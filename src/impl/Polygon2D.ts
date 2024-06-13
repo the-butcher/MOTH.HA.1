@@ -21,11 +21,10 @@ export class Polygon2D implements IPolygon2D {
 
     let inside = false;
     for (let i = 0, j = this.coordinates.length - 1; i < this.coordinates.length; j = i++) {
-      const xi = this.coordinates[i].x,
-        yi = this.coordinates[i].y;
-      const xj = this.coordinates[j].x,
-        yj = this.coordinates[j].y;
-
+      const xi = this.coordinates[i].x;
+      const yi = this.coordinates[i].y;
+      const xj = this.coordinates[j].x;
+      const yj = this.coordinates[j].y;
       const intersect = yi > y != yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
       if (intersect) inside = !inside;
     }

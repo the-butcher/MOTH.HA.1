@@ -223,7 +223,7 @@ function App() {
       id: ObjectUtil.createId(),
       stamp: ObjectUtil.createId(),
       clipPlane: clipPlaneRef.current,
-      scene: './h24og2.dae',
+      scene: './h24og2_poly_test.dae',
       selection: {
         rooms: {},
       },

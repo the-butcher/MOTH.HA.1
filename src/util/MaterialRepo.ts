@@ -1,4 +1,4 @@
-import { Color, DoubleSide, FrontSide, MeshPhysicalMaterial, Plane, Vector3 } from 'three';
+import { Color, DoubleSide, FrontSide, LineBasicMaterial, MeshPhysicalMaterial, Plane, Vector3 } from 'three';
 import { TLevel } from '../types/ISensor';
 import { LineMaterial } from 'three/examples/jsm/Addons.js';
 
@@ -8,6 +8,10 @@ export class MaterialRepo {
   private static MATERIALS_MARK: { [k in string]: MeshPhysicalMaterial } = {};
   private static MATERIALS_LINE: { [k in string]: LineMaterial } = {};
   private static CLIP_PLANE = new Plane(new Vector3(0, -1, 0), -2.7);
+
+  public static MATERIAL_BASIC_LINE = new LineBasicMaterial({
+    color: 0x444444
+  });
 
   static setClipPlane(clipPlane: number) {
     MaterialRepo.CLIP_PLANE.constant = clipPlane - 2.7;
@@ -85,7 +89,7 @@ export class MaterialRepo {
       }
       MaterialRepo.MATERIALS_LINE[level] = new LineMaterial({
         color,
-        linewidth: 5, // in world units with size attenuation, pixels otherwise
+        linewidth: 3, // in world units with size attenuation, pixels otherwise
         vertexColors: false,
         opacity: 0.75,
         transparent: false,

@@ -1,23 +1,14 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
-import { CapsuleGeometry, Color, DoubleSide, FrontSide, Group, LineBasicMaterial, LineSegments, Mesh, MeshPhysicalMaterial, Object3D, Object3DEventMap, PlaneGeometry, Vector2, Vector3 } from 'three';
-import { ColladaLoader, Line2, LineGeometry } from 'three/examples/jsm/Addons.js';
-import { Polygon2D } from '../impl/Polygon2D';
-import { ICoordinate2D } from '../types/ICoordinate2D';
+import { BufferAttribute, BufferGeometry, CapsuleGeometry, Color, FrontSide, Group, LineSegments, Mesh, MeshPhysicalMaterial, Object3D, Object3DEventMap, PlaneGeometry, Vector2, Vector3 } from 'three';
+import { ColladaLoader, Line2 } from 'three/examples/jsm/Addons.js';
+import { IEdge3D } from '../types/IEdge3D';
 import { IModelProps } from '../types/IModelProps';
 import { IPolygon2D } from '../types/IPolygon2D';
 import { ISensor, ISensorPosition } from '../types/ISensor';
 import { MaterialRepo } from '../util/MaterialRepo';
+import { PolygonUtil } from '../util/PolygonUtil';
 import LightComponent from './LightCompoment';
-
-const VALUE_LINE_DEFAULT = 80;
-const MATERIAL_LINE_DEFAULT = new LineBasicMaterial({
-  name: 'line_default',
-  color: new Color(`rgb(${VALUE_LINE_DEFAULT}, ${VALUE_LINE_DEFAULT}, ${VALUE_LINE_DEFAULT})`),
-  opacity: 1.0,
-  // transparent: true,
-  side: DoubleSide,
-});
 
 const ModelComponent = (props: IModelProps) => {
 
@@ -66,7 +57,7 @@ const ModelComponent = (props: IModelProps) => {
       result.scene.position.y = -3;
       // result.scene.position.z = 2;
       // result.scene.rotateZ(3);
-      console.log('scene', result.scene);
+      // console.log('scene', result.scene);
 
 
       const polygons: IPolygon2D[] = [];
@@ -74,112 +65,98 @@ const ModelComponent = (props: IModelProps) => {
       const _namedFaces: Mesh[] = [];
       const _namedMarks: Mesh[] = [];
 
-      const allLines: LineSegments[] = findLinesRecursive(result.scene.children);
-      allLines.forEach((line1) => {
+      // const allLines: LineSegments[] = findLinesRecursive(result.scene.children);
+      // allLines.forEach((line) => {
 
-        let lineName: string = '';
-        let object: Object3D | null = line1;
+      //   let lineName: string = '';
+      //   let object: Object3D | null = line;
 
-        // iterate up in tree to find a name for this object
+      //   // iterate up in tree to find a name for this object
+      //   while (object) {
+      //     lineName = object.name;
+      //     if (lineName !== '') {
+      //       break;
+      //     }
+      //     object = object.parent;
+      //   }
+
+      //   line.castShadow = true;
+      //   line.material = MaterialRepo.MATERIAL_BASIC_LINE;
+
+      // });
+
+
+
+      const allFaces: Mesh[] = findFacesRecursive(result.scene.children);
+      allFaces.forEach((face) => {
+
+        let faceName: string = '';
+        let object: Object3D | null = face;
         while (object) {
-          lineName = object.name;
-          if (lineName !== '') {
+          faceName = object.name;
+          if (faceName !== '') {
             break;
           }
           object = object.parent;
         }
 
-        line1.castShadow = true;
+        face.castShadow = true;
+        face.receiveShadow = true;
+        face.name = faceName;
 
-        if (lineName.startsWith('room')) {
-          // get positions
-          const geometry = new LineGeometry();
-          const positionsA: number[] = [...line1.geometry.attributes['position'].array];
-          // build segments
-          const segmentsA: [Vector3, Vector3][] = [];
-          for (let index = 0; index < positionsA.length / 3; index += 2) {
-            segmentsA.push([new Vector3(positionsA[index * 3 + 0], positionsA[index * 3 + 1], positionsA[index * 3 + 2]), new Vector3(positionsA[index * 3 + 3], positionsA[index * 3 + 4], positionsA[index * 3 + 5])]);
-          }
-          const segmentsB: [Vector3, Vector3][] = [];
-          if (segmentsA.length > 0) {
-            segmentsB.push(segmentsA.shift()!);
-            while (segmentsA.length > 0) {
-              // console.log('segmentsA.length', segmentsA.length);
-              let minDist = Number.MAX_VALUE;
-              let minIndx = -1;
-              let minFlip = false;
-              for (let indexA = 0; indexA < segmentsA.length; indexA++) {
-                const pBB = segmentsB[segmentsB.length - 1][1];
-                const pAA = segmentsA[indexA][0];
-                const pAB = segmentsA[indexA][1];
-                const dBA = pBB.clone().sub(pAA).length(); // to A of segment
-                const dBB = pBB.clone().sub(pAB).length(); // to B of segment
-                if (dBA < dBB && dBA < minDist) {
-                  minDist = dBA;
-                  minIndx = indexA;
-                  minFlip = false;
-                } else if (dBB < dBA && dBB < minDist) {
-                  minDist = dBB;
-                  minIndx = indexA;
-                  minFlip = true;
-                }
-              }
-              // find and remove closest segment
-              const segmentA = segmentsA.splice(minIndx, 1)[0];
-              if (minFlip) {
-                segmentsB.push([segmentA[1], segmentA[0]]);
-              } else {
-                segmentsB.push([segmentA[0], segmentA[1]]);
-              }
-            }
-          }
-
-          const coordinates: ICoordinate2D[] = [];
-          let posL: Vector3;
-          let posW: Vector3;
-
-          const positionsB: number[] = [];
-
-          // first coordinate
-          posL = segmentsB[0][0];
-          posW = line1.localToWorld(posL.clone());
-
-          coordinates.push({
-            x: posW.x,
-            y: posW.z
-          });
-          const z = posW.y;
-          positionsB.push(posL.x, posL.y, posL.z);
-          for (let index = 0; index < segmentsB.length; index++) {
-            posL = segmentsB[index][1];
-            posW = line1.localToWorld(posL.clone());
-            coordinates.push({
-              x: posW.x,
-              y: posW.z
-            });
-            positionsB.push(posL.x, posL.y, posL.z);
-          }
-
-          polygons.push(new Polygon2D(lineName, coordinates, z));
-          geometry.setPositions(positionsB);
-
-          const line2 = new Line2(geometry, MaterialRepo.getMaterialLine('none'));
-          line2.computeLineDistances();
-          line2.scale.set(1, 1, 1);
-          line2.position.set(line1.position.x, line1.position.y, line1.position.z);
-
-          line1.parent?.add(line2);
-          line1.parent?.remove(line1);
-
-          line2.name = lineName;
-          // console.log('lineName', lineName, line2);
-          _namedLines.push(line2);
+        if (faceName.startsWith('room')) {
+          face.material = MaterialRepo.getMaterialFace('none');
+          _namedFaces.push(face);
+        } else if (faceName.startsWith('stairs')) {
+          face.material = MaterialRepo.getMaterialFace('none');
+        } else {
+          face.material = MaterialRepo.getMaterialFace('wall');
         }
+
+        // find outer edges of this element
+        const outerRings: IEdge3D[][] = PolygonUtil.findOuterRings(face);
+
+        outerRings.forEach(outerRing => {
+
+          // each distinct polygon (but segments are unordered and also not split to main polygon and holes)
+
+          const lineSegmentPositionsA: number[] = [];
+          outerRing.forEach(outerEdge => {
+            lineSegmentPositionsA.push(outerEdge.pointA.x);
+            lineSegmentPositionsA.push(outerEdge.pointA.y);
+            lineSegmentPositionsA.push(outerEdge.pointA.z);
+            lineSegmentPositionsA.push(outerEdge.pointB.x);
+            lineSegmentPositionsA.push(outerEdge.pointB.y);
+            lineSegmentPositionsA.push(outerEdge.pointB.z);
+          });
+          const lineSegmentPositionsB = new Float32Array(lineSegmentPositionsA);
+
+          const geometry = new BufferGeometry();
+          geometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
+
+          const lineSegments = new LineSegments(geometry, MaterialRepo.MATERIAL_BASIC_LINE);
+          lineSegments.position.set(face.position.x, face.position.y, face.position.z);
+          lineSegments.updateMatrixWorld();
+          lineSegments.name = face.name;
+
+          const line2 = PolygonUtil.toLine2(lineSegments);
+          if (faceName.startsWith('room')) {
+            face.parent?.add(line2);
+          } else if (faceName.startsWith('stairs')) {
+            face.parent?.add(lineSegments);
+          }
+          _namedLines.push(line2);
+
+          const polygon = PolygonUtil.toPolygon2D(lineSegments, face);
+          polygons.push(polygon);
+
+        });
 
       });
 
       // find sensor markers now
       const _sensors: ISensor[] = [];
+      const allLines: LineSegments[] = findLinesRecursive(result.scene.children);
       allLines.forEach((line1) => {
         let lineName: string = '';
         let object: Object3D | null = line1;
@@ -197,14 +174,14 @@ const ModelComponent = (props: IModelProps) => {
 
           const positionsA: number[] = [...line1.geometry.attributes['position'].array];
           const posLocal = new Vector3(positionsA[0], positionsA[1], positionsA[2]);
-          const posScene = line1.localToWorld(posLocal);
+          const posWorld = line1.localToWorld(posLocal);
 
           const capGeom = new CapsuleGeometry(0.1, 0.1, 3, 12);
           capGeom.computeVertexNormals();
           const capMesh = new Mesh(capGeom, MaterialRepo.getMaterialMark('none'));
           capMesh.receiveShadow = false;
           capMesh.castShadow = false;
-          capMesh.position.set(posScene.x, posScene.y, posScene.z);
+          capMesh.position.set(posWorld.x, posWorld.y, posWorld.z);
 
           line1.parent?.remove(line1);
 
@@ -213,12 +190,11 @@ const ModelComponent = (props: IModelProps) => {
           polygons.forEach((polygon) => {
             if (
               polygon.contains({
-                x: posScene.x,
-                y: posScene.z,
-              }, posScene.y)
+                x: posWorld.x,
+                y: posWorld.z,
+              }, posWorld.y)
             ) {
               roomId = polygon.name;
-              // console.log('sensor', sensorId, ' contained in ', polygon.name);
             }
           });
 
@@ -230,42 +206,12 @@ const ModelComponent = (props: IModelProps) => {
             sensorId,
             roomId,
             levelId: 'none',
-            position3D: posScene,
+            position3D: posWorld,
           });
 
         } else {
-          line1.material = MATERIAL_LINE_DEFAULT;
+          line1.material = MaterialRepo.MATERIAL_BASIC_LINE;
         }
-      });
-
-      const allFaces: Mesh[] = findFacesRecursive(result.scene.children);
-      allFaces.forEach((face) => {
-
-        let faceName: string = '';
-        let object: Object3D | null = face;
-        while (object) {
-          faceName = object.name;
-          if (faceName !== '') {
-            // console.log('faceName', faceName, face);
-            break;
-          }
-          object = object.parent;
-        }
-
-        face.castShadow = true;
-        face.receiveShadow = true;
-
-        if (faceName.startsWith('room')) {
-          face.material = MaterialRepo.getMaterialFace('none');
-          face.name = faceName;
-          // console.log('faceName', faceName, face);
-          _namedFaces.push(face);
-        } else if (faceName.startsWith('stairs')) {
-          face.material = MaterialRepo.getMaterialFace('none');
-        } else {
-          face.material = MaterialRepo.getMaterialFace('wall');
-        }
-
       });
 
       setSensors(_sensors);
@@ -325,7 +271,6 @@ const ModelComponent = (props: IModelProps) => {
     });
     namedMarks.forEach((namedMark) => {
       if (selection.rooms[namedMark.name]) {
-        // console.log('highlighting mark', namedMark.name, selection.rooms[namedMark.name]);
         namedMark.material = MaterialRepo.getMaterialMark(selection.rooms[namedMark.name]);
       }
     });

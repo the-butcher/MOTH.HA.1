@@ -3,7 +3,7 @@ import Co2Icon from '@mui/icons-material/Co2';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import SpeedIcon from '@mui/icons-material/Speed';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
-import { Grid, Paper, Slider, Tab, Tabs } from '@mui/material';
+import { Grid, Paper, Slider, Stack, Tab, Tabs } from '@mui/material';
 import { ReactElement } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
 import { IChartProps } from '../types/IChartProps';
@@ -11,6 +11,7 @@ import { TRecordKey } from '../types/IRecord';
 import ChartComponent from './ChartComponent';
 import GaugeComponent from './GaugeComponent';
 import LabelComponent from './LabelComponent';
+import LockComponent from './LockComponent';
 
 export interface ISpeedDialDef {
   recordKey: TRecordKey;
@@ -109,20 +110,24 @@ const BoardComponent = (props: IBoardProps & IChartProps) => {
         elevation={3}
         sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, width: `${getControlsWidth()}px`, height: `${getControlsHeight()}px`, right: '20px', top: '20px', backgroundColor: 'rgba(50, 50, 50, 0.75)' }}
       >
-        <Tabs
-          value={recordKey}
-          onChange={(e, recordKey) => {
-            e.stopPropagation();
-            handleRecordKey(recordKey)
-          }}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ display: 'flex', width: '100%' }}
-        >
-          {SPEED_DIAL_DEFS.map((action) => (
-            <Tab key={action.recordKey} icon={action.icon} value={action.recordKey} aria-label={action.recordKey} sx={{ minWidth: 'unset', flexGrow: 1, maxWidth: 'unset' }} />
-          ))}
-        </Tabs>
+        <Stack direction={'row'}>
+          <Tabs
+            value={recordKey}
+            onChange={(e, recordKey) => {
+              e.stopPropagation();
+              handleRecordKey(recordKey)
+            }}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ display: 'flex', flexGrow: 2, maxWidth: '70%' }}
+          >
+            {SPEED_DIAL_DEFS.map((action) => (
+              <Tab key={action.recordKey} icon={action.icon} value={action.recordKey} aria-label={action.recordKey} sx={{ minWidth: 'unset', flexGrow: 1, maxWidth: 'unset' }} />
+            ))}
+          </Tabs>
+          <div style={{ flexGrow: 5 }} />
+          <LockComponent />
+        </Stack>
 
         <Grid container spacing={1} sx={{ padding: '10px', flexGrow: 5 }} >
           {
