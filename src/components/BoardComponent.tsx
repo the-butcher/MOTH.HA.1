@@ -3,6 +3,8 @@ import Co2Icon from '@mui/icons-material/Co2';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import SpeedIcon from '@mui/icons-material/Speed';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
+import GrainIcon from '@mui/icons-material/Grain';
+
 import { Grid, Paper, Slider, Stack, Tab, Tabs } from '@mui/material';
 import { ReactElement } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
@@ -25,6 +27,10 @@ export const SPEED_DIAL_DEFS: ISpeedDialDef[] = [
     icon: <Co2Icon />,
   },
   {
+    recordKey: 'pm025',
+    icon: <GrainIcon />,
+  },
+  {
     recordKey: 'deg',
     icon: <DeviceThermostatIcon />,
   },
@@ -44,7 +50,7 @@ export const SPEED_DIAL_DEFS: ISpeedDialDef[] = [
 
 const BoardComponent = (props: IBoardProps & IChartProps) => {
 
-  const { labels, recordKey, clipPlane, handleRecordKey, handleClipPlane } = { ...props };
+  const { labels, recordKeyApp, clipPlane, handleRecordKey, handleClipPlane } = { ...props };
 
   //  value={value} onChange={handleChange}
 
@@ -108,18 +114,18 @@ const BoardComponent = (props: IBoardProps & IChartProps) => {
 
       <Paper
         elevation={3}
-        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, width: `${getControlsWidth()}px`, height: `${getControlsHeight()}px`, right: '20px', top: '20px', backgroundColor: 'rgba(50, 50, 50, 0.75)' }}
+        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, width: `${getControlsWidth()}px`, height: `${getControlsHeight()}px`, right: '20px', top: '20px', backgroundColor: 'rgba(100, 100, 100, 0.60)' }}
       >
         <Stack direction={'row'}>
           <Tabs
-            value={recordKey}
+            value={recordKeyApp}
             onChange={(e, recordKey) => {
               e.stopPropagation();
               handleRecordKey(recordKey)
             }}
             variant="scrollable"
             scrollButtons="auto"
-            sx={{ display: 'flex', flexGrow: 2, maxWidth: '70%' }}
+            sx={{ maxWidth: '70%' }}
           >
             {SPEED_DIAL_DEFS.map((action) => (
               <Tab key={action.recordKey} icon={action.icon} value={action.recordKey} aria-label={action.recordKey} sx={{ minWidth: 'unset', flexGrow: 1, maxWidth: 'unset' }} />
@@ -131,18 +137,19 @@ const BoardComponent = (props: IBoardProps & IChartProps) => {
 
         <Grid container spacing={1} sx={{ padding: '10px', flexGrow: 5 }} >
           {
-            props.sensorIds.length > 0 && props.recordKey !== 'instant' ? <Grid
+            props.labels.some(l => l.selected && l.recordKeyObj === recordKeyApp) && props.recordKeyApp !== 'instant' ? <Grid
               item
               xs={12}
+              sx={{ display: 'flex' }}
             >
-              <ChartComponent {...props} />
+              <ChartComponent {...props} height={getControlsHeight() - 150} />
             </Grid> : labels.map((label) => (
               <Grid
                 item
                 xs={6}
                 key={label.sensorId}
               >
-                <GaugeComponent key={label.sensorId} {...label} />
+                <GaugeComponent key={label.sensorId} {...label} height={(getControlsHeight() - 220) / Math.ceil(labels.length / 2)} />
               </Grid>
             ))
           }

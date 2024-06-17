@@ -58,8 +58,50 @@ export const toLevelColor = (recordKey: TRecordKey, value: number): string => {
   } else if (level == 'risk') {
     return COLOR_R;
   } else {
-    return '#666666';
+    return '#888888';
   }
+}
+
+const SERIES_DEF_CO2: Omit<ISeriesDef, 'recordKey' | 'hint'> = {
+  valueFormatter: (value: number | null) => (Number.isFinite(value) ? `${value!.toFixed(0)}ppm` : 'NA'),
+  levelFormatter: (value: number) => {
+    if (Number.isFinite(value)) {
+      if (value > 1000) {
+        return 'risk';
+      } else if (value > 800) {
+        return 'warn';
+      } else {
+        return 'norm';
+      }
+    }
+    return 'none';
+  },
+  getChartMin: () => 0,
+  getChartMax: () => undefined,
+  getGaugeMin: () => 0,
+  getGaugeMax: () => 1000,
+}
+
+const SERIES_DEF_PM: Omit<ISeriesDef, 'recordKey' | 'hint'> = {
+  // recordKey: 'pm025',
+  // hint: 'PM 2.5 (μg/m³)',
+  valueFormatter: (value: number | null) => (Number.isFinite(value) ? `${value!.toFixed(0)}μg/m³` : 'NA'),
+  levelFormatter: (value: number) => {
+    if (Number.isFinite(value)) {
+      if (value > 15) {
+        return 'risk';
+      } else if (value > 5) {
+        return 'warn';
+      } else {
+        return 'norm';
+      }
+    }
+    return 'none';
+  },
+  getChartMin: () => 0,
+  getChartMax: () => undefined,
+  getGaugeMin: () => 0,
+  getGaugeMax: () => 50,
 }
 
 export const SERIES_DEFS: { [k in TRecordKey]: ISeriesDef } = {
@@ -74,56 +116,29 @@ export const SERIES_DEFS: { [k in TRecordKey]: ISeriesDef } = {
     getGaugeMax: (max) => max,
   },
   co2_lpf: {
+    ...SERIES_DEF_CO2,
     recordKey: 'co2_lpf',
     hint: 'CO₂ (ppm)',
-    valueFormatter: (value: number | null) => (Number.isFinite(value) ? `${value!.toFixed(0)}ppm` : 'NA'),
-    levelFormatter: (value: number) => {
-      if (Number.isFinite(value)) {
-        if (value > 1000) {
-          return 'risk';
-        } else if (value > 800) {
-          return 'warn';
-        } else {
-          return 'norm';
-        }
-      }
-      return 'none';
-    },
-    colorMap: {
-      type: 'piecewise',
-      thresholds: [800, 1000],
-      colors: [COLOR_G, COLOR_Y, COLOR_R],
-    },
-    getChartMin: () => 0,
-    getChartMax: () => undefined,
-    getGaugeMin: () => 0,
-    getGaugeMax: () => 1000,
   },
   co2_raw: {
+    ...SERIES_DEF_CO2,
     recordKey: 'co2_raw',
-    hint: 'CO₂ (ppm)',
-    valueFormatter: (value: number | null) => (Number.isFinite(value) ? `${value!.toFixed(0)}ppm` : 'NA'),
-    levelFormatter: (value: number) => {
-      if (Number.isFinite(value)) {
-        if (value > 1000) {
-          return 'risk';
-        } else if (value > 800) {
-          return 'warn';
-        } else {
-          return 'norm';
-        }
-      }
-      return 'none';
-    },
-    colorMap: {
-      type: 'piecewise',
-      thresholds: [800, 1000],
-      colors: [COLOR_G, COLOR_Y, COLOR_R],
-    },
-    getChartMin: () => 0,
-    getChartMax: () => undefined,
-    getGaugeMin: () => 0,
-    getGaugeMax: () => 1000,
+    hint: 'CO₂ (ppm)'
+  },
+  pm010: {
+    ...SERIES_DEF_PM,
+    recordKey: 'pm010',
+    hint: 'PM 1.0 (μg/m³)'
+  },
+  pm025: {
+    ...SERIES_DEF_PM,
+    recordKey: 'pm025',
+    hint: 'PM 2.5 (μg/m³)'
+  },
+  pm100: {
+    ...SERIES_DEF_PM,
+    recordKey: 'pm100',
+    hint: 'PM 10.0 (μg/m³)'
   },
   deg: {
     recordKey: 'deg',
@@ -141,11 +156,11 @@ export const SERIES_DEFS: { [k in TRecordKey]: ISeriesDef } = {
       }
       return 'none';
     },
-    colorMap: {
-      type: 'piecewise',
-      thresholds: [14, 19, 25, 30],
-      colors: [COLOR_R, COLOR_Y, COLOR_G, COLOR_Y, COLOR_R],
-    },
+    // colorMap: {
+    //   type: 'piecewise',
+    //   thresholds: [14, 19, 25, 30],
+    //   colors: [COLOR_R, COLOR_Y, COLOR_G, COLOR_Y, COLOR_R],
+    // },
     getChartMin: (min) => Math.floor(min - 0.1),
     getChartMax: (max) => Math.ceil(max + 0.1),
     getGaugeMin: () => 14 - 5,
@@ -167,11 +182,11 @@ export const SERIES_DEFS: { [k in TRecordKey]: ISeriesDef } = {
       }
       return 'none';
     },
-    colorMap: {
-      type: 'piecewise',
-      thresholds: [25, 30, 60, 65],
-      colors: [COLOR_R, COLOR_Y, COLOR_G, COLOR_Y, COLOR_R],
-    },
+    // colorMap: {
+    //   type: 'piecewise',
+    //   thresholds: [25, 30, 60, 65],
+    //   colors: [COLOR_R, COLOR_Y, COLOR_G, COLOR_Y, COLOR_R],
+    // },
     getChartMin: (min) => Math.floor(min - 0.1),
     getChartMax: (max) => Math.ceil(max + 0.1),
     getGaugeMin: () => 25 - 5,
@@ -187,7 +202,6 @@ export const SERIES_DEFS: { [k in TRecordKey]: ISeriesDef } = {
     getChartMax: (max) => Math.ceil(max + 0.1),
     getGaugeMin: () => 900,
     getGaugeMax: () => 1100,
-
   },
   bat: {
     recordKey: 'bat',
@@ -205,11 +219,11 @@ export const SERIES_DEFS: { [k in TRecordKey]: ISeriesDef } = {
       }
       return 'none';
     },
-    colorMap: {
-      type: 'piecewise',
-      thresholds: [10, 20],
-      colors: [COLOR_R, COLOR_Y, COLOR_G],
-    },
+    // colorMap: {
+    //   type: 'piecewise',
+    //   thresholds: [10, 20],
+    //   colors: [COLOR_R, COLOR_Y, COLOR_G],
+    // },
     getChartMin: (min) => Math.floor(min - 0.1),
     getChartMax: (max) => Math.ceil(max + 0.1),
     getGaugeMin: () => 0,

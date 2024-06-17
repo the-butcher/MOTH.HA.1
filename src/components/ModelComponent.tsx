@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
-import { BufferAttribute, BufferGeometry, CapsuleGeometry, Color, FrontSide, Group, LineSegments, Mesh, MeshPhysicalMaterial, Object3D, Object3DEventMap, PlaneGeometry, Vector2, Vector3 } from 'three';
+import { BufferAttribute, BufferGeometry, CapsuleGeometry, Group, LineSegments, Mesh, Object3D, Object3DEventMap, Vector2, Vector3 } from 'three';
 import { ColladaLoader, Line2 } from 'three/examples/jsm/Addons.js';
 import { IEdge3D } from '../types/IEdge3D';
 import { IModelProps } from '../types/IModelProps';
@@ -65,29 +65,9 @@ const ModelComponent = (props: IModelProps) => {
       const _namedFaces: Mesh[] = [];
       const _namedMarks: Mesh[] = [];
 
-      // const allLines: LineSegments[] = findLinesRecursive(result.scene.children);
-      // allLines.forEach((line) => {
-
-      //   let lineName: string = '';
-      //   let object: Object3D | null = line;
-
-      //   // iterate up in tree to find a name for this object
-      //   while (object) {
-      //     lineName = object.name;
-      //     if (lineName !== '') {
-      //       break;
-      //     }
-      //     object = object.parent;
-      //   }
-
-      //   line.castShadow = true;
-      //   line.material = MaterialRepo.MATERIAL_BASIC_LINE;
-
-      // });
-
-
-
       const allFaces: Mesh[] = findFacesRecursive(result.scene.children);
+      const allLines: LineSegments[] = findLinesRecursive(result.scene.children);
+
       allFaces.forEach((face) => {
 
         let faceName: string = '';
@@ -134,7 +114,8 @@ const ModelComponent = (props: IModelProps) => {
           const geometry = new BufferGeometry();
           geometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
 
-          const lineSegments = new LineSegments(geometry, MaterialRepo.MATERIAL_BASIC_LINE);
+          const material = faceName.startsWith('stairs') ? MaterialRepo.getMaterialSgmt('none') : MaterialRepo.getMaterialSgmt('wall');
+          const lineSegments = new LineSegments(geometry, material);
           lineSegments.position.set(face.position.x, face.position.y, face.position.z);
           lineSegments.updateMatrixWorld();
           lineSegments.name = face.name;
@@ -142,7 +123,7 @@ const ModelComponent = (props: IModelProps) => {
           const line2 = PolygonUtil.toLine2(lineSegments);
           if (faceName.startsWith('room')) {
             face.parent?.add(line2);
-          } else if (faceName.startsWith('stairs')) {
+          } else { // if (faceName.startsWith('stairs'))
             face.parent?.add(lineSegments);
           }
           _namedLines.push(line2);
@@ -156,7 +137,6 @@ const ModelComponent = (props: IModelProps) => {
 
       // find sensor markers now
       const _sensors: ISensor[] = [];
-      const allLines: LineSegments[] = findLinesRecursive(result.scene.children);
       allLines.forEach((line1) => {
         let lineName: string = '';
         let object: Object3D | null = line1;
@@ -205,12 +185,13 @@ const ModelComponent = (props: IModelProps) => {
           _sensors.push({
             sensorId,
             roomId,
+            recordKeys: [],
             levelId: 'none',
             position3D: posWorld,
           });
 
         } else {
-          line1.material = MaterialRepo.MATERIAL_BASIC_LINE;
+          line1.material = MaterialRepo.getMaterialSgmt('none');
         }
       });
 
@@ -221,25 +202,24 @@ const ModelComponent = (props: IModelProps) => {
 
       groupRef.current.add(result.scene);
 
-      const faceValFloor = 100;
-      const floorMtrl = new MeshPhysicalMaterial({
-        color: new Color(`rgb(${faceValFloor}, ${faceValFloor}, ${faceValFloor})`),
-        roughness: 0.75,
-        metalness: 0.0,
-        reflectivity: 0.5,
-        side: FrontSide,
-        transparent: false,
-        opacity: 1,
-        wireframe: false,
-      });
+      // const faceValFloor = 100;
+      // const floorMtrl = new MeshPhysicalMaterial({
+      //   color: new Color(`rgb(${faceValFloor}, ${faceValFloor}, ${faceValFloor})`),
+      //   roughness: 0.75,
+      //   metalness: 0.0,
+      //   reflectivity: 0.5,
+      //   side: FrontSide,
+      //   transparent: false,
+      //   opacity: 1,
+      //   wireframe: false,
+      // });
 
-      const floorGeom = new PlaneGeometry(100, 100, 10, 10); // new CapsuleGeometry(7, 50, 36, 72);
-      floorGeom.translate(0, 0, -7);
-      floorGeom.computeVertexNormals();
-      const floorMesh = new Mesh(floorGeom, floorMtrl);
-      floorMesh.receiveShadow = true;
-
-      floorRef.current.add(floorMesh);
+      // const floorGeom = new PlaneGeometry(100, 100, 10, 10); // new CapsuleGeometry(7, 50, 36, 72);
+      // floorGeom.translate(0, 0, -7);
+      // floorGeom.computeVertexNormals();
+      // const floorMesh = new Mesh(floorGeom, floorMtrl);
+      // floorMesh.receiveShadow = true;
+      // floorRef.current.add(floorMesh);
 
       invalidate();
 

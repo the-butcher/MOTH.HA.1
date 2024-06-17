@@ -38,4 +38,12 @@ export const TICK_DEFINITIONS: ITickDefinition[] = [
     tick: TimeUtil.MILLISECONDS_PER__DAY,
     step: 24,
   },
+  {
+    tick: TimeUtil.MILLISECONDS_PER__DAY * 2,
+    step: 24,
+  },
+  {
+    tick: TimeUtil.MILLISECONDS_PER__DAY * 7,
+    step: 28,
+  },
 ];

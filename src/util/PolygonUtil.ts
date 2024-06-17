@@ -85,7 +85,7 @@ export class PolygonUtil {
 
         const outerRings: IEdge3D[][] = [];
 
-        // create triangle buckets by normal
+        // create triangle buckets by face normal
         while (allTriangles.length > 0) {
 
             // get last triangle
@@ -142,6 +142,7 @@ export class PolygonUtil {
                 }
             }
 
+            // order edges, split by rings
             while (outerEdges.length > 0) {
 
                 // console.log('outerEdges', [...outerEdges]);

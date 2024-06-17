@@ -4,6 +4,7 @@ import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { useEffect, useRef, useState } from 'react';
 import { IChartProps } from '../types/IChartProps';
 import { IInfluxDbResponses } from '../types/IInfluxDbResponses';
+import { ILabelProps } from '../types/ILabelProps';
 import { IRecord } from '../types/IRecord';
 import { SERIES_DEFS } from '../types/ISeriesDef';
 import { TICK_DEFINITIONS } from '../types/ITickDefinition';
@@ -27,7 +28,9 @@ export interface ISeries {
  */
 const ChartComponent = (props: IChartProps) => {
 
-  const { sensorIds, recordKey, exportTo, handleExportComplete } = props;
+  const { height, labels, recordKeyApp, exportTo, handleExportComplete } = props;
+
+  const stackRef = useRef<HTMLDivElement>(document.createElement('div'));
 
   const [timeRange, setTimeRange] = useState<string>('3h');
   const [tickDefIndex, setTickDefIndex] = useState<number>(0);
@@ -40,6 +43,10 @@ const ChartComponent = (props: IChartProps) => {
   const [minmax, setMinMax] = useState<[number, number]>([0, 0]);
   const chartRef = useRef<SVGElement>();
 
+  const isSelected = (label: ILabelProps): boolean => {
+    return label.selected && label.recordKeyObj === recordKeyApp;
+  }
+
   const loadSensorValues = () => {
 
     // https://docs.influxdata.com/influxdb/v1/tools/api/#request-body
@@ -48,65 +55,68 @@ const ChartComponent = (props: IChartProps) => {
     // const minDate = new Date(minInstant);
     // console.log('minTime', TimeUtil.toCsvDate(minDate), TimeUtil.getTimezoneOffsetSeconds());
 
-    const url = `http://192.168.0.38:8086/query`;
-    const qry = encodeURIComponent(sensorIds.map((sensorId) => `SELECT ${recordKey} FROM "homeassistant"."autogen"."${sensorId}" WHERE time > now() - ${timeRange}`).join(';'));
+    const url = `${import.meta.env.VITE_INFLUXDB__URL}`;
+    const qry = encodeURIComponent(labels.filter(l => isSelected(l)).map((label) => `SELECT ${recordKeyApp} FROM "homeassistant"."autogen"."${label.sensorId}" WHERE time > now() - ${timeRange}`).join(';'));
+    if (qry && qry !== '') {
 
-    new JsonLoader(url, 'POST')
-      .withBasicAuthorization(`${import.meta.env.VITE_INFLUXDB_USER}`, `${import.meta.env.VITE_INFLUXDB_PASS}`)
-      .withParameter('epoch', 'ms')
-      .withParameter('q', qry)
-      .load<IInfluxDbResponses>()
-      .then((responses) => {
-        const _records1: IRecord[] = [];
-        const _series: ISeries[] = [];
+      new JsonLoader(url, 'POST')
+        .withBasicAuthorization(`${import.meta.env.VITE_INFLUXDB_USER}`, `${import.meta.env.VITE_INFLUXDB_PASS}`)
+        .withParameter('epoch', 'ms')
+        .withParameter('q', qry)
+        .load<IInfluxDbResponses>()
+        .then((responses) => {
 
-        responses.results.forEach((result) => {
+          const _records1: IRecord[] = [];
+          const _series: ISeries[] = [];
 
-          const combinedKey = toCombinedKey(result.series[0].name);
+          responses.results.forEach((result) => {
 
-          _series.push({
-            dataKey: combinedKey,
-            label: `${SERIES_DEFS[recordKey].hint} (${result.series[0].name})`,
-            showMark: false,
-            type: 'line',
-            curve: 'linear',
-            connectNulls: true,
-            valueFormatter: SERIES_DEFS[recordKey].valueFormatter,
-          });
+            const combinedKey = toCombinedKey(result.series[0].name);
 
-          result.series[0].values.forEach((value) => {
-            const record: IRecord = {};
-            record['instant'] = getTickInstant(value[0] as number, TimeUtil.MILLISECONDS_PER_MINUTE);
-            record[combinedKey] = value[1] as number;
-            _records1.push(record);
-          });
-        });
-        _records1.sort((a, b) => a['instant'] - b['instant']);
-
-        const _records2: IRecord[] = [];
-        for (let recordIndex = 0; recordIndex < _records1.length; recordIndex++) {
-          if (_records2.length === 0 || _records1[recordIndex].instant !== _records2[_records2.length - 1].instant) {
-            _records2.push({
-              ..._records2[_records2.length - 1], // all previous value (if the new record does not redefine a value, there will be the previous value)
-              ..._records1[recordIndex] // all values of the new record
+            _series.push({
+              dataKey: combinedKey,
+              label: `${SERIES_DEFS[recordKeyApp].hint} (${result.series[0].name})`,
+              showMark: false,
+              type: 'line',
+              curve: 'linear',
+              connectNulls: true,
+              valueFormatter: SERIES_DEFS[recordKeyApp].valueFormatter,
             });
-          } else { // same instant, merge records
-            _records2[_records2.length - 1] = {
-              ..._records2[_records2.length - 1],
-              ..._records1[recordIndex]
+
+            result.series[0].values.forEach((value) => {
+              const record: IRecord = {};
+              record['instant'] = getTickInstant(value[0] as number, TimeUtil.MILLISECONDS_PER_MINUTE);
+              record[combinedKey] = value[1] as number;
+              _records1.push(record);
+            });
+          });
+          _records1.sort((a, b) => a['instant'] - b['instant']);
+
+          const _records2: IRecord[] = [];
+          for (let recordIndex = 0; recordIndex < _records1.length; recordIndex++) {
+            if (_records2.length === 0 || _records1[recordIndex].instant !== _records2[_records2.length - 1].instant) {
+              _records2.push({
+                ..._records2[_records2.length - 1], // all previous value (if the new record does not redefine a value, there will be the previous value)
+                ..._records1[recordIndex] // all values of the new record
+              });
+            } else { // same instant, merge records
+              _records2[_records2.length - 1] = {
+                ..._records2[_records2.length - 1],
+                ..._records1[recordIndex]
+              }
             }
           }
-        }
 
-        // console.log('_records2', _records2);
+          setSeries(_series);
+          setRecords(_records2);
+        });
 
-        setSeries(_series);
-        setRecords(_records2);
-      });
+    }
+
   };
 
   const toCombinedKey = (seriesId: string) => {
-    return `${seriesId.replace('/', '_')}_${recordKey}`
+    return `${seriesId.replace('/', '_')}_${recordKeyApp}`
   }
 
   /**
@@ -289,7 +299,7 @@ const ChartComponent = (props: IChartProps) => {
    * recalculates the y-axis min and max values
    */
   const recalculateMinMax = () => {
-    const combinedKeys = sensorIds.map(s => toCombinedKey(s));
+    const combinedKeys = labels.map(label => toCombinedKey(label.sensorId));
     const values: number[] = [];
     records.forEach(record => {
       combinedKeys.forEach(combinedKey => {
@@ -359,8 +369,8 @@ const ChartComponent = (props: IChartProps) => {
   }, [stepRecords]);
 
   useEffect(() => {
-    console.debug(`⚙ updating chart component (sensorIds, recordKey)`, sensorIds, recordKey);
-    if (sensorIds.length > 0 && recordKey !== 'instant') {
+    console.debug(`⚙ updating chart component (labels, recordKey)`, labels, recordKeyApp);
+    if (labels.length > 0 && recordKeyApp !== 'instant') {
       loadSensorValues();
       recalculateMinMax();
     } else {
@@ -370,7 +380,7 @@ const ChartComponent = (props: IChartProps) => {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sensorIds, recordKey]);
+  }, [labels, recordKeyApp]);
 
   /**
    * component init hook
@@ -398,45 +408,48 @@ const ChartComponent = (props: IChartProps) => {
     }
   };
 
-  // , backgroundColor: 'rgba(50, 50, 50, 0.9)'
-
   return (
-    <Stack style={{ display: 'flex', flexDirection: 'column', height: '100%', border: '1px solid gray', borderRadius: '5px', margin: '0px' }}>
+    <Stack ref={stackRef} style={{
+      display: 'flex', flexDirection: 'column', flexGrow: 10, border: '1px solid #444444', borderRadius: '5px', margin: '0px', backgroundColor: 'rgba(100, 100, 100, 0.60)'
+    }}>
 
       <LineChart
+        height={height}
         skipAnimation
         ref={handleRefChange}
-        xAxis={[
-          {
-            dataKey: 'instant',
-            valueFormatter: (instant, context) => {
-              if (context.location === 'tooltip') {
-                return TimeUtil.toLocalDateTime(instant);
-              } else {
-                return TimeUtil.toLocalTime(instant);
-              }
+        xAxis={
+          [
+            {
+              dataKey: 'instant',
+              valueFormatter: (instant, context) => {
+                if (context.location === 'tooltip') {
+                  return TimeUtil.toLocalDateTime(instant);
+                } else {
+                  return TimeUtil.toLocalTime(instant);
+                }
+              },
+              min: getXAxisMin(),
+              max: getXAxisMax(),
+              label: 'time (HH:MM)',
+              tickInterval,
+              tickLabelStyle: {
+                angle: -90,
+                translate: -4,
+                textAnchor: 'end',
+                fontSize: 12,
+              },
             },
-            min: getXAxisMin(),
-            max: getXAxisMax(),
-            label: 'time (HH:MM)',
-            tickInterval,
-            tickLabelStyle: {
-              angle: -90,
-              translate: -4,
-              textAnchor: 'end',
-              fontSize: 12,
+          ]}
+        yAxis={
+          [
+            {
+              colorMap: SERIES_DEFS[recordKeyApp].colorMap,
+              valueFormatter: SERIES_DEFS[recordKeyApp].valueFormatter,
+              min: SERIES_DEFS[recordKeyApp].getChartMin(minmax[0]),
+              max: SERIES_DEFS[recordKeyApp].getChartMax(minmax[1]),
+              label: `${SERIES_DEFS[recordKeyApp].hint}`,
             },
-          },
-        ]}
-        yAxis={[
-          {
-            colorMap: SERIES_DEFS[recordKey].colorMap,
-            valueFormatter: SERIES_DEFS[recordKey].valueFormatter,
-            min: SERIES_DEFS[recordKey].getChartMin(minmax[0]),
-            max: SERIES_DEFS[recordKey].getChartMax(minmax[1]),
-            label: `${SERIES_DEFS[recordKey].hint}`,
-          },
-        ]}
+          ]}
         series={series}
         dataset={stepRecords}
         grid={{ vertical: true, horizontal: true }}
@@ -451,12 +464,13 @@ const ChartComponent = (props: IChartProps) => {
           '& .MuiLineElement-root': {
             strokeWidth: 3,
           },
-          flexGrow: 5
+          height: '100%'
         }}
         {...{
           legend: { hidden: true },
-        }}
-      ></LineChart>
+        }
+        }
+      ></LineChart >
       <FormControl variant="outlined" sx={{ margin: '10px' }}>
         <InputLabel id="prop-label" size='small'>time range</InputLabel>
         <Select

@@ -65,7 +65,7 @@ function LockComponent() {
     return (
         <IconButton
             onClick={requestScreenLock}
-            sx={{ margin: '6px' }}
+            sx={{ margin: '6px', color: '#333333' }}
 
         >
             {locked ? <LockIcon /> : <LockOpenIcon />}

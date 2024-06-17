@@ -23,15 +23,16 @@ export class ThemeUtil {
         MuiTabs: {
           styleOverrides: {
             indicator: {
-              backgroundColor: '#56c937',
+              backgroundColor: '#aaaaaa', // bar under the tab
             }
           }
         },
         MuiTab: {
           styleOverrides: {
             root: {
+              color: '#333333',
               '&.Mui-selected': {
-                color: '#56c937',
+                color: '#aaaaaa', // selected tab
               }
             },
           },
@@ -39,20 +40,10 @@ export class ThemeUtil {
         MuiSlider: {
           styleOverrides: {
             root: {
-              color: '#56c937',
+              color: '#666666',
             },
           },
         },
-        // MuiFab: {
-        //   styleOverrides: {
-        //     root: {
-        //       backgroundColor: '#56c937',
-        //       '&:hover': {
-        //         backgroundColor: '#56c937',
-        //       },
-        //     },
-        //   }
-        // },
         MuiButtonBase: {
           styleOverrides: {
             root: {
@@ -65,14 +56,6 @@ export class ThemeUtil {
             },
           },
         },
-        // MuiStack: {
-        //   styleOverrides: {
-        //     root: {},
-        //   },
-        //   defaultProps: {
-        //     spacing: 2,
-        //   },
-        // },
         MuiChip: {
           styleOverrides: {
             label: {

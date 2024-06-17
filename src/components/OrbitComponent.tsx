@@ -40,7 +40,7 @@ const OrbitComponent = (props: IOrbitProps) => {
 
     controlsRef.current = new OrbitControls(camera, gl.domElement);
     controlsRef.current.enablePan = false;
-    controlsRef.current.enableDamping = true;
+    controlsRef.current.enableDamping = false;
 
     // const globalPlaneA = new Plane(new Vector3(1, 0, 1), 0.0001);
     // const globalPlaneB = new Plane(new Vector3(1, 0, -1), 0.0001);
@@ -49,7 +49,7 @@ const OrbitComponent = (props: IOrbitProps) => {
     //   // globalPlaneB
     // ];
 
-    camera.position.set(11.19436600277133, 12.236519880683824, 12.723191882907665);
+    camera.position.set(-28.59821177010701, 14.644400463539876, 28.36975612282989);
     controlsRef.current.target.set(0, 0, 0);
     camera.near = 1;
     controlsRef.current.minPolarAngle = 0; // Math.PI / 4; // how far above ground the map can be tilted, 0 == vertical
