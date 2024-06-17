@@ -29,6 +29,8 @@ const GaugeComponent = (props: IGaugeProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recent, recordKey]);
 
+  // console.log('height', height);
+
   return (
     <Stack
       ref={stackRef}
@@ -37,24 +39,27 @@ const GaugeComponent = (props: IGaugeProps) => {
       }}
     >
       <Typography
-        sx={{ textAlign: 'center', padding: '20px' }}
+        variant='caption'
+        sx={{ textAlign: 'center', padding: '10px 0px 10px 10px' }}
       >{roomId}</Typography>
       <Stack spacing={1}
         sx={{ display: 'flex', flexGrow: 5, flexDirection: 'column', width: `100%`, height: `100%`, margin: `0px`, padding: '10px' }}
       >
         <Gauge
-          height={height * 0.7}
+          height={height >= 100 ? height * 0.7 : height}
           value={recent[recent.length - 1]}
           startAngle={-110}
           endAngle={110}
           valueMin={SERIES_DEFS[recordKey].getGaugeMin(recent[recent.length - 1])}
           valueMax={SERIES_DEFS[recordKey].getGaugeMax(recent[recent.length - 1])}
-          innerRadius={'70%'}
+          innerRadius={'60%'}
+          outerRadius={'100%'}
           cornerRadius={2}
-
           sx={{
             [`& .${gaugeClasses.valueText}`]: {
-              fontSize: 14
+              fontSize: 14,
+              transform: 'translateY(20px)',
+
             },
             [`& .${gaugeClasses.valueArc} `]: {
               fill: color,
@@ -72,20 +77,23 @@ const GaugeComponent = (props: IGaugeProps) => {
           }}
           text={SERIES_DEFS[recordKey].valueFormatter(recent[recent.length - 1])}
         />
-        <SparkLineChart
-          height={height * 0.3}
-          // plotType="bar"
-          data={recent}
-          sx={{
-            height: '30%',
-            border: '1px solid #444444',
-            borderRadius: '5px',
-            [`& .MuiLineElement-root`]: {
-              stroke: '#aaaaaa',
-              strokeWidth: 3
-            },
-          }}
-        />
+        {
+          height >= 100 ? <SparkLineChart
+            height={height * 0.3}
+            // plotType="bar"
+            data={recent}
+            sx={{
+              height: '30%',
+              border: '1px solid #444444',
+              borderRadius: '5px',
+              [`& .MuiLineElement-root`]: {
+                stroke: '#aaaaaa',
+                strokeWidth: 3
+              },
+            }}
+          /> : null
+        }
+
       </Stack>
 
     </Stack>

@@ -471,7 +471,7 @@ const ChartComponent = (props: IChartProps) => {
         }
         }
       ></LineChart >
-      <FormControl variant="outlined" sx={{ margin: '10px' }}>
+      <FormControl variant="outlined" sx={{ margin: '10px' }} size='small'>
         <InputLabel id="prop-label" size='small'>time range</InputLabel>
         <Select
           value={timeRange}
