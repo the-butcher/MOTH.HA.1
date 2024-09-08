@@ -1,10 +1,17 @@
+import { ISunProps } from "../types/ISunProps";
+import SunCalc from 'suncalc';
+
 /**
  * utility class for time related functionality
  */
 export class TimeUtil {
+
   static readonly MILLISECONDS_PER_MINUTE = 1000 * 60;
   static readonly MILLISECONDS_PER_HOUR = TimeUtil.MILLISECONDS_PER_MINUTE * 60;
   static readonly MILLISECONDS_PER__DAY = TimeUtil.MILLISECONDS_PER_HOUR * 24;
+
+  public static readonly LATITUDE = 48.21;
+  public static readonly LONGITUDE = 16.49;
 
   /**
    * formats the given instants to yyyyMMddHHmm_yyyyMMddHHmm
@@ -15,6 +22,17 @@ export class TimeUtil {
    */
   static getExportName(type: string, instantA: number, instantB: number) {
     return `mothdat_${TimeUtil.toExportDateTime(new Date(instantA))}_${TimeUtil.toExportDateTime(new Date(instantB))}.${type}`;
+  }
+
+  static getSunProps(): ISunProps {
+
+    const times = SunCalc.getTimes(new Date(), TimeUtil.LATITUDE, TimeUtil.LONGITUDE);
+    return {
+      sunInstant: Date.now(),
+      sunriseInstant: times.sunrise.getTime(),
+      sunsetInstant: times.sunset.getTime()
+    };
+
   }
 
   /**

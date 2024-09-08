@@ -1,21 +1,147 @@
-import { LineSegments, Mesh, Vector3 } from "three";
-import { Line2, LineGeometry } from "three/examples/jsm/Addons.js";
+import { BufferAttribute, BufferGeometry, Group, LineSegments, Mesh, Vector3 } from "three";
+import { Font, Line2, LineGeometry, TextGeometry, TTFLoader } from "three/examples/jsm/Addons.js";
 import { Edge3D } from "../impl/Edge3D";
 import { Triangle3D } from "../impl/Triangle3D";
-import { ICoordinate2D } from "../types/ICoordinate2D";
 import { IEdge3D, TEdgeComparison } from "../types/IEdge3D";
+import { ILineDescription, LINE_DESCRIPTIONS } from "../types/ILineDescription";
 import { ITriangle3D } from "../types/ITriangle3D";
 import { MaterialRepo } from "./MaterialRepo";
-import { IPolygon2D } from "../types/IPolygon2D";
-import { Polygon2D } from "../impl/Polygon2D";
+import { IColorDescription } from "../types/IColorDescription";
+
 
 export class PolygonUtil {
 
-    static toLine2(segments: LineSegments): Line2 {
+    static font: Font;
+
+    static async getFont(): Promise<Font> {
+
+        if (!this.font) {
+            const fontData = await new TTFLoader().loadAsync('./smb.ttf');
+            this.font = new Font(fontData);
+        }
+        return this.font;
+
+    }
+
+    static createTextMesh(label: string, parent: Group, colorDesc: IColorDescription) {
+
+        this.getFont().then(() => {
+
+            const textGeom = new TextGeometry(label, {
+                font: this.font,
+                size: 0.3,
+                depth: 0.00,
+                curveSegments: 12,
+                bevelThickness: 0.005,
+                bevelSize: 0.005,
+                bevelEnabled: false
+            });
+            textGeom.computeBoundingBox();
+            textGeom.computeVertexNormals();
+
+            const textMesh = new Mesh(textGeom, MaterialRepo.getMaterialFace(colorDesc));
+            textMesh.castShadow = true;
+            textMesh.receiveShadow = true;
+            textMesh.name = 'ArrowHelper';
+
+            parent.clear();
+            parent.add(textMesh);
+
+            const outerRings: IEdge3D[][] = PolygonUtil.findOuterRings(textMesh);
+            const sgmtsArray: LineSegments[] = PolygonUtil.toSgmt(outerRings, 'ArrowHelper', textMesh.position, {
+                ...LINE_DESCRIPTIONS['misc_gray'],
+                opacity: 0.10
+            });
+            sgmtsArray.forEach(sgmts => {
+                parent.add(sgmts);
+            });
+
+        });
+
+    }
+
+    static toSgmt(outerRings: IEdge3D[][], name: string, position: Vector3, lineDesc: ILineDescription): LineSegments[] {
+
+        const filteredEdges: IEdge3D[] = [];
+        outerRings.forEach(outerRing => {
+            outerRing.forEach(outerEdge => {
+
+                let isDuplicate = false;
+                filteredEdges.forEach(filteredEdge => {
+                    const comparison = outerEdge.compare(filteredEdge);
+                    if (comparison === 'equals_ab' || comparison === 'equals_ba') {
+                        isDuplicate = true;
+                    }
+                });
+                if (!isDuplicate) {
+                    filteredEdges.push(outerEdge);
+                } else {
+                    // console.log('found duplicate');
+                }
+
+            });
+        });
+
+        const lineSegmentArray: LineSegments[] = [];
+
+        const lineSegmentPositionsA: number[] = [];
+        filteredEdges.forEach(filteredEdge => {
+            lineSegmentPositionsA.push(filteredEdge.pointA.x);
+            lineSegmentPositionsA.push(filteredEdge.pointA.y);
+            lineSegmentPositionsA.push(filteredEdge.pointA.z);
+            lineSegmentPositionsA.push(filteredEdge.pointB.x);
+            lineSegmentPositionsA.push(filteredEdge.pointB.y);
+            lineSegmentPositionsA.push(filteredEdge.pointB.z);
+        });
+        const lineSegmentPositionsB = new Float32Array(lineSegmentPositionsA);
+
+        const geometry = new BufferGeometry();
+        geometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
+
+        const material = MaterialRepo.getMaterialSgmt(lineDesc);
+        const lineSegments = new LineSegments(geometry, material);
+        lineSegments.position.set(position.x, position.y, position.z);
+        lineSegments.updateMatrixWorld();
+        lineSegments.name = name;
+        lineSegmentArray.push(lineSegments);
+
+
+        // const lineSegmentArray: LineSegments[] = [];
+        // outerRings.forEach(outerRing => {
+
+        //     const lineSegmentPositionsA: number[] = [];
+        //     outerRing.forEach(outerEdge => {
+        //         lineSegmentPositionsA.push(outerEdge.pointA.x);
+        //         lineSegmentPositionsA.push(outerEdge.pointA.y);
+        //         lineSegmentPositionsA.push(outerEdge.pointA.z);
+        //         lineSegmentPositionsA.push(outerEdge.pointB.x);
+        //         lineSegmentPositionsA.push(outerEdge.pointB.y);
+        //         lineSegmentPositionsA.push(outerEdge.pointB.z);
+        //     });
+        //     const lineSegmentPositionsB = new Float32Array(lineSegmentPositionsA);
+
+        //     const geometry = new BufferGeometry();
+        //     geometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
+
+        //     const material = MaterialRepo.getMaterialSgmt(lineDesc);
+        //     const lineSegments = new LineSegments(geometry, material);
+        //     lineSegments.position.set(position.x, position.y, position.z);
+        //     lineSegments.updateMatrixWorld();
+        //     lineSegments.name = name;
+        //     lineSegmentArray.push(lineSegments);
+
+        // });
+
+        return lineSegmentArray;
+
+    }
+
+    static toLine2(segments: LineSegments, lineDesc: ILineDescription): Line2 {
 
         const positions1: number[] = [...segments.geometry.attributes['position'].array];
 
         const positions2: number[] = [positions1[0], positions1[1], positions1[2]]; // point A of first segment
+        // one segment at a time
         for (let i = 0; i < positions1.length / 6; i++) {
             positions2.push(positions1[i * 6 + 3]);
             positions2.push(positions1[i * 6 + 4]);
@@ -26,54 +152,55 @@ export class PolygonUtil {
         const geometry = new LineGeometry();
         geometry.setPositions(positions2);
 
-        const line2 = new Line2(geometry, MaterialRepo.getMaterialLine('none'));
+        const line2 = new Line2(geometry, MaterialRepo.getMaterialLine(lineDesc));
         line2.computeLineDistances();
         line2.scale.set(1, 1, 1);
         line2.position.set(segments.position.x, segments.position.y, segments.position.z);
         line2.name = segments.name;
+        line2.castShadow = true;
+        line2.receiveShadow = true;
 
         return line2;
 
     }
 
-    static toPolygon2D(segments: LineSegments, face: Mesh): IPolygon2D {
+    // static toPolygon2D(segments: LineSegments, face: Mesh): IPolygon2D {
 
-        const positions1: number[] = [...segments.geometry.attributes['position'].array];
+    //     const positions1: number[] = [...segments.geometry.attributes['position'].array];
 
-        const coordinates: ICoordinate2D[] = [];
-        let posLocal: Vector3;
-        let posWorld: Vector3;
+    //     const coordinates: ICoordinate2D[] = [];
+    //     let posLocal: Vector3;
+    //     let posWorld: Vector3;
 
-        // first coordinate
-        posLocal = new Vector3(positions1[0], positions1[1], positions1[2]);
-        posWorld = face.localToWorld(posLocal.clone());
-        coordinates.push({
-            x: posWorld.x,
-            y: posWorld.z
-        });
-        // console.log('posWorld', posWorld);
-        const z = posWorld.y;
-        for (let i = 0; i < positions1.length / 6; i++) {
-            posLocal = new Vector3(positions1[i * 6 + 3], positions1[i * 6 + 4], positions1[i * 6 + 5]);
-            posWorld = face.localToWorld(posLocal.clone());
-            coordinates.push({
-                x: posWorld.x,
-                y: posWorld.z
-            });
-            // console.log('posWorld', posWorld);
-        }
+    //     // first coordinate
+    //     posLocal = new Vector3(positions1[0], positions1[1], positions1[2]);
+    //     posWorld = face.localToWorld(posLocal.clone());
+    //     coordinates.push({
+    //         x: posWorld.x,
+    //         y: posWorld.z
+    //     });
+    //     // console.log('posWorld', posWorld);
+    //     const z = posWorld.y;
+    //     for (let i = 0; i < positions1.length / 6; i++) {
+    //         posLocal = new Vector3(positions1[i * 6 + 3], positions1[i * 6 + 4], positions1[i * 6 + 5]);
+    //         posWorld = face.localToWorld(posLocal.clone());
+    //         coordinates.push({
+    //             x: posWorld.x,
+    //             y: posWorld.z
+    //         });
+    //         // console.log('posWorld', posWorld);
+    //     }
 
-        return new Polygon2D(face.name, coordinates, z);
+    //     return new Polygon2D(face.name, coordinates, z);
 
-    }
+    // }
 
     static findOuterRings(mesh: Mesh): IEdge3D[][] {
 
         const positions: number[] = [...mesh.geometry.attributes['position'].array];
         const normals: number[] = [...mesh.geometry.attributes['normal'].array];
-        // console.log('positions', positions, 'normals', normals);
 
-        // const allEdges: IEdge3D[] = [];
+        // collect triangles
         const allTriangles: ITriangle3D[] = [];
         for (let i = 0; i < positions.length; i += 9) {
             const edgeA = new Edge3D(new Vector3(positions[i + 0], positions[i + 1], positions[i + 2]), new Vector3(positions[i + 3], positions[i + 4], positions[i + 5]));
@@ -190,8 +317,6 @@ export class PolygonUtil {
             }
 
         }
-
-        // console.log('outerRings', outerRings);
 
         return outerRings;
 

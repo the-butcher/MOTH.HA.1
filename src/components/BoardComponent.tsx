@@ -1,106 +1,91 @@
-import BatteryStdIcon from '@mui/icons-material/BatteryStd';
-import Co2Icon from '@mui/icons-material/Co2';
-import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
-import SpeedIcon from '@mui/icons-material/Speed';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
-import GrainIcon from '@mui/icons-material/Grain';
-
-import { Grid, Paper, Slider, Stack, Tab, Tabs } from '@mui/material';
-import { ReactElement } from 'react';
+import HolidayVillageIcon from '@mui/icons-material/HolidayVillage';
+import HomeIcon from '@mui/icons-material/Home';
+import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
+import { BottomNavigation, BottomNavigationAction, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Slider } from '@mui/material';
+import { SyntheticEvent, useEffect, useRef } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
-import { IChartProps } from '../types/IChartProps';
-import { TRecordKey } from '../types/IRecord';
-import ChartComponent from './ChartComponent';
-import GaugeComponent from './GaugeComponent';
-import LabelComponent from './LabelComponent';
-import LockComponent from './LockComponent';
+import { TimeUtil } from '../util/TimeUtil';
+import { TCameraKey } from '../types/IOrbitProps';
 
-export interface ISpeedDialDef {
-  recordKey: TRecordKey;
-  icon: ReactElement;
-}
+const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const SPEED_DIAL_DEFS: ISpeedDialDef[] = [
-  {
-    recordKey: 'co2_lpf',
-    icon: <Co2Icon />,
-  },
-  {
-    recordKey: 'pm025',
-    icon: <GrainIcon />,
-  },
-  {
-    recordKey: 'deg',
-    icon: <DeviceThermostatIcon />,
-  },
-  {
-    recordKey: 'hum',
-    icon: <WaterDropIcon />,
-  },
-  {
-    recordKey: 'hpa',
-    icon: <SpeedIcon />,
-  },
-  {
-    recordKey: 'bat',
-    icon: <BatteryStdIcon />,
-  },
-];
+  // const { labels, recordKeyApp, clipPlane, handleRecordKey, handleClipPlane, handleCameraKey } = { ...props };
+  const { sun, handleSunInstant, confirmProps, cameraKey, handleCameraKey } = { ...props };
 
-const BoardComponent = (props: IBoardProps & IChartProps) => {
+  // const getSliderHeight = () => {
+  //   return window.innerHeight - 80;
+  // }
 
-  const { labels, recordKeyApp, clipPlane, handleRecordKey, handleClipPlane } = { ...props };
+  // const getSliderWidth = () => {
+  //   return window.innerWidth - 80;
+  // }
 
-  //  value={value} onChange={handleChange}
+  /**
+   * component init hook
+   */
+  useEffect(() => {
 
-  const getControlsWidth = () => {
-    if (window.innerWidth > window.innerHeight) {
-      return window.innerWidth / 2 - 40;
-    } else {
-      return window.innerWidth - 40;
-    }
+    console.debug('✨ building board component');
+
+    window.clearTimeout(setSunInstantTo.current);
+    setSunInstantTo.current = window.setTimeout(() => {
+      handleSunInstantChange(Date.now());
+    }, 60000); // update every minute
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // const marks = [
+  //   {
+  //     value: 0.2,
+  //     label: '0.2m - ground',
+  //   },
+  //   {
+  //     value: 3.0,
+  //     label: '3.0m - 1st',
+  //   },
+  //   {
+  //     value: 5.8,
+  //     label: '5.8m - 2nd',
+  //   },
+  //   {
+  //     value: 8.6,
+  //     label: '8.6m - roof',
+  //   },
+  // ];
+
+  const valueLabelFormat = (value: number) => {
+    return TimeUtil.toLocalTime(value);
   }
 
-  const getControlsHeight = () => {
-    if (window.innerWidth > window.innerHeight) {
-      return window.innerHeight - 40;
-    } else {
-      return window.innerHeight / 2 - 40;
-    }
+  const setSunInstantTo = useRef<number>(-1);
+  const handleSunInstantChange = (value: number) => {
+
+    handleSunInstant(value);
+
+    window.clearTimeout(setSunInstantTo.current);
+    setSunInstantTo.current = window.setTimeout(() => {
+      handleSunInstantChange(Date.now());
+    }, 60000);
+
   }
 
-  const getSliderHeight = () => {
-    if (window.innerWidth > window.innerHeight) {
-      return window.innerHeight - 80;
-    } else {
-      return window.innerHeight / 2 - 80;
-    }
-  }
+  const handleSunInstantCommit = (value: number) => {
 
-  const marks = [
-    {
-      value: 0.2,
-      label: '0.2m - ground',
-    },
-    {
-      value: 3.0,
-      label: '3.0m - 1st',
-    },
-    {
-      value: 5.8,
-      label: '5.8m - 2nd',
-    },
-    {
-      value: 8.6,
-      label: '8.6m - roof',
-    },
-  ];
+    handleSunInstant(value);
+
+    // reset after 5 seconds
+    window.clearTimeout(setSunInstantTo.current);
+    setSunInstantTo.current = window.setTimeout(() => {
+      handleSunInstantChange(Date.now());
+    }, 600000);
+
+  }
 
   return (
     <>
 
-      <Slider
+      {/* <Slider
         sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '20px', bottom: '40px', height: `${getSliderHeight()}px` }}
         orientation="vertical"
         value={clipPlane}
@@ -109,10 +94,76 @@ const BoardComponent = (props: IBoardProps & IChartProps) => {
         valueLabelDisplay="off"
         step={0.7}
         marks={marks}
-        onChange={(_e, value) => handleClipPlane(value as number)}
+        onChange={(_e: Event, value: number | number[]) => handleClipPlane(value as number)}
+      /> */}
+
+      <Slider
+        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
+        orientation="horizontal"
+        value={sun.sunInstant}
+        min={sun.sunriseInstant}
+        max={sun.sunsetInstant}
+        valueLabelDisplay="on"
+        step={1000 * 60}
+        getAriaValueText={valueLabelFormat}
+        valueLabelFormat={valueLabelFormat}
+        onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
+        onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
+        marks={
+          [
+            {
+              value: sun.sunriseInstant,
+              label: valueLabelFormat(sun.sunriseInstant),
+            },
+            {
+              value: sun.sunsetInstant,
+              label: valueLabelFormat(sun.sunsetInstant),
+            }
+          ]
+        }
       />
 
-      <Paper
+      <BottomNavigation sx={{ display: 'flex', flexDirection: 'row', zIndex: 300 }} value={cameraKey} onChange={(_e: SyntheticEvent, value: TCameraKey) => handleCameraKey(value)} showLabels={true}>
+        <BottomNavigationAction
+          label="Schuppen"
+          value="pumps"
+          icon={<LocalDrinkIcon />}
+        />
+        <BottomNavigationAction
+          label="Haus"
+          value="home"
+          icon={<HomeIcon />}
+        />
+        <BottomNavigationAction
+          label="Häuser"
+          value="quarter"
+          icon={<HolidayVillageIcon />}
+        />
+      </BottomNavigation>
+
+      {
+        confirmProps ? <Dialog
+          open={true}
+          // onClose={handleCancel}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">
+            {confirmProps.getTitle()}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              {confirmProps.getContent()}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button id={'cancelbutton'} onClick={confirmProps.handleCancel} autoFocus>nein</Button>
+            <Button id={'confirmbutton'} onClick={confirmProps.handleConfirm}>ja</Button>
+          </DialogActions>
+        </Dialog> : null
+      }
+
+      {/* <Paper
         elevation={3}
         sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, width: `${getControlsWidth()}px`, height: `${getControlsHeight()}px`, right: '20px', top: '20px', backgroundColor: 'rgba(100, 100, 100, 0.60)' }}
       >
@@ -149,18 +200,18 @@ const BoardComponent = (props: IBoardProps & IChartProps) => {
                 xs={6}
                 key={label.sensorId}
               >
-                <GaugeComponent key={label.sensorId} {...label} height={(getControlsHeight() - 220) / Math.ceil(labels.length / 2)} />
+                <GaugeComponent key={label.sensorId} {...label} height={(getControlsHeight() - 180) / Math.ceil(labels.length / 2)} />
               </Grid>
             ))
           }
         </Grid>
 
-      </Paper >
-      {
+      </Paper > */}
+      {/* {
         labels.map((labels) => (
           <LabelComponent key={labels.sensorId} {...labels} />
         ))
-      }
+      } */}
 
     </>
   );

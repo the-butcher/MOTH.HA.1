@@ -13,6 +13,20 @@ export class ThemeUtil {
         },
       },
       components: {
+        MuiBottomNavigationAction: {
+          styleOverrides: {
+            root: {
+              '&.Mui-selected': {
+                color: '#0ca51c'
+              }
+            },
+            label: {
+              '&.Mui-selected': {
+                fontSize: '0.75rem'
+              }
+            }
+          }
+        },
         MuiTypography: {
           styleOverrides: {
             root: {

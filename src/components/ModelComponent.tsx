@@ -1,28 +1,31 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef, useState } from 'react';
-import { BufferAttribute, BufferGeometry, CapsuleGeometry, Group, LineSegments, Mesh, Object3D, Object3DEventMap, Vector2, Vector3 } from 'three';
-import { ColladaLoader, Line2 } from 'three/examples/jsm/Addons.js';
+import { useEffect, useRef } from 'react';
+import { Group, LineSegments, Mesh, Object3D, Object3DEventMap, Vector3 } from 'three';
+import { ColladaLoader } from 'three/examples/jsm/Addons.js';
 import { IEdge3D } from '../types/IEdge3D';
+import { FACE_DESCRIPTIONS, IFaceDescription, TFaceDescKey } from '../types/IFaceDescription';
+import { ILineDescription, LINE_DESCRIPTIONS, TLineDescKey } from '../types/ILineDescription';
 import { IModelProps } from '../types/IModelProps';
-import { IPolygon2D } from '../types/IPolygon2D';
-import { ISensor, ISensorPosition } from '../types/ISensor';
+import { STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
+import { MqttUtil } from '../util/MqttUtil';
 import { PolygonUtil } from '../util/PolygonUtil';
-import LightComponent from './LightCompoment';
 
 const ModelComponent = (props: IModelProps) => {
 
-  const { scene, lights, selection, clipPlane, handleSensors, handleSensorPositions } = { ...props };
+  // const { scene, lights, selection, clipPlane, handleSensors, handleSensorPositions } = { ...props };
+  const { scene: sceneUrl, clipPlane } = { ...props };
 
-  const { invalidate } = useThree();
+
+  const { scene, invalidate } = useThree();
 
   const groupRef = useRef<Group>(new Group());
   const floorRef = useRef<Group>(new Group());
 
-  const [namedMarks, setNamedMarks] = useState<Mesh[]>([]);
-  const [namedFaces, setNamedFaces] = useState<Mesh[]>([]);
-  const [namedLines, setNamedLines] = useState<Line2[]>([]);
-  const [sensors, setSensors] = useState<ISensor[]>([]);
+  // const [namedMarks, setNamedMarks] = useState<Mesh[]>([]);
+  // const [namedFaces, setNamedFaces] = useState<Mesh[]>([]);
+  // const [namedLines, setNamedLines] = useState<Line2[]>([]);
+  // const [sensors, setSensors] = useState<ISensor[]>([]);
 
   const findFacesRecursive = (children: Object3D<Object3DEventMap>[]): Mesh[] => {
     const planes: Mesh[] = [];
@@ -51,19 +54,18 @@ const ModelComponent = (props: IModelProps) => {
   const loadModel = () => {
 
     const loader = new ColladaLoader();
-    loader.loadAsync(scene).then((result) => {
+    loader.loadAsync(sceneUrl).then((result) => {
 
-      result.scene.position.x = -0.8;
+      // TODO :: get the scene centered where do these values come from
+      // result.scene.position.x = 1.5;
       result.scene.position.y = -3;
+      result.scene.position.z = -6;
+      // result.scene.scale.x = 0.1;
+      // result.scene.scale.y = 0.1;
+      // result.scene.scale.z = 0.1;
       // result.scene.position.z = 2;
-      // result.scene.rotateZ(3);
+      result.scene.rotateZ(-0.320); // north
       // console.log('scene', result.scene);
-
-
-      const polygons: IPolygon2D[] = [];
-      const _namedLines: Line2[] = [];
-      const _namedFaces: Mesh[] = [];
-      const _namedMarks: Mesh[] = [];
 
       const allFaces: Mesh[] = findFacesRecursive(result.scene.children);
       const allLines: LineSegments[] = findLinesRecursive(result.scene.children);
@@ -72,6 +74,7 @@ const ModelComponent = (props: IModelProps) => {
 
         let faceName: string = '';
         let object: Object3D | null = face;
+
         while (object) {
           faceName = object.name;
           if (faceName !== '') {
@@ -80,64 +83,59 @@ const ModelComponent = (props: IModelProps) => {
           object = object.parent;
         }
 
-        face.castShadow = true;
-        face.receiveShadow = true;
-        face.name = faceName;
-
         if (faceName.startsWith('room')) {
-          face.material = MaterialRepo.getMaterialFace('none');
-          _namedFaces.push(face);
-        } else if (faceName.startsWith('stairs')) {
-          face.material = MaterialRepo.getMaterialFace('none');
-        } else {
-          face.material = MaterialRepo.getMaterialFace('wall');
+          faceName = 'room';
         }
 
-        // find outer edges of this element
-        const outerRings: IEdge3D[][] = PolygonUtil.findOuterRings(face);
-
-        outerRings.forEach(outerRing => {
-
-          // each distinct polygon (but segments are unordered and also not split to main polygon and holes)
-
-          const lineSegmentPositionsA: number[] = [];
-          outerRing.forEach(outerEdge => {
-            lineSegmentPositionsA.push(outerEdge.pointA.x);
-            lineSegmentPositionsA.push(outerEdge.pointA.y);
-            lineSegmentPositionsA.push(outerEdge.pointA.z);
-            lineSegmentPositionsA.push(outerEdge.pointB.x);
-            lineSegmentPositionsA.push(outerEdge.pointB.y);
-            lineSegmentPositionsA.push(outerEdge.pointB.z);
-          });
-          const lineSegmentPositionsB = new Float32Array(lineSegmentPositionsA);
-
-          const geometry = new BufferGeometry();
-          geometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
-
-          const material = faceName.startsWith('stairs') ? MaterialRepo.getMaterialSgmt('none') : MaterialRepo.getMaterialSgmt('wall');
-          const lineSegments = new LineSegments(geometry, material);
-          lineSegments.position.set(face.position.x, face.position.y, face.position.z);
-          lineSegments.updateMatrixWorld();
-          lineSegments.name = face.name;
-
-          const line2 = PolygonUtil.toLine2(lineSegments);
-          if (faceName.startsWith('room')) {
-            face.parent?.add(line2);
-          } else { // if (faceName.startsWith('stairs'))
-            face.parent?.add(lineSegments);
+        // console.log('faceName', faceName);
+        const faceDescKeys: TFaceDescKey[] = Object.keys(FACE_DESCRIPTIONS) as TFaceDescKey[];
+        let faceDesc: IFaceDescription | undefined;
+        faceDescKeys.forEach((faceDescKey: TFaceDescKey) => {
+          if (faceName.startsWith(faceDescKey)) {
+            faceDesc = FACE_DESCRIPTIONS[faceDescKey];
+            faceName = faceDescKey;
           }
-          _namedLines.push(line2);
-
-          const polygon = PolygonUtil.toPolygon2D(lineSegments, face);
-          polygons.push(polygon);
-
         });
+        if (faceDesc) {
+
+          face.name = faceName; // reassign, since the original occurence of name may have been somewhere else in the hierarchy
+
+          STATUS_HANDLERS[faceName as TStatusHandlerKey]?.faces.push(face);
+
+          face.material = MaterialRepo.getMaterialFace(faceDesc);
+          if (faceDesc.lineDesc.lineStyle !== 'none') {
+
+            // find outer edges of this element
+            const outerRings: IEdge3D[][] = PolygonUtil.findOuterRings(face);
+            const sgmtsArray: LineSegments[] = PolygonUtil.toSgmt(outerRings, faceName, face.position, faceDesc.lineDesc);
+            sgmtsArray.forEach(sgmts => {
+              if (faceDesc!.lineDesc.lineStyle === 'thin') {
+                face.parent?.add(sgmts);
+                // todo :: add to segments on status handler if applicable
+                STATUS_HANDLERS[faceName as TStatusHandlerKey]?.sgmts.push(sgmts);
+              } else if (faceDesc!.lineDesc.lineStyle === 'wide') {
+                const line2 = PolygonUtil.toLine2(sgmts, faceDesc!.lineDesc);
+                face.parent?.add(line2);
+                STATUS_HANDLERS[faceName as TStatusHandlerKey]?.lines.push(line2);
+                // todo :: add to outlines on status handler if applicable
+              }
+            });
+
+          }
+
+        } else { // unnamed
+
+          face.material = MaterialRepo.getMaterialFace(FACE_DESCRIPTIONS['misc_gray']);
+
+        }
+
+        face.castShadow = face.material.opacity >= 0.50;
+        face.receiveShadow = true;
 
       });
 
-      // find sensor markers now
-      const _sensors: ISensor[] = [];
       allLines.forEach((line1) => {
+
         let lineName: string = '';
         let object: Object3D | null = line1;
 
@@ -150,76 +148,79 @@ const ModelComponent = (props: IModelProps) => {
           object = object.parent;
         }
 
-        if (lineName.startsWith('sensor')) {
+        const lineDescKeys: TLineDescKey[] = Object.keys(LINE_DESCRIPTIONS) as TLineDescKey[];
+        let lineDesc: ILineDescription | undefined;
+        lineDescKeys.forEach((lineDescKey: TLineDescKey) => {
+          if (lineName.startsWith(lineDescKey)) {
+            lineDesc = LINE_DESCRIPTIONS[lineDescKey];
+            lineName = lineDescKey;
+          }
+        });
+        if (lineDesc) {
 
-          const positionsA: number[] = [...line1.geometry.attributes['position'].array];
-          const posLocal = new Vector3(positionsA[0], positionsA[1], positionsA[2]);
-          const posWorld = line1.localToWorld(posLocal);
+          // console.log('line1.name (label)', line1.name);
+          if (line1.name.endsWith('_label')) {
 
-          const capGeom = new CapsuleGeometry(0.1, 0.1, 3, 12);
-          capGeom.computeVertexNormals();
-          const capMesh = new Mesh(capGeom, MaterialRepo.getMaterialMark('none'));
-          capMesh.receiveShadow = false;
-          capMesh.castShadow = false;
-          capMesh.position.set(posWorld.x, posWorld.y, posWorld.z);
+            const positions: number[] = [...line1.geometry.attributes['position'].array];
+            // console.log('positions', positions);
 
-          line1.parent?.remove(line1);
+            const textGroupOuter = new Group();
+            const textGroupInner = new Group();
 
-          const sensorId = lineName.substring('sensor_'.length).replace('_', '/');
-          let roomId = '';
-          polygons.forEach((polygon) => {
-            if (
-              polygon.contains({
-                x: posWorld.x,
-                y: posWorld.z,
-              }, posWorld.y)
-            ) {
-              roomId = polygon.name;
+            const p0 = line1.localToWorld(new Vector3(positions[0], positions[1], positions[2]));
+            const p1 = line1.localToWorld(new Vector3(positions[3], positions[4], positions[5]));
+            const p2 = line1.localToWorld(new Vector3(positions[9], positions[10], positions[11]));
+
+            const p10 = p0.clone().sub(p1).normalize();
+            const p12 = p2.clone().sub(p1).normalize();
+
+            textGroupOuter.position.x = p1.x;
+            textGroupOuter.position.y = p1.y;
+            textGroupOuter.position.z = p1.z;
+
+            // the target normal of the text
+            const axisNormal0 = p12.clone().cross(p10.clone()).normalize();
+
+            textGroupOuter.lookAt(p1.clone().add(axisNormal0));
+            textGroupInner.rotateZ(Math.PI / 2);
+
+            line1.visible = false;
+            textGroupOuter.add(textGroupInner);
+            scene.add(textGroupOuter);
+
+            STATUS_HANDLERS[lineName as TStatusHandlerKey]?.texts.push(textGroupInner);
+
+          } else {
+
+            line1.name = lineName; // reassign, since the original occurence of name may have been somewhere else in the hierarchy
+
+            if (lineDesc.lineStyle === 'thin') {
+              line1.material = MaterialRepo.getMaterialSgmt(lineDesc);
+              STATUS_HANDLERS[lineName as TStatusHandlerKey]?.sgmts.push(line1);
+            } else if (lineDesc.lineStyle === 'wide') {
+              const line2 = PolygonUtil.toLine2(line1, lineDesc);
+              line1.visible = false;
+              line1.parent?.add(line2);
+              STATUS_HANDLERS[lineName as TStatusHandlerKey]?.lines.push(line2);
             }
-          });
 
-          capMesh.name = roomId;
-          _namedMarks.push(capMesh);
-          groupRef.current.add(capMesh);
+          }
 
-          _sensors.push({
-            sensorId,
-            roomId,
-            recordKeys: [],
-            levelId: 'none',
-            position3D: posWorld,
-          });
+        } else { // unnamed
 
-        } else {
-          line1.material = MaterialRepo.getMaterialSgmt('none');
+          line1.material = MaterialRepo.getMaterialSgmt(LINE_DESCRIPTIONS['misc_gray']);
+
         }
+
       });
 
-      setSensors(_sensors);
-      setNamedLines(_namedLines);
-      setNamedFaces(_namedFaces);
-      setNamedMarks(_namedMarks);
+
+      // console.log('STATUS_HANDLERS', STATUS_HANDLERS);
+      window.setTimeout(() => {
+        MqttUtil.setup();
+      }, 1000);
 
       groupRef.current.add(result.scene);
-
-      // const faceValFloor = 100;
-      // const floorMtrl = new MeshPhysicalMaterial({
-      //   color: new Color(`rgb(${faceValFloor}, ${faceValFloor}, ${faceValFloor})`),
-      //   roughness: 0.75,
-      //   metalness: 0.0,
-      //   reflectivity: 0.5,
-      //   side: FrontSide,
-      //   transparent: false,
-      //   opacity: 1,
-      //   wireframe: false,
-      // });
-
-      // const floorGeom = new PlaneGeometry(100, 100, 10, 10); // new CapsuleGeometry(7, 50, 36, 72);
-      // floorGeom.translate(0, 0, -7);
-      // floorGeom.computeVertexNormals();
-      // const floorMesh = new Mesh(floorGeom, floorMtrl);
-      // floorMesh.receiveShadow = true;
-      // floorRef.current.add(floorMesh);
 
       invalidate();
 
@@ -237,39 +238,6 @@ const ModelComponent = (props: IModelProps) => {
   }, []);
 
   useEffect(() => {
-    console.debug('⚙ updating model component (selection)', selection);
-
-    namedLines.forEach((namedLine) => {
-      if (selection.rooms[namedLine.name]) {
-        namedLine.material = MaterialRepo.getMaterialLine(selection.rooms[namedLine.name]);
-      }
-    });
-    namedFaces.forEach((namedFace) => {
-      if (selection.rooms[namedFace.name]) {
-        namedFace.material = MaterialRepo.getMaterialFace(selection.rooms[namedFace.name]);
-      }
-    });
-    namedMarks.forEach((namedMark) => {
-      if (selection.rooms[namedMark.name]) {
-        namedMark.material = MaterialRepo.getMaterialMark(selection.rooms[namedMark.name]);
-      }
-    });
-    invalidate();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selection]);
-
-  useEffect(() => {
-    console.debug('⚙ updating model component (sensors)', sensors);
-    if (sensors.length > 0) {
-      handleSensors(sensors);
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sensors]);
-
-
-  useEffect(() => {
 
     console.debug('⚙ updating model component (clipPlane)', clipPlane);
 
@@ -280,23 +248,24 @@ const ModelComponent = (props: IModelProps) => {
   }, [clipPlane]);
 
   useFrame(({ camera }) => {
+
     MaterialRepo.updateMaterialLineResolution(); // does not have to happen on every frame
 
-    const widthHalf = window.innerWidth / 2;
-    const heightHalf = window.innerHeight / 2;
+    // const widthHalf = window.innerWidth / 2;
+    // const heightHalf = window.innerHeight / 2;
 
     // rebuild sensors with their projected screen cooordinates
-    const sensorPositions: ISensorPosition[] = [];
-    sensors.forEach((sensor) => {
-      const pos = sensor.position3D.clone();
-      pos.project(camera);
-      sensorPositions.push({
-        ...sensor,
-        position2D: new Vector2(pos.x * widthHalf + widthHalf, -(pos.y * heightHalf) + heightHalf),
-      });
-    }, 1);
+    // const sensorPositions: ISensorPosition[] = [];
+    // sensors.forEach((sensor) => {
+    //   const pos = sensor.position3D.clone();
+    //   pos.project(camera);
+    //   sensorPositions.push({
+    //     ...sensor,
+    //     position2D: new Vector2(pos.x * widthHalf + widthHalf, -(pos.y * heightHalf) + heightHalf),
+    //   });
+    // }, 1);
 
-    handleSensorPositions(sensorPositions);
+    // handleSensorPositions(sensorPositions);
 
     floorRef.current.lookAt(camera.position.clone());
     floorRef.current.rotateZ(Math.PI / 2);
@@ -306,12 +275,11 @@ const ModelComponent = (props: IModelProps) => {
 
   return (
     <>
-
-      <group ref={floorRef}>
+      {/* <group ref={floorRef}>
         {lights.map((light) => (
           <LightComponent key={light.id} {...light} />
         ))}
-      </group>
+      </group> */}
       <group ref={groupRef} />
     </>
   );

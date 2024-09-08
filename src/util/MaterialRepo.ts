@@ -1,11 +1,10 @@
-import { Color, DoubleSide, FrontSide, LineBasicMaterial, MeshPhysicalMaterial, Plane, Vector3 } from 'three';
-import { TLevel } from '../types/ISensor';
+import { Color, DoubleSide, LineBasicMaterial, MeshPhysicalMaterial, Plane, Vector3 } from 'three';
 import { LineMaterial } from 'three/examples/jsm/Addons.js';
+import { IColorDescription } from '../types/IColorDescription';
 
 export class MaterialRepo {
 
   private static MATERIALS_FACE: { [k in string]: MeshPhysicalMaterial } = {};
-  private static MATERIALS_MARK: { [k in string]: MeshPhysicalMaterial } = {};
   private static MATERIALS_LINE: { [k in string]: LineMaterial } = {};
   private static MATERIALS_SGMT: { [k in string]: LineBasicMaterial } = {};
   private static CLIP_PLANE = new Plane(new Vector3(0, -1, 0), -2.7);
@@ -14,126 +13,85 @@ export class MaterialRepo {
     MaterialRepo.CLIP_PLANE.constant = clipPlane - 2.7;
   }
 
-  static getMaterialSgmt(level: TLevel): LineBasicMaterial {
-    if (!this.MATERIALS_SGMT[level]) {
-      const segmValDefault = 80;
+  static toCode(type: string, rgb: number, opacity: number): string {
+    return `${type}_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+  }
+
+  static getMaterialSgmt(colorDesc: IColorDescription): LineBasicMaterial {
+
+    const code = this.toCode('face', colorDesc.rgb, 1); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+    if (!this.MATERIALS_SGMT[code]) {
+
       const clippingPlanes: Plane[] = [
         this.CLIP_PLANE
       ];
-      let color = new Color(`rgb(${segmValDefault}, ${segmValDefault}, ${segmValDefault})`);
-      if (level === 'norm') {
-        color = new Color(`rgb(${segmValDefault}, 200, ${segmValDefault})`);
-      } else if (level === 'warn') {
-        color = new Color(`rgb(200, 200, ${segmValDefault})`);
-      } else if (level === 'risk') {
-        color = new Color(`rgb(255, ${segmValDefault}, ${segmValDefault})`);
-      } else if (level === 'none') {
-        // just stick with the color, but no clipping plane
-      } else { // i.e. a wall
-        // clippingPlanes.push(this.CLIP_PLANE);
-      }
-      MaterialRepo.MATERIALS_SGMT[level] = new LineBasicMaterial({
-        color,
+
+      MaterialRepo.MATERIALS_SGMT[code] = new LineBasicMaterial({
+        color: new Color(colorDesc.rgb),
+        opacity: colorDesc.opacity,
+        transparent: true,
         clippingPlanes,
         clipShadows: clippingPlanes.length > 0,
       });
     }
-    return MaterialRepo.MATERIALS_SGMT[level];
+
+    return MaterialRepo.MATERIALS_SGMT[code];
+
   }
 
-  static getMaterialFace(level: TLevel): MeshPhysicalMaterial {
-    if (!this.MATERIALS_FACE[level]) {
-      const faceValDefault = 100;
+  static getMaterialFace(colorDesc: IColorDescription): MeshPhysicalMaterial {
+
+    const code = this.toCode('face', colorDesc.rgb, colorDesc.opacity); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+    if (!this.MATERIALS_FACE[code]) {
+
       const clippingPlanes: Plane[] = [
         this.CLIP_PLANE
       ];
-      let color = new Color(`rgb(${faceValDefault}, ${faceValDefault}, ${faceValDefault})`);
-      let opacity = 0.80;
-      if (level === 'norm') {
-        color = new Color(`rgb(${faceValDefault}, 200, ${faceValDefault})`);
-      } else if (level === 'warn') {
-        color = new Color(`rgb(200, 200, ${faceValDefault})`);
-      } else if (level === 'risk') {
-        color = new Color(`rgb(255, ${faceValDefault}, ${faceValDefault})`);
-      } else if (level === 'none') {
-        // just stick with the color, but no clipping plane
-      } else { // i.e. a wall
-        color = new Color(`rgb(255, 255, 255)`);
-        // clippingPlanes.push(this.CLIP_PLANE);
-        opacity = 0.50;
-      }
-      MaterialRepo.MATERIALS_FACE[level] = new MeshPhysicalMaterial({
-        color,
-        opacity,
+
+      MaterialRepo.MATERIALS_FACE[code] = new MeshPhysicalMaterial({
+        color: new Color(colorDesc.rgb),
+        opacity: colorDesc.opacity,
         transparent: true,
-        roughness: 0.25,
-        metalness: 0.10,
+        roughness: 0.75,
+        metalness: 0.00,
         reflectivity: 0.01,
         side: DoubleSide,
         clippingPlanes,
         clipShadows: clippingPlanes.length > 0,
         polygonOffset: true,
-        polygonOffsetFactor: 1
+        polygonOffsetFactor: 0.5
       });
+
     }
-    return MaterialRepo.MATERIALS_FACE[level];
+
+    return MaterialRepo.MATERIALS_FACE[code];
+
   }
 
-  static getMaterialMark(level: TLevel): MeshPhysicalMaterial {
-    if (!this.MATERIALS_MARK[level]) {
-      const faceValDefault = 5;
+  static getMaterialLine(colorDesc: IColorDescription): LineMaterial {
+
+    const code = this.toCode('face', colorDesc.rgb, 1); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+    if (!this.MATERIALS_LINE[code]) {
+
       const clippingPlanes: Plane[] = [
         this.CLIP_PLANE
       ];
-      let color = new Color(`rgb(${faceValDefault}, ${faceValDefault}, ${faceValDefault})`);
-      if (level === 'norm') {
-        color = new Color(`rgb(0, 255, 0)`);
-      } else if (level === 'warn') {
-        color = new Color(`rgb(200, 200, 0)`);
-      } else if (level === 'risk') {
-        color = new Color(`rgb(250, 0, 0)`);
-      }
-      MaterialRepo.MATERIALS_MARK[level] = new MeshPhysicalMaterial({
-        color,
-        roughness: 0.50,
-        metalness: 0.75,
-        reflectivity: 0.75,
-        side: FrontSide,
-        emissive: color,
-        emissiveIntensity: 0.1,
-        // wireframe: true
-        clippingPlanes
-      });
-    }
-    return MaterialRepo.MATERIALS_MARK[level];
-  }
 
-  static getMaterialLine(level: TLevel): LineMaterial {
-    if (!this.MATERIALS_LINE[level]) {
-      const lineValDefault = 75;
-      const clippingPlanes: Plane[] = [
-        this.CLIP_PLANE
-      ];
-      let color = new Color(`rgb(${lineValDefault}, ${lineValDefault}, ${lineValDefault})`);
-      if (level === 'norm') {
-        color = new Color(`rgb(0, 180, 0)`);
-      } else if (level === 'warn') {
-        color = new Color(`rgb(200, 200, 0)`);
-      } else if (level === 'risk') {
-        color = new Color(`rgb(255, 0, 0)`);
-      }
-      MaterialRepo.MATERIALS_LINE[level] = new LineMaterial({
-        color,
-        linewidth: 3, // in world units with size attenuation, pixels otherwise
+      MaterialRepo.MATERIALS_LINE[code] = new LineMaterial({
+        color: new Color(colorDesc.rgb),
+        linewidth: 4, // in world units with size attenuation, pixels otherwise
         vertexColors: false,
-        opacity: 0.75,
+        opacity: colorDesc.opacity,
         transparent: false,
         dashed: false,
         alphaToCoverage: false,
         clippingPlanes
       });
+
     }
-    return MaterialRepo.MATERIALS_LINE[level];
+
+    return MaterialRepo.MATERIALS_LINE[code];
+
   }
 
   static updateMaterialLineResolution() {
