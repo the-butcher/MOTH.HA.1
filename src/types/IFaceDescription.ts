@@ -1,7 +1,7 @@
 import { COLOR_DESCRIPTIONS, IColorDescription } from "./IColorDescription";
 import { ILineDescription } from "./ILineDescription";
 
-export type TFaceDescKey = 'switch_pump_1' | 'switch_pump_2' | 'handrail' | 'walls_shed' | 'walls_house' | 'barrel_top' | 'barrel_bot' | 'barrel_mid' | 'lawn' | 'hedge' | 'tree' | 'stairs' | 'umbrella' | 'pavement' | 'misc_gray';
+export type TFaceDescKey = 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3' | 'handrail' | 'walls_shed' | 'walls_house' | 'barrel_top' | 'barrel_bot' | 'barrel_mid' | 'lawn' | 'hedge' | 'tree' | 'stairs' | 'umbrella' | 'pavement' | 'misc_gray';
 
 export interface IFaceDescription extends IColorDescription {
     lineDesc: ILineDescription;
@@ -16,6 +16,13 @@ export const FACE_DESCRIPTIONS: { [K in TFaceDescKey]: IFaceDescription } = {
         }
     },
     switch_pump_2: {
+        ...COLOR_DESCRIPTIONS['face_gray'],
+        lineDesc: {
+            ...COLOR_DESCRIPTIONS['line_gray'],
+            lineStyle: 'thin'
+        }
+    },
+    switch_pump_3: {
         ...COLOR_DESCRIPTIONS['face_gray'],
         lineDesc: {
             ...COLOR_DESCRIPTIONS['line_gray'],

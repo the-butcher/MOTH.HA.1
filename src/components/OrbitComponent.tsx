@@ -4,7 +4,7 @@ import { Group, Mesh, Raycaster, SphereGeometry, Vector2, Vector3 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { IClientCoordinate, IConfirmProps } from '../types/IConfirmProps';
 import { CAMERA_PROPS, IOrbitProps, TCameraKey } from '../types/IOrbitProps';
-import { STATUS_HANDLERS } from '../types/IStatusHandler';
+import { STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { ID_CANVAS } from './SceneComponent';
 
@@ -182,7 +182,7 @@ const OrbitComponent = (props: IOrbitProps) => {
                 // sphere.position.z = intersect.point.z;
                 // selectHelperRef.current?.add(sphere);
 
-                const statusHandler = STATUS_HANDLERS[intersect.object.name];
+                const statusHandler = STATUS_HANDLERS[intersect.object.name as TStatusHandlerKey];
                 if (statusHandler?.confirmProps) {
                   hitsByNamedHandler[intersect.object.name] = hitsByNamedHandler[intersect.object.name] ? hitsByNamedHandler[intersect.object.name] + (3 - radius) : 1;
                 }
@@ -198,9 +198,9 @@ const OrbitComponent = (props: IOrbitProps) => {
         let maxHits = -1;
         Object.keys(hitsByNamedHandler).forEach(key => {
           const keyHits = hitsByNamedHandler[key];
-          if (keyHits > maxHits && STATUS_HANDLERS[key].confirmProps) {
+          if (keyHits > maxHits && STATUS_HANDLERS[key as TStatusHandlerKey].confirmProps) {
             maxHits = keyHits;
-            maxConfirmProps = STATUS_HANDLERS[key].confirmProps;
+            maxConfirmProps = STATUS_HANDLERS[key as TStatusHandlerKey].confirmProps;
           }
         });
 
@@ -217,7 +217,6 @@ const OrbitComponent = (props: IOrbitProps) => {
             }
           });
         }
-
 
         pointerDownRef.current = undefined;
 

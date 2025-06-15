@@ -7,7 +7,7 @@ import { COLOR_DESCRIPTIONS, TColorKey } from "./IColorDescription";
 import { IConfirmProps } from "./IConfirmProps";
 import { PolygonUtil } from "../util/PolygonUtil";
 
-export type TStatusHandlerKey = 'moth____66' | 'moth___178' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'switch_pump_1' | 'switch_pump_2';
+export type TStatusHandlerKey = 'moth____66' | 'moth___178' | 'moth___130' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
 
 export interface IStatusHandler {
     statusTopic: string; // the url to get this elements status from (other elements may use the same url, only one call shall be made)
@@ -21,17 +21,33 @@ export interface IStatusHandler {
     actTo: number;
 }
 
-const topicPump1 = 'plug_150';
-const topicPump2 = 'plug_103';
-const topicLevel = 'esp__228';
+const topicPump = 'plug_153';
+const topicShed = 'shed_024';
 
 export let STATUS_COUNTER_1 = 0;
 let STATUS_POWER_1 = false;
 let STATUS_POWER_2 = false;
+let STATUS_POWER_3 = false;
 const counter1Min = 225;
+
+const setVisible = (statusHandler: TStatusHandlerKey, visible: boolean) => {
+
+    STATUS_HANDLERS[statusHandler].faces.forEach(face => {
+        face.visible = visible;
+    });
+    STATUS_HANDLERS[statusHandler].sgmts.forEach(sgmt => {
+        sgmt.visible = visible;
+    });
+    STATUS_HANDLERS[statusHandler].lines.forEach(line => {
+        line.visible = visible;
+    });
+
+}
 
 
 const setBarrelTopColors = () => {
+
+    console.log('setBarrelTopColors', STATUS_COUNTER_1);
 
     let colorDescFace = COLOR_DESCRIPTIONS['face_gray'];
     let colorDescSgmt = COLOR_DESCRIPTIONS['line_gray'];
@@ -157,11 +173,51 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         texts: [],
         actTo: -1
     },
-    barrel_cnt: {
-        statusTopic: `stat/${topicLevel}/RESULT`,
+    moth___130: {
+        statusTopic: `moth/ip_130`,
         statusHndlr: (status: never) => {
 
-            STATUS_COUNTER_1 = status['Counter1'];
+            const pm025 = status['pm025'];
+            console.log('moth/ip_130', pm025, status, STATUS_HANDLERS['moth___130'].texts[0]);
+
+            let colorDescKeyPm025: TColorKey = 'face_green';
+            if (pm025 >= 15) {
+                colorDescKeyPm025 = 'face_red';
+            } else if (pm025 >= 5) {
+                colorDescKeyPm025 = 'face_yellow';
+            }
+
+            // TODO :: multiple messages coming almost at the same time -> debounce
+            window.clearTimeout(STATUS_HANDLERS['moth___130'].actTo);
+            STATUS_HANDLERS['moth___130'].actTo = window.setTimeout(() => {
+                PolygonUtil.createTextMesh(`${pm025}ug/m³`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyPm025]); // TODO :: color depending on value
+                invalidate();
+            }, 500);
+
+        },
+        statusQuery: () => {
+
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS['face_gray']); // TODO :: color depending on value
+            // // nothing
+
+        },
+        faces: [],
+        sgmts: [],
+        lines: [],
+        texts: [],
+        actTo: -1
+    },
+    barrel_cnt: {
+        statusTopic: `stat/${topicShed}/RESULT`,
+        statusHndlr: (status: never) => {
+
+            console.log('barrel_cnt :: statusHndlr', status)
+
+            if (status['Counter1']) {
+                STATUS_COUNTER_1 = status['Counter1'];
+            } else if (status['Var1']) {
+                STATUS_COUNTER_1 = parseInt(status['Var1']);
+            }
             setBarrelTopColors();
             if (STATUS_COUNTER_1 && STATUS_POWER_1) {
 
@@ -186,7 +242,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
         },
         statusQuery: () => {
-            MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicLevel}/Counter1`, '+0', { qos: 0, retain: false });
+            MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicShed}/Counter1`, '+0', { qos: 0, retain: false });
         },
         faces: [],
         sgmts: [],
@@ -195,8 +251,10 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         actTo: -1
     },
     barrel_top: {
-        statusTopic: `stat/${topicLevel}/RESULT`,
+        statusTopic: `stat/${topicShed}/RESULT`,
         statusHndlr: (status: never) => {
+
+            console.log('barrel_top :: statusHndlr', status)
 
             const switch1 = status['POWER1']; // when ON the barrel is completely full
             if (switch1) {
@@ -216,7 +274,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
         },
         statusQuery: () => {
-            MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicLevel}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
+            MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicShed}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
         },
         faces: [],
         sgmts: [],
@@ -225,8 +283,10 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         actTo: -1
     },
     barrel_bot: {
-        statusTopic: `stat/${topicLevel}/RESULT`,
+        statusTopic: `stat/${topicShed}/RESULT`,
         statusHndlr: (status: never) => {
+
+            console.log('barrel_bot :: statusHndlr', status)
 
             const switch2 = status['POWER2']; // when ON the barrel is completely empty
             if (switch2) {
@@ -253,15 +313,17 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         actTo: -1
     },
     switch_pump_1: {
-        statusTopic: `stat/${topicPump1}/RESULT`,
+        statusTopic: `stat/${topicPump}/RESULT`,
         statusHndlr: (status: never) => {
 
-            STATUS_POWER_1 = status['POWER'] && status['POWER'] === 'ON';
+            console.log('switch_pump_1 :: statusHndlr', status)
+
+            STATUS_POWER_1 = status['POWER1'] && status['POWER1'] === 'ON';
             setBarrelTopColors();
 
         },
         statusQuery: () => {
-            MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump1}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
+            MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
         },
         confirmProps: {
             getTitle: () => 'Boden >> Tonne',
@@ -271,7 +333,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             },
             handleConfirm: () => {
                 // console.log('power toggle switch_pump_1');
-                MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump1}/Power`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
+                MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/Power1`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             }
         },
         faces: [],
@@ -281,14 +343,16 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         actTo: -1
     },
     switch_pump_2: {
-        statusTopic: `stat/${topicPump2}/RESULT`,
+        statusTopic: `stat/${topicPump}/RESULT`,
         statusHndlr: (status: never) => {
+
+            console.log('switch_pump_2 :: statusHndlr', status)
 
             let colorDescFace = COLOR_DESCRIPTIONS['face_gray'];
             let colorDescSgmt = COLOR_DESCRIPTIONS['line_gray'];
             let colorDescLine = COLOR_DESCRIPTIONS['line_gray'];
 
-            STATUS_POWER_2 = status['POWER'] && status['POWER'] === 'ON'; // when ON the barrel is completely full
+            STATUS_POWER_2 = status['POWER2'] && status['POWER2'] === 'ON'; // when ON the barrel is completely full
             if (STATUS_POWER_2) {
 
                 colorDescFace = COLOR_DESCRIPTIONS['face_blue'];
@@ -297,21 +361,25 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
             }
 
-            STATUS_HANDLERS['switch_pump_2'].faces.forEach(face => {
-                face.material = MaterialRepo.getMaterialFace(colorDescFace);
-            });
-            STATUS_HANDLERS['switch_pump_2'].sgmts.forEach(sgmt => {
-                sgmt.material = MaterialRepo.getMaterialSgmt(colorDescSgmt);
-            });
-            STATUS_HANDLERS['switch_pump_2'].lines.forEach(line => {
-                line.material = MaterialRepo.getMaterialLine(colorDescLine);
+            const statusHandlerKeys: TStatusHandlerKey[] = ['switch_pump_2', 'switch_pump_3'];
+            statusHandlerKeys.forEach(statusHandlerKey => {
+                STATUS_HANDLERS[statusHandlerKey].faces.forEach(face => {
+                    face.material = MaterialRepo.getMaterialFace(colorDescFace);
+                });
+                STATUS_HANDLERS[statusHandlerKey].sgmts.forEach(sgmt => {
+                    sgmt.material = MaterialRepo.getMaterialSgmt(colorDescSgmt);
+                });
+                STATUS_HANDLERS[statusHandlerKey].lines.forEach(line => {
+                    line.material = MaterialRepo.getMaterialLine(colorDescLine);
+                });
             });
 
             invalidate();
 
         },
         statusQuery: () => {
-            MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump2}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
+            // nothing, 'switch_pump_1' already triggers the correct query
+            // MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
         },
         confirmProps: {
             getTitle: () => 'Tonne >> Garten',
@@ -321,10 +389,56 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             },
             handleConfirm: () => {
                 // console.log('power toggle switch_pump_2');
-                MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump2}/Power`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
+                MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/Power2`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             }
 
         },
+        faces: [],
+        sgmts: [],
+        lines: [],
+        texts: [],
+        actTo: -1
+    },
+    switch_pump_3: {
+        statusTopic: `stat/${topicPump}/RESULT`,
+        statusHndlr: (status: never) => {
+
+            console.log('switch_pump_3 :: statusHndlr', status)
+
+            STATUS_POWER_3 = status['POWER3'] && status['POWER3'] === 'ON'; // when ON the barrel is completely full
+            if (STATUS_POWER_3) {
+
+                setVisible('switch_pump_1', false);
+                setVisible('switch_pump_2', false);
+                setVisible('switch_pump_3', true);
+
+            } else {
+
+                setVisible('switch_pump_1', true);
+                setVisible('switch_pump_2', true);
+                setVisible('switch_pump_3', false);
+
+            }
+
+            invalidate();
+
+        },
+        statusQuery: () => {
+            // nothing, 'switch_pump_1' already triggers the correct query
+            // MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
+        },
+        // confirmProps: {
+        //     getTitle: () => 'Tonne >> Garten',
+        //     getContent: () => STATUS_POWER_2 ? 'Pumpe ausschalten?' : 'Pumpe einschalten?',
+        //     handleCancel: () => {
+
+        //     },
+        //     handleConfirm: () => {
+        //         // console.log('power toggle switch_pump_2');
+        //         MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/Power2`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
+        //     }
+
+        // },
         faces: [],
         sgmts: [],
         lines: [],

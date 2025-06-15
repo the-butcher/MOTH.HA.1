@@ -25,7 +25,7 @@ const theme = ThemeUtil.createTheme();
  * TODO :: query the fields of the sensor to know what icons to offer (maybe the sensors can indicate what values are available, gray out sensors not providing a specific value)
  * @returns
  */
-function App() {
+function AppScene() {
 
   const handleClipPlane = (clipPlane: number) => {
 
@@ -154,4 +154,4 @@ function App() {
   );
 }
 
-export default App;
+export default AppScene;

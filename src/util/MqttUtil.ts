@@ -1,5 +1,5 @@
 import mqtt, { MqttClient } from 'mqtt';
-import { IStatusHandler, STATUS_HANDLERS } from '../types/IStatusHandler';
+import { IStatusHandler, STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
 
 export class MqttUtil {
 
@@ -25,7 +25,7 @@ export class MqttUtil {
             // console.log('collecting handlers by topic');
             const handlersByTopic: { [K in string]: IStatusHandler[] } = {};
             handlerKeys.forEach(handlerKey => {
-                const handler = STATUS_HANDLERS[handlerKey];
+                const handler = STATUS_HANDLERS[handlerKey as TStatusHandlerKey];
                 // first handler for this topic?
                 if (!handlersByTopic[handler.statusTopic]) {
                     handlersByTopic[handler.statusTopic] = []; // bucket to store any handlers subscribing to the same topic
@@ -48,7 +48,7 @@ export class MqttUtil {
 
             // issue any triggering messages for initial state
             handlerKeys.forEach(handlerKey => {
-                const handler = STATUS_HANDLERS[handlerKey];
+                const handler = STATUS_HANDLERS[handlerKey as TStatusHandlerKey];
                 handler.statusQuery();
             });
 
