@@ -17,7 +17,8 @@ const ControlsComponent = (props: IOrbitProps) => {
   const { camera, gl, scene, invalidate } = useThree();
 
   const controlsRef = useRef<OrbitControls>();
-  const sphereHelperRef = useRef<Mesh>(); // target of orbit controls
+  const centerHelperRef = useRef<Mesh>(); // target of orbit controls
+  const wFocusHelperRef = useRef<Mesh>()
   const selectHelperRef = useRef<Group>();
   const pointerUpRef = useRef<Vector2>();
   const pointerDownRef = useRef<Vector2>();
@@ -116,13 +117,22 @@ const ControlsComponent = (props: IOrbitProps) => {
     // controlsRef.current.minPolarAngle = 0; // Math.PI / 4; // how far above ground the map can be tilted, 0 == vertical
     // controlsRef.current.maxPolarAngle = Math.PI / 2;
 
-    const sphere = new Mesh(new SphereGeometry(0.025), MaterialRepo.getMaterialFace({
-      rgb: 0x00FF00,
+    const centerSphere = new Mesh(new SphereGeometry(0.025), MaterialRepo.getMaterialFace({
+      rgb: 0x00ff00,
       opacity: 1.00
     }));
-    sphereHelperRef.current = sphere;
-    sphereHelperRef.current.name = 'ArrowHelper';
-    scene.add(sphereHelperRef.current);
+    centerHelperRef.current = centerSphere;
+    centerHelperRef.current.name = 'ArrowHelper';
+    scene.add(centerHelperRef.current);
+
+    const wFocusSphere = new Mesh(new SphereGeometry(0.010), MaterialRepo.getMaterialFace({
+      rgb: 0x0000ff,
+      opacity: 1.00
+    }));
+    wFocusHelperRef.current = wFocusSphere;
+    wFocusHelperRef.current.name = 'ArrowHelper';
+    scene.add(wFocusHelperRef.current);
+
 
     selectHelperRef.current = new Group();
     scene.add(selectHelperRef.current);
@@ -194,13 +204,13 @@ const ControlsComponent = (props: IOrbitProps) => {
       }
 
       const targetPos = controlsRef.current!.target;
-      sphereHelperRef.current?.position.set(targetPos.x, targetPos.y, targetPos.z);
+      centerHelperRef.current?.position.set(targetPos.x, targetPos.y, targetPos.z);
 
-      const worldFocusDistance = camera.position.clone().sub(targetPos).length();
+      const worldFocusDistance = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
       handleWorldFocusDistance(worldFocusDistance);
 
-      console.log('pos', camera.position.x, ',', camera.position.y, ',', camera.position.z);
-      console.log('tgt', targetPos.x, ',', targetPos.y, ',', targetPos.z);
+      // console.log('pos', camera.position.x, ',', camera.position.y, ',', camera.position.z);
+      // console.log('tgt', targetPos.x, ',', targetPos.y, ',', targetPos.z);
 
 
       if (pointerDownRef.current && pointerUpRef.current.clone().sub(pointerDownRef.current).length() < 3) {
@@ -222,13 +232,14 @@ const ControlsComponent = (props: IOrbitProps) => {
 
             const intersects = raycasterRef.current.intersectObjects(scene.children).filter(i => i.point.y < (clipPlane + MODEL_OFFSET_Y));
             for (let intersectIndex = 0; intersectIndex < intersects.length; intersectIndex++) {
+
               if (intersectIndex === 0) {
-                const worldFocusDistance = camera.position.clone().sub(intersects[intersectIndex].point).length();
-                // console.log('worldFocusDistance', worldFocusDistance);
+                wFocusHelperRef.current!.position.set(intersects[intersectIndex].point.x, intersects[intersectIndex].point.y, intersects[intersectIndex].point.z);
+                const worldFocusDistance = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
                 handleWorldFocusDistance(worldFocusDistance);
               }
               const intersect = intersects[intersectIndex];
-              console.log('intersect', intersect);
+              // console.log('intersect', intersect);
               if (intersect.object.name !== '' && intersect.object.name !== 'ArrowHelper') {
 
                 // const sphere = new Mesh(new SphereGeometry(0.02), MaterialRepo.getMaterialFace({

@@ -5,9 +5,11 @@
 flaws:
 
 -- by using forecast early hours become unavailble later in the day and light intensities become negative, likely due to naive interpolation
-OK collision detection does not consider clipPlane
+OK interesections do not consider clipPlane
 -- page becomes unresponsive after a while (maybe after many text updates)
--- add radiation sensor through homeassistant
+-- add radiation sensor through homeassistant (no radiation entity found in HA)
+OK labels only work when vertical
+OK introduce a second reference point so focus to that point can be preserved while navigating
 
 possible improvements:
 

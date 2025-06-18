@@ -8,7 +8,7 @@ import { IConfirmProps } from "./IConfirmProps";
 import { PolygonUtil } from "../util/PolygonUtil";
 import { IWeatherForecast } from "../util/IWeatherForecast";
 
-export type TStatusHandlerKey = 'weather___' | 'moth____66' | 'moth___178' | 'moth___130' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
+export type TStatusHandlerKey = 'weather___' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
 
 export interface IStatusHandler {
     statusTopic?: string; // the url to get this elements status from (other elements may use the same url, only one call shall be made)
@@ -100,7 +100,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             STATUS_HANDLERS['weather___'].actTo = window.setTimeout(() => {
                 PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
                 PolygonUtil.createTextMesh(`${sun}%`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray']);
-                PolygonUtil.createTextMesh(`${prc}mm`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray']);
+                PolygonUtil.createTextMesh(`${prc}mm/h`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray']);
                 invalidate();
             }, 500);
         },
@@ -109,6 +109,38 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
             // PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray']);
             // PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray']);
+        },
+        faces: [],
+        sgmts: [],
+        lines: [],
+        texts: [],
+        actTo: -1
+    },
+    moth_295D3: {
+        statusTopic: `aranet/295D3`,
+        statusHndlr: (status: never) => {
+
+            const rad = status['rad'];
+
+            let colorDescKeyRad: TColorKey = 'face_green';
+            if (rad >= 10) {
+                colorDescKeyRad = 'face_red';
+            } else if (rad >= 0.2) {
+                colorDescKeyRad = 'face_yellow';
+            }
+
+            // TODO :: multiple messages coming almost at the same time -> debounce
+            window.clearTimeout(STATUS_HANDLERS['moth_295D3'].actTo);
+            STATUS_HANDLERS['moth_295D3'].actTo = window.setTimeout(() => {
+                PolygonUtil.createTextMesh(`${rad}µSv/h`, STATUS_HANDLERS['moth_295D3'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyRad]);
+                invalidate();
+            }, 500);
+
+        },
+        statusQuery: () => {
+
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth_295D3'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
+            // nothing
         },
         faces: [],
         sgmts: [],
@@ -219,7 +251,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth___130'].actTo);
             STATUS_HANDLERS['moth___130'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${pm025}ug/m³`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyPm025]); // TODO :: color depending on value
+                PolygonUtil.createTextMesh(`${pm025}µg/m³`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyPm025]); // TODO :: color depending on value
                 invalidate();
             }, 500);
 

@@ -167,20 +167,33 @@ const ModelComponent = (props: IModelProps) => {
 
             const p0 = line1.localToWorld(new Vector3(positions[0], positions[1], positions[2]));
             const p1 = line1.localToWorld(new Vector3(positions[3], positions[4], positions[5]));
-            const p2 = line1.localToWorld(new Vector3(positions[9], positions[10], positions[11]));
+            const p2 = line1.localToWorld(new Vector3(positions[6], positions[7], positions[8]));
+            const p3 = line1.localToWorld(new Vector3(positions[9], positions[10], positions[11]));
 
-            const p10 = p0.clone().sub(p1).normalize();
-            const p12 = p2.clone().sub(p1).normalize();
+            // const d01 = p0.clone().sub(p1).length();
+            // const d23 = p2.clone().sub(p3).length();
+            // console.log('d01', d01, 'd23', d23, p0, p1, p2, p3);
+
+            const p10n = p0.clone().sub(p1).normalize();
+            const p23n = p3.clone().sub(p2).normalize();
+            // const pUpn = p23n.clone().cross(p10n).normalize();
 
             textGroupOuter.position.x = p1.x;
             textGroupOuter.position.y = p1.y;
             textGroupOuter.position.z = p1.z;
 
-            // the target normal of the text
-            const axisNormal0 = p12.clone().cross(p10.clone()).normalize();
+            // rotate text to follow the long "leg"
+            const txBase = new Vector3(1, 0, 0);
+            const nTx1p23n = txBase.clone().cross(p23n).normalize();
+            const aTx1p23n = txBase.angleTo(p23n);
 
-            textGroupOuter.lookAt(p1.clone().add(axisNormal0));
-            textGroupInner.rotateZ(Math.PI / 2);
+            // calculate angle required to put up on the short leg
+            const txUp = new Vector3(0, 1, 0);
+            txUp.applyAxisAngle(nTx1p23n, aTx1p23n);
+            const aTx2p10n = txUp.angleTo(p10n);
+
+            textGroupOuter.rotateOnAxis(p23n, -aTx2p10n);
+            textGroupOuter.rotateOnAxis(nTx1p23n, aTx1p23n);
 
             line1.visible = false;
             textGroupOuter.add(textGroupInner);

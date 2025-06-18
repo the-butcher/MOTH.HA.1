@@ -58,7 +58,7 @@ const SceneComponent = (props: ISceneProps) => {
           worldFocusDistance={worldFocusDistance}
         />
       </EffectComposer>
-      <Environment preset="park" backgroundRotation={[0, 0, 0]} background={false} environmentIntensity={0.1} backgroundBlurriness={0.1} resolution={64} />
+      <Environment preset="park" backgroundRotation={[0, 0, 0]} background={false} environmentIntensity={0.1} backgroundBlurriness={0.50} resolution={64} />
       <ControlsComponent key={orbit.id} {...orbit} />
       <ambientLight intensity={ambientIntensity} />
       <ModelComponent key={model.id} {...model} />

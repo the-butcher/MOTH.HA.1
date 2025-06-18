@@ -29,7 +29,7 @@ const SunCompoment = (props: ISunProps) => {
     light.shadow.camera.near = 15;
     light.shadow.camera.far = 150;
     light.shadow.camera.lookAt(0, 0, 0);
-    light.shadow.bias = -0.005;
+    light.shadow.bias = -0.0005;
 
     const maxTextureSize = gl.capabilities.maxTextureSize;
     light.shadow.mapSize.width = maxTextureSize / textureFraction;
