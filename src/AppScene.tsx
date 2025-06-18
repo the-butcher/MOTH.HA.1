@@ -1,6 +1,6 @@
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BoardComponent from './components/BoardComponent';
 import SceneComponent from './components/SceneComponent';
 import { IBoardProps } from './types/IBoardProps';
@@ -11,20 +11,11 @@ import { ISunProps } from './types/ISunProps';
 import { ObjectUtil } from './util/ObjectUtil';
 import { ThemeUtil } from './util/ThemeUtil';
 import { TimeUtil } from './util/TimeUtil';
+import { WeatherUtil } from './util/WeatherUtil';
+import { MqttUtil } from './util/MqttUtil';
 
 const theme = ThemeUtil.createTheme();
 
-/**
- * tasmota command to turn on:  http://192.168.0.24/cm?cmnd=Power%201
- * tasmota command to turn off: http://192.168.0.24/cm?cmnd=Power%200
- * tasmota command to get status: http://192.168.0.24/cm?cmnd=status%2010 (different responses for plugs and esp32)
- *
- * TODO :: time range in chart
- * TODO :: time animation on the 3D-view (maybe with color transitions)
- * TODO :: better strategy for missing values in series
- * TODO :: query the fields of the sensor to know what icons to offer (maybe the sensors can indicate what values are available, gray out sensors not providing a specific value)
- * @returns
- */
 function AppScene() {
 
   const handleClipPlane = (clipPlane: number) => {
@@ -36,14 +27,18 @@ function AppScene() {
     // MaterialRepo.setClipPlane(clipPlane);
     boardPropsRef.current = {
       ...boardPropsRef.current,
-      clipPlane
+      clipPlane: clipPlaneRef.current
     };
     setBoardProps(boardPropsRef.current);
 
     scenePropsRef.current = {
       ...scenePropsRef.current,
       model: {
-        ...sceneProps.model,
+        ...scenePropsRef.current.model,
+        clipPlane: clipPlaneRef.current
+      },
+      orbit: {
+        ...scenePropsRef.current.orbit,
         clipPlane: clipPlaneRef.current
       }
     };
@@ -92,9 +87,31 @@ function AppScene() {
     sunPropsRef.current = {
       ...sunPropsRef.current,
       sunInstant
-    }
+    };
 
-    // MaterialRepo.setClipPlane(clipPlane);
+    // update slider
+    boardPropsRef.current = {
+      ...boardPropsRef.current,
+      sun: sunPropsRef.current
+    };
+    setBoardProps(boardPropsRef.current);
+
+    // update sun in scene
+    scenePropsRef.current = {
+      ...scenePropsRef.current,
+      model: {
+        ...scenePropsRef.current.model,
+        sun: sunPropsRef.current
+      }
+    };
+    setSceneProps(scenePropsRef.current);
+
+  }
+
+  const handleWorldFocusDistance = (worldFocusDistance: number) => {
+
+    console.debug('📞 worldFocusDistance', worldFocusDistance);
+
     boardPropsRef.current = {
       ...boardPropsRef.current,
       sun: sunPropsRef.current
@@ -103,14 +120,31 @@ function AppScene() {
 
     scenePropsRef.current = {
       ...scenePropsRef.current,
-      model: {
-        ...sceneProps.model,
-        sun: sunPropsRef.current
-      }
+      worldFocusDistance
     };
     setSceneProps(scenePropsRef.current);
 
   }
+
+  const handleModelComplete = () => {
+
+    console.debug('📞 handleModelComplete');
+
+    // window.setTimeout(() => {
+    MqttUtil.setup();
+    // }, 1000);
+
+
+    scenePropsRef.current = {
+      ...scenePropsRef.current,
+      model: {
+        ...scenePropsRef.current.model,
+        modelComplete: true
+      }
+    };
+    setSceneProps(scenePropsRef.current);
+
+  };
 
   const clipPlaneRef = useRef<number>(8.6);
   const cameraKeyRef = useRef<TCameraKey>('home');
@@ -120,8 +154,10 @@ function AppScene() {
       id: ObjectUtil.createId(),
       stamp: ObjectUtil.createId(),
       cameraKey: cameraKeyRef.current,
+      clipPlane: clipPlaneRef.current,
       handleConfirmProps,
-      handleCameraKey
+      handleCameraKey,
+      handleWorldFocusDistance
     },
     model: {
       id: ObjectUtil.createId(),
@@ -129,7 +165,10 @@ function AppScene() {
       clipPlane: clipPlaneRef.current,
       scene: './h24og2_poly_test.dae',
       sun: sunPropsRef.current,
+      modelComplete: false,
+      handleModelComplete
     },
+    worldFocusDistance: 0
   });
   const boardPropsRef = useRef<IBoardProps>({
     clipPlane: clipPlaneRef.current,
@@ -142,6 +181,16 @@ function AppScene() {
 
   const [sceneProps, setSceneProps] = useState<ISceneProps>(scenePropsRef.current);
   const [boardProps, setBoardProps] = useState<IBoardProps>(boardPropsRef.current);
+
+
+  useEffect(() => {
+
+    console.debug('✨ building appscene component');
+
+    WeatherUtil.loadForecast();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>

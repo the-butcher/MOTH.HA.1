@@ -1,21 +1,23 @@
 import { Canvas } from '@react-three/fiber';
-import { createRef, useEffect } from 'react';
+import { createRef, useEffect, useState } from 'react';
 import { PCFSoftShadowMap } from 'three';
 import { ISceneProps } from '../types/ISceneProps';
 import ModelComponent from './ModelComponent';
-import OrbitComponent from './OrbitComponent';
+import ControlsComponent from './ControlsComponent';
 import SunCompoment from './SunCompoment';
+
+import { Environment } from '@react-three/drei';
+import { DepthOfField, EffectComposer } from "@react-three/postprocessing";
+import { WeatherUtil } from '../util/WeatherUtil';
 
 
 export const ID_CANVAS = 'dashcanvas';
 
 const SceneComponent = (props: ISceneProps) => {
 
-  const { orbit, model } = { ...props };
+  const { orbit, model, worldFocusDistance } = { ...props };
   const canvasRef = createRef<HTMLCanvasElement>();
-
-  // const [ambientIntensity, setAmbientIntensity] = useState<number>(0);
-  // const [sunArray, setSunArray] = useState<JSX.Element[]>([]);
+  const [ambientIntensity, setAmbientIntensity] = useState<number>(0);
 
   useEffect(() => {
 
@@ -25,47 +27,44 @@ const SceneComponent = (props: ISceneProps) => {
       canvasRef.current.id = ID_CANVAS;
     }
 
-    // console.log('model.sun', model.sun);
-    // const _sunArray: JSX.Element[] = [];
-    // for (let sunInstant = model.sun.sunriseInstant; sunInstant <= model.sun.sunsetInstant; sunInstant += (model.sun.sunsetInstant - model.sun.sunriseInstant) / 10) {
-    //   console.log('instant', sunInstant);
-    //   const sunProps: ISunProps = {
-    //     sunInstant,
-    //     sunriseInstant: model.sun.sunriseInstant,
-    //     sunsetInstant: model.sun.sunsetInstant
-    //   };
-    //   _sunArray.push(<SunCompoment {...sunProps} />);
-    // }
-    // setSunArray(_sunArray);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
 
-    // console.log('⚙ updating scene component (model.sun)', model.sun);
+    console.debug('⚙ updating scene component (model.sun)', model.sun);
 
-    // const position = SunCalc.getPosition(new Date(model.sun.sunInstant), TimeUtil.LATITUDE, TimeUtil.LONGITUDE); // coordinates for vienna
-
-    // const altitude = position.altitude;
-    // // console.log('altitude', altitude);
-    // setAmbientIntensity(Math.min(0.75, altitude * 10));
+    const forecast = WeatherUtil.getForecast(model.sun.sunInstant);
+    setAmbientIntensity(1.1 - 0.1 * forecast.sunshine);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model.sun]);
 
-  return (
-    <Canvas ref={canvasRef} style={{ position: 'absolute', height: '100%', width: '100%' }} gl={{ antialias: true, localClippingEnabled: true }} frameloop="demand" shadows={{ type: PCFSoftShadowMap, enabled: true, autoUpdate: true }} camera={{ position: [0, 0, 0], fov: 30, far: 10000 }}>
 
-      <OrbitComponent key={orbit.id} {...orbit} />
-      <ambientLight intensity={0.80} />
+
+  return (
+    <Canvas
+      ref={canvasRef}
+      style={{ position: 'absolute', height: '100%', width: '100%' }}
+      gl={{ antialias: true, localClippingEnabled: true, preserveDrawingBuffer: true }}
+      frameloop="demand"
+      shadows={{ type: PCFSoftShadowMap, enabled: true, autoUpdate: false }}
+      camera={{ position: [0, 0, 0], fov: 30, near: 1, far: 1000 }}
+    >
+      <EffectComposer renderPriority={3}>
+        <DepthOfField
+          bokehScale={4}
+          worldFocusRange={worldFocusDistance / 3}
+          worldFocusDistance={worldFocusDistance}
+        />
+      </EffectComposer>
+      <Environment preset="park" backgroundRotation={[0, 0, 0]} background={false} environmentIntensity={0.1} backgroundBlurriness={0.1} resolution={64} />
+      <ControlsComponent key={orbit.id} {...orbit} />
+      <ambientLight intensity={ambientIntensity} />
       <ModelComponent key={model.id} {...model} />
-      <SunCompoment {...model.sun} />
-      {/* <SunCompoment {...model.sun} sunInstant={model.sun.sunInstant - TimeUtil.MILLISECONDS_PER_MINUTE * 2} /> */}
-      {/* <SunCompoment {...model.sun} sunInstant={model.sun.sunInstant + TimeUtil.MILLISECONDS_PER_MINUTE * 2} /> */}
-      {/* {
-        sunArray
-      } */}
+      {
+        model.modelComplete ? <SunCompoment {...model.sun} /> : null
+      }
 
       {/* <axesHelper /> */}
       {/* <gridHelper /> */}

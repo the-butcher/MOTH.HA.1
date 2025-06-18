@@ -1,16 +1,18 @@
 import { Color, DoubleSide, LineBasicMaterial, MeshPhysicalMaterial, Plane, Vector3 } from 'three';
 import { LineMaterial } from 'three/examples/jsm/Addons.js';
 import { IColorDescription } from '../types/IColorDescription';
+import { MODEL_OFFSET_Y } from '../types/IModelProps';
 
 export class MaterialRepo {
 
   private static MATERIALS_FACE: { [k in string]: MeshPhysicalMaterial } = {};
   private static MATERIALS_LINE: { [k in string]: LineMaterial } = {};
   private static MATERIALS_SGMT: { [k in string]: LineBasicMaterial } = {};
-  private static CLIP_PLANE = new Plane(new Vector3(0, -1, 0), -2.7);
+  private static CLIP_PLANE = new Plane(new Vector3(0, -1, 0), MODEL_OFFSET_Y);
 
   static setClipPlane(clipPlane: number) {
-    MaterialRepo.CLIP_PLANE.constant = clipPlane - 2.7;
+    // console.log('clipPlane (repo)', clipPlane);
+    MaterialRepo.CLIP_PLANE.constant = clipPlane + MODEL_OFFSET_Y;
   }
 
   static toCode(type: string, rgb: number, opacity: number): string {
@@ -59,7 +61,7 @@ export class MaterialRepo {
         clippingPlanes,
         clipShadows: clippingPlanes.length > 0,
         polygonOffset: true,
-        polygonOffsetFactor: 0.5
+        polygonOffsetFactor: 0.50
       });
 
     }

@@ -27,13 +27,15 @@ export class MqttUtil {
             handlerKeys.forEach(handlerKey => {
                 const handler = STATUS_HANDLERS[handlerKey as TStatusHandlerKey];
                 // first handler for this topic?
-                if (!handlersByTopic[handler.statusTopic]) {
-                    handlersByTopic[handler.statusTopic] = []; // bucket to store any handlers subscribing to the same topic
-                    this.MQTT_CLIENT.subscribe(handler.statusTopic, { qos: 0 }); // subscribe to this topic
-                    console.log('subscribing to topic', handler.statusTopic);
+                if (handler.statusTopic) {
+                    if (!handlersByTopic[handler.statusTopic]) {
+                        handlersByTopic[handler.statusTopic] = []; // bucket to store any handlers subscribing to the same topic
+                        this.MQTT_CLIENT.subscribe(handler.statusTopic, { qos: 0 }); // subscribe to this topic
+                        // console.log('subscribing to topic', handler.statusTopic);
+                    }
+                    // add to handlers
+                    handlersByTopic[handler.statusTopic].push(handler);
                 }
-                // add to handlers
-                handlersByTopic[handler.statusTopic].push(handler);
             });
 
             this.MQTT_CLIENT.on('message', (topic, message) => {

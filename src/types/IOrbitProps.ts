@@ -9,16 +9,16 @@ export interface ICameraProps {
 export type TCameraKey = 'pumps' | 'home' | 'quarter' | 'user';
 
 export const CAMERA_POSITIONS: { [K in TCameraKey]: Vector3 } = {
-  'pumps': new Vector3(-8.267770135658687, 4.8086158348320724, 1.3546789531281878),
-  'home': new Vector3(-45.103139533877865, 12.40505417958047, -3.340202979929243),
-  'quarter': new Vector3(-53.172083123771564, 132.55506642815183, 9.811176581449974),
+  'pumps': new Vector3(-8.151666681268697, 4.0703936745272955, -2.4322886971611197),
+  'home': new Vector3(-27.11462252850753, 7.170372208075888, 3.3851106655435768),
+  'quarter': new Vector3(-30.45090193818403, 14.736196882882762, -36.08947504792695),
   'user': new Vector3()
 }
 
 export const CAMERA_TARGETS: { [K in TCameraKey]: Vector3 } = {
-  'pumps': new Vector3(-7.049997379630604, -0.6834751064135369, -11.314080010311438),
-  'home': new Vector3(-4.314651979439628, 1.8449880211182899, -6.257759581240546),
-  'quarter': new Vector3(-2.2059846503016374, -0.49999997588496337, 3.7697885110909604),
+  'pumps': new Vector3(-7.995836074067476, -1.4606985542355526, -13.10672209292114),
+  'home': new Vector3(-4.857485561634025, 1.392515836707786, -4.783590931805891),
+  'quarter': new Vector3(-4.473854194388395, 2.363560431817357, -5.589525052934382),
   'user': new Vector3()
 }
 
@@ -70,6 +70,8 @@ export interface IOrbitProps {
   id: string;
   stamp: string;
   cameraKey: TCameraKey;
+  clipPlane: number;
   handleConfirmProps: (confirmProps: IConfirmProps | undefined) => void;
   handleCameraKey: (cameraKey: TCameraKey) => void;
+  handleWorldFocusDistance: (worldFocusDistance: number) => void;
 }

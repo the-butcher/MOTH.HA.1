@@ -1,11 +1,9 @@
 
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
-import { ThemeUtil } from './util/ThemeUtil';
-import { useEffect, useRef } from 'react';
 import { Buffer } from 'buffer';
-import * as bmp from 'bmp-ts';
-import { Token } from '@mui/icons-material';
+import { useEffect, useRef } from 'react';
+import { ThemeUtil } from './util/ThemeUtil';
 
 const theme = ThemeUtil.createTheme();
 

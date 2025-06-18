@@ -1,20 +1,22 @@
 import HolidayVillageIcon from '@mui/icons-material/HolidayVillage';
 import HomeIcon from '@mui/icons-material/Home';
-import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
+
 import { BottomNavigation, BottomNavigationAction, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Slider } from '@mui/material';
 import { SyntheticEvent, useEffect, useRef } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
-import { TimeUtil } from '../util/TimeUtil';
 import { TCameraKey } from '../types/IOrbitProps';
+import { TimeUtil } from '../util/TimeUtil';
+
+import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 
 const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
 
-  // const { labels, recordKeyApp, clipPlane, handleRecordKey, handleClipPlane, handleCameraKey } = { ...props };
-  const { sun, handleSunInstant, confirmProps, cameraKey, handleCameraKey } = { ...props };
+  // const { labels, recordKeyApp, handleRecordKey, handleClipPlane, handleCameraKey } = { ...props };
+  const { sun, handleSunInstant, confirmProps, cameraKey, handleCameraKey, clipPlane, handleClipPlane } = { ...props };
 
-  // const getSliderHeight = () => {
-  //   return window.innerHeight - 80;
-  // }
+  const getSliderHeight = () => {
+    return window.innerHeight - 160;
+  }
 
   // const getSliderWidth = () => {
   //   return window.innerWidth - 80;
@@ -35,24 +37,24 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // const marks = [
-  //   {
-  //     value: 0.2,
-  //     label: '0.2m - ground',
-  //   },
-  //   {
-  //     value: 3.0,
-  //     label: '3.0m - 1st',
-  //   },
-  //   {
-  //     value: 5.8,
-  //     label: '5.8m - 2nd',
-  //   },
-  //   {
-  //     value: 8.6,
-  //     label: '8.6m - roof',
-  //   },
-  // ];
+  const marks = [
+    {
+      value: 0.2,
+      label: '0.2m - ground',
+    },
+    {
+      value: 3.0,
+      label: '3.0m - 1st',
+    },
+    {
+      value: 5.8,
+      label: '5.8m - 2nd',
+    },
+    {
+      value: 8.6,
+      label: '8.6m - roof',
+    },
+  ];
 
   const valueLabelFormat = (value: number) => {
     return TimeUtil.toLocalTime(value);
@@ -78,15 +80,15 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
     window.clearTimeout(setSunInstantTo.current);
     setSunInstantTo.current = window.setTimeout(() => {
       handleSunInstantChange(Date.now());
-    }, 600000);
+    }, 60000);
 
   }
 
   return (
     <>
 
-      {/* <Slider
-        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '20px', bottom: '40px', height: `${getSliderHeight()}px` }}
+      <Slider
+        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '20px', bottom: '80px', height: `${getSliderHeight()}px` }}
         orientation="vertical"
         value={clipPlane}
         min={marks[0].value}
@@ -95,7 +97,7 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
         step={0.7}
         marks={marks}
         onChange={(_e: Event, value: number | number[]) => handleClipPlane(value as number)}
-      /> */}
+      />
 
       <Slider
         sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
@@ -104,7 +106,7 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
         min={sun.sunriseInstant}
         max={sun.sunsetInstant}
         valueLabelDisplay="on"
-        step={1000 * 60}
+        step={1000 * 60 * 10}
         getAriaValueText={valueLabelFormat}
         valueLabelFormat={valueLabelFormat}
         onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
@@ -157,8 +159,8 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button id={'cancelbutton'} onClick={confirmProps.handleCancel} autoFocus>nein</Button>
-            <Button id={'confirmbutton'} onClick={confirmProps.handleConfirm}>ja</Button>
+            <Button id={'cancelbutton'} onClick={confirmProps.handleCancel} autoFocus>no</Button>
+            <Button id={'confirmbutton'} onClick={confirmProps.handleConfirm}>yes</Button>
           </DialogActions>
         </Dialog> : null
       }

@@ -6,11 +6,13 @@ import { IClientCoordinate, IConfirmProps } from '../types/IConfirmProps';
 import { CAMERA_PROPS, IOrbitProps, TCameraKey } from '../types/IOrbitProps';
 import { STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
+import { ScreenshotUtil } from '../util/ScreenshotUtil';
 import { ID_CANVAS } from './SceneComponent';
+import { MODEL_OFFSET_Y } from '../types/IModelProps';
 
-const OrbitComponent = (props: IOrbitProps) => {
+const ControlsComponent = (props: IOrbitProps) => {
 
-  const { handleConfirmProps, cameraKey, handleCameraKey } = { ...props };
+  const { handleConfirmProps, cameraKey, handleCameraKey, handleWorldFocusDistance, clipPlane } = { ...props };
 
   const { camera, gl, scene, invalidate } = useThree();
 
@@ -43,6 +45,26 @@ const OrbitComponent = (props: IOrbitProps) => {
     }
   };
 
+  const handleKeyUp = (e: KeyboardEvent) => {
+    if (e.key === 'f') {
+
+      console.debug('⚙ handle key up "f"');
+      ScreenshotUtil.getInstance().renderToFrame(gl); // , scene, camera, 0
+
+    } else if (e.key === 'p') {
+
+      console.debug('⚙ handle key up "p"');
+      ScreenshotUtil.getInstance().renderToFrame(gl); // , scene, camera, 0
+      if (ScreenshotUtil.getInstance().getFrameCount() === 1) {
+        ScreenshotUtil.getInstance().exportToPng();
+      } else {
+        ScreenshotUtil.getInstance().exportToGif();
+      }
+      ScreenshotUtil.getInstance().removeFrame(0);
+      // handleScreenshotCompleted();
+
+    }
+  };
   // const handleResize = () => {
   //   if (window.innerWidth > window.innerHeight) {
   //     camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth / 4 - 50, 0, window.innerWidth, window.innerHeight);
@@ -59,6 +81,8 @@ const OrbitComponent = (props: IOrbitProps) => {
     window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('wheel', handlePointerUp);
+
+    window.addEventListener('keyup', handleKeyUp);
     // window.addEventListener('resize', handleResize);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,9 +105,9 @@ const OrbitComponent = (props: IOrbitProps) => {
 
     controlsRef.current = new OrbitControls(camera, gl.domElement);
     // controlsRef.current.enablePan = false;
-    controlsRef.current.screenSpacePanning = true; // default
-    controlsRef.current.enableDamping = false;
-    controlsRef.current.zoomToCursor = true;
+    // controls.screenSpacePanning = true; // default
+    // controls.enableDamping = false;
+    // controls.zoomToCursor = true;
 
     // cameraKeyRefA.current = cameraKey;
     // cameraKeyRefB.current = cameraKey;
@@ -102,6 +126,7 @@ const OrbitComponent = (props: IOrbitProps) => {
 
     selectHelperRef.current = new Group();
     scene.add(selectHelperRef.current);
+
 
     controlsRef.current.addEventListener('change', () => {
       const target: Vector3 = new Vector3();
@@ -135,7 +160,7 @@ const OrbitComponent = (props: IOrbitProps) => {
     if (cameraKeyRefA.current) {
 
       CAMERA_PROPS[cameraKeyRefA.current!].apply(camera.position, controlsRef.current!.target);
-      controlsRef.current?.update();
+      controlsRef.current!.update();
 
       // reset key to prevent repeated eval
       cameraKeyRefA.current = undefined;
@@ -150,6 +175,33 @@ const OrbitComponent = (props: IOrbitProps) => {
     }
 
     if (pointerUpRef.current) {
+
+      raycasterRef.current.setFromCamera(new Vector2(0, 0), camera);
+      const intersects = raycasterRef.current.intersectObjects(scene.children).filter(i => i.point.y < (clipPlane + MODEL_OFFSET_Y));
+      for (let intersectIndex = 0; intersectIndex < intersects.length; intersectIndex++) {
+        const intersect = intersects[intersectIndex];
+        if (intersect.object.name !== 'ArrowHelper' && intersect.object.parent?.name !== 'ArrowHelper') {
+
+          controlsRef.current!.target.x = intersect.point.x;
+          controlsRef.current!.target.y = intersect.point.y;
+          controlsRef.current!.target.z = intersect.point.z;
+
+          controlsRef.current!.update(); // https://github.com/mrdoob/three.js/issues/23090
+
+          break;
+
+        }
+      }
+
+      const targetPos = controlsRef.current!.target;
+      sphereHelperRef.current?.position.set(targetPos.x, targetPos.y, targetPos.z);
+
+      const worldFocusDistance = camera.position.clone().sub(targetPos).length();
+      handleWorldFocusDistance(worldFocusDistance);
+
+      console.log('pos', camera.position.x, ',', camera.position.y, ',', camera.position.z);
+      console.log('tgt', targetPos.x, ',', targetPos.y, ',', targetPos.z);
+
 
       if (pointerDownRef.current && pointerUpRef.current.clone().sub(pointerDownRef.current).length() < 3) {
 
@@ -168,9 +220,15 @@ const OrbitComponent = (props: IOrbitProps) => {
 
             raycasterRef.current.setFromCamera(screenCoordinate, camera);
 
-            const intersects = raycasterRef.current.intersectObjects(scene.children);
+            const intersects = raycasterRef.current.intersectObjects(scene.children).filter(i => i.point.y < (clipPlane + MODEL_OFFSET_Y));
             for (let intersectIndex = 0; intersectIndex < intersects.length; intersectIndex++) {
+              if (intersectIndex === 0) {
+                const worldFocusDistance = camera.position.clone().sub(intersects[intersectIndex].point).length();
+                // console.log('worldFocusDistance', worldFocusDistance);
+                handleWorldFocusDistance(worldFocusDistance);
+              }
               const intersect = intersects[intersectIndex];
+              console.log('intersect', intersect);
               if (intersect.object.name !== '' && intersect.object.name !== 'ArrowHelper') {
 
                 // const sphere = new Mesh(new SphereGeometry(0.02), MaterialRepo.getMaterialFace({
@@ -222,26 +280,6 @@ const OrbitComponent = (props: IOrbitProps) => {
 
       }
 
-      raycasterRef.current.setFromCamera(new Vector2(0, 0), camera);
-      const intersects = raycasterRef.current.intersectObjects(scene.children);
-      for (let intersectIndex = 0; intersectIndex < intersects.length; intersectIndex++) {
-        const intersect = intersects[intersectIndex];
-        if (intersect.object.name !== 'ArrowHelper' && intersect.object.parent?.name !== 'ArrowHelper') {
-
-          controlsRef.current!.target.x = intersect.point.x;
-          controlsRef.current!.target.y = intersect.point.y;
-          controlsRef.current!.target.z = intersect.point.z;
-
-          controlsRef.current?.update(); // https://github.com/mrdoob/three.js/issues/23090
-
-          break;
-
-        }
-      }
-
-      const targetPos = controlsRef.current!.target;
-      sphereHelperRef.current?.position.set(targetPos.x, targetPos.y, targetPos.z);
-
       pointerUpRef.current = undefined;
 
     }
@@ -251,6 +289,7 @@ const OrbitComponent = (props: IOrbitProps) => {
   }, 2);
 
   return null;
+
 };
 
-export default OrbitComponent;
+export default ControlsComponent;

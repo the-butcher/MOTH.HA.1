@@ -8,19 +8,17 @@ import { ILineDescription, LINE_DESCRIPTIONS, TLineDescKey } from '../types/ILin
 import { IModelProps } from '../types/IModelProps';
 import { STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
-import { MqttUtil } from '../util/MqttUtil';
 import { PolygonUtil } from '../util/PolygonUtil';
 
 const ModelComponent = (props: IModelProps) => {
 
-  // const { scene, lights, selection, clipPlane, handleSensors, handleSensorPositions } = { ...props };
-  const { scene: sceneUrl, clipPlane } = { ...props };
+  const { scene: sceneUrl, clipPlane, handleModelComplete } = { ...props };
 
 
   const { scene, invalidate } = useThree();
 
   const groupRef = useRef<Group>(new Group());
-  const floorRef = useRef<Group>(new Group());
+  // const floorRef = useRef<Group>(new Group());
 
   // const [namedMarks, setNamedMarks] = useState<Mesh[]>([]);
   // const [namedFaces, setNamedFaces] = useState<Mesh[]>([]);
@@ -214,13 +212,11 @@ const ModelComponent = (props: IModelProps) => {
 
       });
 
-
-      // console.log('STATUS_HANDLERS', STATUS_HANDLERS);
-      window.setTimeout(() => {
-        MqttUtil.setup();
-      }, 1000);
-
       groupRef.current.add(result.scene);
+      window.setTimeout(() => {
+        handleModelComplete();
+      }, 250)
+
 
       invalidate();
 
@@ -228,6 +224,7 @@ const ModelComponent = (props: IModelProps) => {
   };
 
   useEffect(() => {
+
     console.debug('✨ building model component');
 
     setTimeout(() => {
@@ -247,39 +244,14 @@ const ModelComponent = (props: IModelProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clipPlane]);
 
-  useFrame(({ camera }) => {
+  useFrame(() => { // { camera }
 
-    MaterialRepo.updateMaterialLineResolution(); // does not have to happen on every frame
+    // MaterialRepo.updateMaterialLineResolution(); // does not have to happen on every frame
 
-    // const widthHalf = window.innerWidth / 2;
-    // const heightHalf = window.innerHeight / 2;
-
-    // rebuild sensors with their projected screen cooordinates
-    // const sensorPositions: ISensorPosition[] = [];
-    // sensors.forEach((sensor) => {
-    //   const pos = sensor.position3D.clone();
-    //   pos.project(camera);
-    //   sensorPositions.push({
-    //     ...sensor,
-    //     position2D: new Vector2(pos.x * widthHalf + widthHalf, -(pos.y * heightHalf) + heightHalf),
-    //   });
-    // }, 1);
-
-    // handleSensorPositions(sensorPositions);
-
-    floorRef.current.lookAt(camera.position.clone());
-    floorRef.current.rotateZ(Math.PI / 2);
-    floorRef.current.updateMatrixWorld();
-
-  });
+  }, 2);
 
   return (
     <>
-      {/* <group ref={floorRef}>
-        {lights.map((light) => (
-          <LightComponent key={light.id} {...light} />
-        ))}
-      </group> */}
       <group ref={groupRef} />
     </>
   );
