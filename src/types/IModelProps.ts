@@ -7,7 +7,10 @@ export interface IModelProps {
   stamp: string;
   scene: string;
   sun: ISunProps;
-  clipPlane: number;
   modelComplete: boolean;
   handleModelComplete: () => void;
 }
+
+// export interface IClipPlane {
+//   clipPlane: number;
+// }

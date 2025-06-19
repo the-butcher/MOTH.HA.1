@@ -18,33 +18,28 @@ const theme = ThemeUtil.createTheme();
 
 function AppScene() {
 
-  const handleClipPlane = (clipPlane: number) => {
+  // const handleClipPlane = (clipPlane: number) => {
 
-    console.debug('📞 handleClipPlane', clipPlane);
+  //   console.log('📞 handleClipPlane', clipPlane);
 
-    clipPlaneRef.current = clipPlane;
+  //   clipPlaneRef.current = clipPlane;
 
-    // MaterialRepo.setClipPlane(clipPlane);
-    boardPropsRef.current = {
-      ...boardPropsRef.current,
-      clipPlane: clipPlaneRef.current
-    };
-    setBoardProps(boardPropsRef.current);
+  //   boardPropsRef.current = {
+  //     ...boardPropsRef.current,
+  //     clipPlane: clipPlaneRef.current
+  //   };
+  //   setBoardProps(boardPropsRef.current);
 
-    scenePropsRef.current = {
-      ...scenePropsRef.current,
-      model: {
-        ...scenePropsRef.current.model,
-        clipPlane: clipPlaneRef.current
-      },
-      orbit: {
-        ...scenePropsRef.current.orbit,
-        clipPlane: clipPlaneRef.current
-      }
-    };
-    setSceneProps(scenePropsRef.current);
+  //   scenePropsRef.current = {
+  //     ...scenePropsRef.current,
+  //     orbit: {
+  //       ...scenePropsRef.current.orbit,
+  //       clipPlane: clipPlaneRef.current
+  //     },
+  //   };
+  //   setSceneProps(scenePropsRef.current);
 
-  }
+  // }
 
   const handleCameraKey = (cameraKey: TCameraKey) => {
 
@@ -55,7 +50,7 @@ function AppScene() {
     scenePropsRef.current = {
       ...scenePropsRef.current,
       orbit: {
-        ...sceneProps.orbit,
+        ...scenePropsRef.current.orbit,
         cameraKey: cameraKeyRef.current
       }
     };
@@ -108,24 +103,6 @@ function AppScene() {
 
   }
 
-  const handleWorldFocusDistance = (worldFocusDistance: number) => {
-
-    console.debug('📞 worldFocusDistance', worldFocusDistance);
-
-    boardPropsRef.current = {
-      ...boardPropsRef.current,
-      sun: sunPropsRef.current
-    };
-    setBoardProps(boardPropsRef.current);
-
-    scenePropsRef.current = {
-      ...scenePropsRef.current,
-      worldFocusDistance
-    };
-    setSceneProps(scenePropsRef.current);
-
-  }
-
   const handleModelComplete = () => {
 
     console.debug('📞 handleModelComplete');
@@ -146,35 +123,32 @@ function AppScene() {
 
   };
 
-  const clipPlaneRef = useRef<number>(8.6);
-  const cameraKeyRef = useRef<TCameraKey>('home');
+  // const clipPlaneRef = useRef<number>(8.6);
+  const cameraKeyRef = useRef<TCameraKey>('home3');
   const sunPropsRef = useRef<ISunProps>(TimeUtil.getSunProps());
   const scenePropsRef = useRef<ISceneProps>({
     orbit: {
       id: ObjectUtil.createId(),
       stamp: ObjectUtil.createId(),
       cameraKey: cameraKeyRef.current,
-      clipPlane: clipPlaneRef.current,
+      // clipPlane: clipPlaneRef.current,
       handleConfirmProps,
-      handleCameraKey,
-      handleWorldFocusDistance
+      handleCameraKey
     },
     model: {
       id: ObjectUtil.createId(),
       stamp: ObjectUtil.createId(),
-      clipPlane: clipPlaneRef.current,
       scene: './h24og2_poly_test.dae',
       sun: sunPropsRef.current,
       modelComplete: false,
       handleModelComplete
-    },
-    worldFocusDistance: 0
+    }
   });
   const boardPropsRef = useRef<IBoardProps>({
-    clipPlane: clipPlaneRef.current,
+    // clipPlane: clipPlaneRef.current,
     sun: sunPropsRef.current,
     cameraKey: cameraKeyRef.current,
-    handleClipPlane,
+    // handleClipPlane,
     handleSunInstant,
     handleCameraKey
   });

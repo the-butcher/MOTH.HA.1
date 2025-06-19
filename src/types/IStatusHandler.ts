@@ -50,20 +50,20 @@ const setBarrelTopColors = () => {
 
     // console.log('setBarrelTopColors', STATUS_COUNTER_1);
 
-    let colorDescFace = COLOR_DESCRIPTIONS['face_gray'];
-    let colorDescSgmt = COLOR_DESCRIPTIONS['line_gray'];
-    let colorDescLine = COLOR_DESCRIPTIONS['line_gray'];
+    let colorDescFace = COLOR_DESCRIPTIONS['face_gray_noclip'];
+    let colorDescSgmt = COLOR_DESCRIPTIONS['line_gray_noclip'];
+    let colorDescLine = COLOR_DESCRIPTIONS['line_gray_noclip'];
 
     if (STATUS_POWER_1) {
 
         if (STATUS_COUNTER_1 > counter1Min) {
-            colorDescFace = COLOR_DESCRIPTIONS['face_blue'];
-            colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_blue'];
-            colorDescLine = COLOR_DESCRIPTIONS['line_blue'];
+            colorDescFace = COLOR_DESCRIPTIONS['face_blue_noclip'];
+            colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_blue_noclip'];
+            colorDescLine = COLOR_DESCRIPTIONS['line_blue_noclip'];
         } else {
-            colorDescFace = COLOR_DESCRIPTIONS['face_red'];
-            colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_red'];
-            colorDescLine = COLOR_DESCRIPTIONS['line_red'];
+            colorDescFace = COLOR_DESCRIPTIONS['face_red_noclip'];
+            colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_red_noclip'];
+            colorDescLine = COLOR_DESCRIPTIONS['line_red_noclip'];
         }
 
     } else {
@@ -98,17 +98,17 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
             window.clearTimeout(STATUS_HANDLERS['weather___'].actTo);
             STATUS_HANDLERS['weather___'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
-                PolygonUtil.createTextMesh(`${sun}%`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray']);
-                PolygonUtil.createTextMesh(`${prc}mm/h`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray']);
+                PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray_noclip']);
+                PolygonUtil.createTextMesh(`${sun}%`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray_noclip']);
+                PolygonUtil.createTextMesh(`${prc}mm/h`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray_noclip']);
                 invalidate();
             }, 500);
         },
         statusQuery: () => {
 
-            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
-            // PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray']);
-            // PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray_noclip']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray_noclip']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray_noclip']);
         },
         faces: [],
         sgmts: [],
@@ -122,11 +122,11 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
             const rad = status['rad'];
 
-            let colorDescKeyRad: TColorKey = 'face_green';
+            let colorDescKeyRad: TColorKey = 'face_green___clip';
             if (rad >= 10) {
-                colorDescKeyRad = 'face_red';
+                colorDescKeyRad = 'face_red___clip';
             } else if (rad >= 0.2) {
-                colorDescKeyRad = 'face_yellow';
+                colorDescKeyRad = 'face_yellow___clip';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
@@ -139,7 +139,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         },
         statusQuery: () => {
 
-            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth_295D3'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth_295D3'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip']);
             // nothing
         },
         faces: [],
@@ -156,24 +156,24 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             const deg = status['deg'];
             // console.log('moth/ip__66', co2Lpf, status, STATUS_HANDLERS['moth____66'].texts[0]);
 
-            let colorDescKeyLpf: TColorKey = 'face_green';
+            let colorDescKeyLpf: TColorKey = 'face_green___clip';
             if (co2Lpf >= 1000) {
-                colorDescKeyLpf = 'face_red';
+                colorDescKeyLpf = 'face_red___clip';
             } else if (co2Lpf >= 800) {
-                colorDescKeyLpf = 'face_yellow';
+                colorDescKeyLpf = 'face_yellow___clip';
             }
 
-            let colorDescKeyDeg: TColorKey = 'face_green';
+            let colorDescKeyDeg: TColorKey = 'face_green___clip';
             if (deg >= 30) {
-                colorDescKeyDeg = 'face_red';
+                colorDescKeyDeg = 'face_red___clip';
             } else if (deg >= 25) {
-                colorDescKeyDeg = 'face_yellow';
+                colorDescKeyDeg = 'face_yellow___clip';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth____66'].actTo);
             STATUS_HANDLERS['moth____66'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth____66'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf]); // TODO :: color depending on value
+                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth____66'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf]);
                 PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['moth____66'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyDeg]);
                 invalidate();
             }, 500);
@@ -181,8 +181,8 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         },
         statusQuery: () => {
 
-            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth____66'].texts[1], COLOR_DESCRIPTIONS['face_gray']); // TODO :: color depending on value
-            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth____66'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth____66'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth____66'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip']);
             // nothing
         },
         faces: [],
@@ -199,24 +199,24 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             const deg = status['deg'];
             // console.log('moth/ip_178', co2Lpf, status, STATUS_HANDLERS['moth___178'].texts[0]);
 
-            let colorDescKeyLpf: TColorKey = 'face_green';
+            let colorDescKeyLpf: TColorKey = 'face_green___clip';
             if (co2Lpf >= 1000) {
-                colorDescKeyLpf = 'face_red';
+                colorDescKeyLpf = 'face_red___clip';
             } else if (co2Lpf >= 800) {
-                colorDescKeyLpf = 'face_yellow';
+                colorDescKeyLpf = 'face_yellow___clip';
             }
 
-            let colorDescKeyDeg: TColorKey = 'face_green';
+            let colorDescKeyDeg: TColorKey = 'face_green___clip';
             if (deg >= 30) {
-                colorDescKeyDeg = 'face_red';
+                colorDescKeyDeg = 'face_red___clip';
             } else if (deg >= 25) {
-                colorDescKeyDeg = 'face_yellow';
+                colorDescKeyDeg = 'face_yellow___clip';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth___178'].actTo);
             STATUS_HANDLERS['moth___178'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth___178'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf]); // TODO :: color depending on value
+                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth___178'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf]);
                 PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['moth___178'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyDeg]);
                 invalidate();
             }, 500);
@@ -224,8 +224,8 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         },
         statusQuery: () => {
 
-            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___178'].texts[1], COLOR_DESCRIPTIONS['face_gray']); // TODO :: color depending on value
-            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___178'].texts[0], COLOR_DESCRIPTIONS['face_gray']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___178'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip']);
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___178'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip']);
             // nothing
         },
         faces: [],
@@ -241,24 +241,24 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             const pm025 = status['pm025'];
             // console.log('moth/ip_130', pm025, status, STATUS_HANDLERS['moth___130'].texts[0]);
 
-            let colorDescKeyPm025: TColorKey = 'face_green';
+            let colorDescKeyPm025: TColorKey = 'face_green___clip';
             if (pm025 >= 15) {
-                colorDescKeyPm025 = 'face_red';
+                colorDescKeyPm025 = 'face_red___clip';
             } else if (pm025 >= 5) {
-                colorDescKeyPm025 = 'face_yellow';
+                colorDescKeyPm025 = 'face_yellow___clip';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth___130'].actTo);
             STATUS_HANDLERS['moth___130'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${pm025}µg/m³`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyPm025]); // TODO :: color depending on value
+                PolygonUtil.createTextMesh(`${pm025}µg/m³`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyPm025]);
                 invalidate();
             }, 500);
 
         },
         statusQuery: () => {
 
-            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS['face_gray']); // TODO :: color depending on value
+            PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip']);
             // // nothing
 
         },
@@ -287,7 +287,8 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
                 const liters = STATUS_COUNTER_1 / 350;
                 PolygonUtil.createTextMesh(`~ ${liters.toFixed()} liter`, STATUS_HANDLERS['switch_pump_1'].texts[0], {
                     rgb: 0xFFFFFF,
-                    opacity: 1
+                    opacity: 1,
+                    clip: false
                 });
 
                 window.clearTimeout(STATUS_HANDLERS['barrel_cnt'].actTo);
@@ -321,8 +322,8 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             if (switch1) {
 
                 // console.log('barrel_top handler', power1, status);
-                const colorDesc = switch1 === 'ON' ? COLOR_DESCRIPTIONS['face_blue'] : COLOR_DESCRIPTIONS['face_gray'];
-                const colorDescSgmt = switch1 === 'ON' ? COLOR_DESCRIPTIONS['sgmt_blue'] : COLOR_DESCRIPTIONS['line_gray'];
+                const colorDesc = switch1 === 'ON' ? COLOR_DESCRIPTIONS['face_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray_noclip'];
+                const colorDescSgmt = switch1 === 'ON' ? COLOR_DESCRIPTIONS['sgmt_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray_noclip'];
                 STATUS_HANDLERS['barrel_top'].faces.forEach(face => {
                     face.material = MaterialRepo.getMaterialFace(colorDesc);
                 });
@@ -352,8 +353,8 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             const switch2 = status['POWER2']; // when ON the barrel is completely empty
             if (switch2) {
                 // console.log('barrel_bot handler', power2, status);
-                const colorDescFace = switch2 === 'OFF' ? COLOR_DESCRIPTIONS['face_blue'] : COLOR_DESCRIPTIONS['face_gray'];
-                const colorDescSgmt = switch2 === 'OFF' ? COLOR_DESCRIPTIONS['sgmt_blue'] : COLOR_DESCRIPTIONS['line_gray'];
+                const colorDescFace = switch2 === 'OFF' ? COLOR_DESCRIPTIONS['face_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray_noclip'];
+                const colorDescSgmt = switch2 === 'OFF' ? COLOR_DESCRIPTIONS['sgmt_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray_noclip'];
                 STATUS_HANDLERS['barrel_bot'].faces.forEach(face => {
                     face.material = MaterialRepo.getMaterialFace(colorDescFace);
                 });
@@ -411,16 +412,16 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
             if (status['POWER2']) {
 
-                let colorDescFace = COLOR_DESCRIPTIONS['face_gray'];
-                let colorDescSgmt = COLOR_DESCRIPTIONS['line_gray'];
-                let colorDescLine = COLOR_DESCRIPTIONS['line_gray'];
+                let colorDescFace = COLOR_DESCRIPTIONS['face_gray_noclip'];
+                let colorDescSgmt = COLOR_DESCRIPTIONS['line_gray_noclip'];
+                let colorDescLine = COLOR_DESCRIPTIONS['line_gray_noclip'];
 
                 STATUS_POWER_2 = status['POWER2'] === 'ON'; // when ON the barrel is completely full
                 if (STATUS_POWER_2) {
 
-                    colorDescFace = COLOR_DESCRIPTIONS['face_blue'];
-                    colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_blue'];
-                    colorDescLine = COLOR_DESCRIPTIONS['line_blue'];
+                    colorDescFace = COLOR_DESCRIPTIONS['face_blue_noclip'];
+                    colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_blue_noclip'];
+                    colorDescLine = COLOR_DESCRIPTIONS['line_blue_noclip'];
 
                 }
 

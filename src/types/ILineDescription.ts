@@ -9,47 +9,47 @@ export interface ILineDescription extends IColorDescription {
 
 export const LINE_DESCRIPTIONS: { [K in TLineDescKey]: ILineDescription } = {
     weather___: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'thin'
     },
     moth_295D3: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'thin'
     },
     moth____66: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'thin'
     },
     moth___178: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'thin'
     },
     moth___130: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'thin'
     },
     switch_pump_1: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray_noclip'],
         lineStyle: 'wide'
     },
     switch_pump_2: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray_noclip'],
         lineStyle: 'wide'
     },
     switch_pump_3: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray_noclip'],
         lineStyle: 'wide'
     },
     barrel_top: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'wide'
     },
     barrel_bot: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'wide'
     },
     misc_gray: {
-        ...COLOR_DESCRIPTIONS['line_gray'],
+        ...COLOR_DESCRIPTIONS['line_gray___clip'],
         lineStyle: 'thin'
     }
 };

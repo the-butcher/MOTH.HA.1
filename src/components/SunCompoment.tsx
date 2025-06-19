@@ -1,7 +1,7 @@
-import { invalidate, useFrame, useThree } from '@react-three/fiber';
+import { invalidate, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import SunCalc from 'suncalc';
-import { DirectionalLight, Vector3 } from 'three';
+import { AmbientLight, DirectionalLight } from 'three';
 import { STATUS_HANDLERS } from '../types/IStatusHandler';
 import { ISunProps } from '../types/ISunProps';
 import { TimeUtil } from '../util/TimeUtil';
@@ -11,8 +11,12 @@ const SunCompoment = (props: ISunProps) => {
 
   const { sunInstant } = { ...props };
   const lightRef = useRef<DirectionalLight>(new DirectionalLight());
+  const ambientLightRef = useRef<AmbientLight>(new AmbientLight());
 
-  const { gl, scene } = useThree();
+  // const [environmentIntensity, setEnvironmentIntensity] = useState<number>(0.5);
+  // const [backgroundRotation, setBackgroundRotation] = useState<[number, number, number]>([0, 0, 0]);
+
+  const { gl } = useThree();
 
   const configureLight = (light: DirectionalLight, textureFraction: number) => {
 
@@ -35,17 +39,20 @@ const SunCompoment = (props: ISunProps) => {
     light.shadow.mapSize.width = maxTextureSize / textureFraction;
     light.shadow.mapSize.height = maxTextureSize / textureFraction;
 
+    // console.log('texture dim', maxTextureSize / textureFraction);
+
   };
   useEffect(() => {
 
     console.debug('✨ building sun component');
 
-    configureLight(lightRef.current, 16);
+    configureLight(lightRef.current, 8);
 
     // scene.add(new DirectionalLightHelper(lightRef.current));
     // scene.add(new CameraHelper(lightRef.current.shadow.camera));
 
-    lightRef.current.shadow.needsUpdate = true;
+    // console.log('updating shadow');
+    // lightRef.current.shadow.needsUpdate = true;
     gl.shadowMap.needsUpdate = true;
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,45 +60,60 @@ const SunCompoment = (props: ISunProps) => {
 
   useEffect(() => {
 
-    console.debug('⚙ updating sun component (hour)', sunInstant);
+    console.debug('⚙ updating sun component (sunInstant)', sunInstant);
+
+    const position = SunCalc.getPosition(new Date(sunInstant), TimeUtil.LATITUDE, TimeUtil.LONGITUDE); // coordinates for vienna
 
     const forecast = WeatherUtil.getForecast(sunInstant);
     STATUS_HANDLERS['weather___'].statusHndlr(forecast as never);
+
+    // console.log('forecast sun', forecast.sunshine);
+    lightRef.current.intensity = 0.5 + 1.0 * forecast.sunshine;
+    ambientLightRef.current.intensity = 0.5 + 0.5 * forecast.sunshine;
+
+    const azimuth = position.azimuth;
+    const altitude = position.altitude;
+    const sunDist = 50;
+
+    // const _backgroundRotation = position.azimuth + Math.PI / 2;
+    // const _environmentIntensity = 0.1 + 0.5 * forecast.sunshine;
+    // console.log('environmentRotation', environmentRotation, 'environmentIntensity', environmentIntensity);
+
+    lightRef.current.position.set(- Math.sin(azimuth) * sunDist, Math.tan(altitude) * sunDist, Math.cos(azimuth) * sunDist);
+    lightRef.current.lookAt(0, 0, 0);
+
+    // console.log('environmentIntensity', _environmentIntensity, 'environmentRotation', _backgroundRotation);
+
+    // setBackgroundRotation([0, -_backgroundRotation, 0]);
+    // setEnvironmentIntensity(_environmentIntensity);
+
+    // console.log('updating shadow');
+    // lightRef.current.shadow.needsUpdate = true;
+    gl.shadowMap.needsUpdate = true;
 
     invalidate();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sunInstant]);
 
-  useFrame(() => { // { gl, scene, camera }
+  // useEffect(() => {
 
-    const position = SunCalc.getPosition(new Date(sunInstant), TimeUtil.LATITUDE, TimeUtil.LONGITUDE); // coordinates for vienna
+  //   console.debug('⚙ updating sun component (backgroundRotation, environmentIntensity)', backgroundRotation, environmentIntensity);
 
-    const forecast = WeatherUtil.getForecast(sunInstant);
-    // console.log('forecast sun', forecast.sunshine);
-    lightRef.current.intensity = 0.1 + 0.8 * forecast.sunshine;
+  //   // scene.environmentIntensity = environmentIntensity;
+  //   // scene.environmentRotation.setFromVector3(new Vector3(backgroundRotation[0], backgroundRotation[1], backgroundRotation[2]));
+  //   // scene.environment!.needsUpdate = true;
 
-    const azimuth = position.azimuth;
-    const altitude = position.altitude;
-    const sunDist = 50;
+  //   // invalidate();
 
-    const environmentRotation = position.azimuth + Math.PI / 2;
-    const environmentIntensity = 0.02 + 0.1 * forecast.sunshine;
-    // console.log('environmentRotation', environmentRotation, 'environmentIntensity', environmentIntensity);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [backgroundRotation, environmentIntensity]);
 
-    lightRef.current.position.set(- Math.sin(azimuth) * sunDist, Math.tan(altitude) * sunDist, Math.cos(azimuth) * sunDist);
-    lightRef.current.lookAt(0, 0, 0);
-
-    scene.environmentRotation.setFromVector3(new Vector3(0, -environmentRotation, 0));
-    scene.environmentIntensity = environmentIntensity;
-    scene.environment!.needsUpdate = true;
-
-    lightRef.current.shadow.needsUpdate = true;
-    gl.shadowMap.needsUpdate = true;
-
-  }, 2);
-
-  return <directionalLight intensity={1} ref={lightRef} castShadow />;
+  return <>
+    {/* <Environment preset="park" backgroundRotation={backgroundRotation} background={true} environmentIntensity={environmentIntensity} backgroundBlurriness={0.00} resolution={128} /> */}
+    <directionalLight intensity={1} ref={lightRef} castShadow />
+    <ambientLight intensity={1} ref={ambientLightRef} />
+  </>;
 
 };
 

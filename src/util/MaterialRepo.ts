@@ -15,18 +15,18 @@ export class MaterialRepo {
     MaterialRepo.CLIP_PLANE.constant = clipPlane + MODEL_OFFSET_Y;
   }
 
-  static toCode(type: string, rgb: number, opacity: number): string {
-    return `${type}_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+  static toCode(type: string, rgb: number, opacity: number, clip: boolean): string {
+    return `${type}_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}_${clip ? 'c' : 'n'}`;
   }
 
   static getMaterialSgmt(colorDesc: IColorDescription): LineBasicMaterial {
 
-    const code = this.toCode('face', colorDesc.rgb, 1); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+    const code = this.toCode('face', colorDesc.rgb, 1, colorDesc.clip); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
     if (!this.MATERIALS_SGMT[code]) {
 
-      const clippingPlanes: Plane[] = [
+      const clippingPlanes: Plane[] = colorDesc.clip ? [
         this.CLIP_PLANE
-      ];
+      ] : [];
 
       MaterialRepo.MATERIALS_SGMT[code] = new LineBasicMaterial({
         color: new Color(colorDesc.rgb),
@@ -43,12 +43,12 @@ export class MaterialRepo {
 
   static getMaterialFace(colorDesc: IColorDescription): MeshPhysicalMaterial {
 
-    const code = this.toCode('face', colorDesc.rgb, colorDesc.opacity); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+    const code = this.toCode('face', colorDesc.rgb, colorDesc.opacity, colorDesc.clip); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
     if (!this.MATERIALS_FACE[code]) {
 
-      const clippingPlanes: Plane[] = [
+      const clippingPlanes: Plane[] = colorDesc.clip ? [
         this.CLIP_PLANE
-      ];
+      ] : [];
 
       MaterialRepo.MATERIALS_FACE[code] = new MeshPhysicalMaterial({
         color: new Color(colorDesc.rgb),
@@ -72,12 +72,12 @@ export class MaterialRepo {
 
   static getMaterialLine(colorDesc: IColorDescription): LineMaterial {
 
-    const code = this.toCode('face', colorDesc.rgb, 1); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
+    const code = this.toCode('face', colorDesc.rgb, 1, colorDesc.clip); // `face_${rgb.toString(16).padStart(6, '0')}_${Math.round(opacity * 256).toString(16).padStart(2, '0')}`;
     if (!this.MATERIALS_LINE[code]) {
 
-      const clippingPlanes: Plane[] = [
+      const clippingPlanes: Plane[] = colorDesc.clip ? [
         this.CLIP_PLANE
-      ];
+      ] : [];
 
       MaterialRepo.MATERIALS_LINE[code] = new LineMaterial({
         color: new Color(colorDesc.rgb),

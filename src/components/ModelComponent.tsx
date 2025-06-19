@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Group, LineSegments, Mesh, Object3D, Object3DEventMap, Vector3 } from 'three';
 import { ColladaLoader } from 'three/examples/jsm/Addons.js';
@@ -12,7 +12,7 @@ import { PolygonUtil } from '../util/PolygonUtil';
 
 const ModelComponent = (props: IModelProps) => {
 
-  const { scene: sceneUrl, clipPlane, handleModelComplete } = { ...props };
+  const { scene: sceneUrl, handleModelComplete } = { ...props };
 
 
   const { scene, invalidate } = useThree();
@@ -85,15 +85,28 @@ const ModelComponent = (props: IModelProps) => {
           faceName = 'room';
         }
 
+        // console.log('misc_gray', faceName)
+
         // console.log('faceName', faceName);
         const faceDescKeys: TFaceDescKey[] = Object.keys(FACE_DESCRIPTIONS) as TFaceDescKey[];
         let faceDesc: IFaceDescription | undefined;
         faceDescKeys.forEach((faceDescKey: TFaceDescKey) => {
-          if (faceName.startsWith(faceDescKey)) {
+          if (faceName === faceDescKey) {
             faceDesc = FACE_DESCRIPTIONS[faceDescKey];
             faceName = faceDescKey;
           }
         });
+        if (!faceDesc) {
+          faceDescKeys.forEach((faceDescKey: TFaceDescKey) => {
+            if (faceName.startsWith(faceDescKey)) {
+              faceDesc = FACE_DESCRIPTIONS[faceDescKey];
+              faceName = faceDescKey;
+            }
+          });
+        }
+
+        // console.log(faceName, faceDesc)
+
         if (faceDesc) {
 
           face.name = faceName; // reassign, since the original occurence of name may have been somewhere else in the hierarchy
@@ -230,7 +243,6 @@ const ModelComponent = (props: IModelProps) => {
         handleModelComplete();
       }, 250)
 
-
       invalidate();
 
     }); // load async
@@ -246,22 +258,6 @@ const ModelComponent = (props: IModelProps) => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-
-    console.debug('⚙ updating model component (clipPlane)', clipPlane);
-
-    MaterialRepo.setClipPlane(clipPlane);
-    invalidate();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clipPlane]);
-
-  useFrame(() => { // { camera }
-
-    // MaterialRepo.updateMaterialLineResolution(); // does not have to happen on every frame
-
-  }, 2);
 
   return (
     <>

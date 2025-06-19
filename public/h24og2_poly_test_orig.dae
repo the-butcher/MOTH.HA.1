@@ -1225,7 +1225,7 @@
                 </node>
                 <node id="ID624" name="group_1">
                     <matrix>1 0 0 -368.3306 0 1 0 -873.4426 0 0 1 7.874016 0 0 0 1</matrix>
-                    <node id="ID625" name="walls_house">
+                    <node id="ID625" name="walls_house___clip">
                         <matrix>1 0 0 614.1687 0 1 0 672.4123 0 0 1 1.181277e-13 0 0 0 1</matrix>
                         <instance_geometry url="#ID626">
                             <bind_material>
@@ -1267,7 +1267,7 @@
                             </bind_material>
                         </instance_geometry>
                     </node>
-                    <node id="ID650" name="walls_house">
+                    <node id="ID650" name="walls_house___clip">
                         <matrix>1 0 0 627.1463 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
                         <instance_geometry url="#ID651">
                             <bind_material>
@@ -1282,7 +1282,7 @@
                             </bind_material>
                         </instance_geometry>
                     </node>
-                    <node id="ID657" name="walls_house">
+                    <node id="ID657" name="walls_house___clip">
                         <matrix>1 0 0 194.2718 0 1 0 672.4123 0 0 1 1.181277e-13 0 0 0 1</matrix>
                         <instance_geometry url="#ID658">
                             <bind_material>
@@ -1357,7 +1357,7 @@
                             </bind_material>
                         </instance_geometry>
                     </node>
-                    <node id="ID696" name="walls_house">
+                    <node id="ID696" name="walls_house___clip">
                         <matrix>1 0 0 359.4454 0 1 0 111.4687 0 0 1 6.128431e-14 0 0 0 1</matrix>
                         <instance_geometry url="#ID697">
                             <bind_material>

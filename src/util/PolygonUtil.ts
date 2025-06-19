@@ -27,14 +27,16 @@ export class PolygonUtil {
 
         this.getFont().then(() => {
 
+            // console.log('create text');
+
             const textGeom = new TextGeometry(label, {
                 font: this.font,
                 size: 0.3,
                 depth: 0.00,
-                curveSegments: 12,
-                bevelThickness: 0.005,
-                bevelSize: 0.005,
-                bevelEnabled: false
+                curveSegments: 2,
+                // bevelThickness: 0.005,
+                // bevelSize: 0.005,
+                // bevelEnabled: false
             });
             textGeom.computeBoundingBox();
             textGeom.computeVertexNormals();
@@ -44,10 +46,20 @@ export class PolygonUtil {
             textMesh.receiveShadow = true;
             textMesh.name = 'ArrowHelper';
 
-            parent.clear();
+            const children = [...parent.children];
+            children.forEach(child => {
+                parent.remove(child);
+                (child as Mesh).geometry.dispose();
+            });
+            parent.clear(); // just to be sure
             parent.add(textMesh);
 
             const outerRings: IEdge3D[][] = PolygonUtil.findOuterRings(textMesh);
+
+            // let orcount = 0;
+            // outerRings.forEach(or => orcount += or.length);
+            // console.log('orcount', orcount)
+
             const sgmtsArray: LineSegments[] = PolygonUtil.toSgmt(outerRings, 'ArrowHelper', textMesh.position, {
                 ...LINE_DESCRIPTIONS['misc_gray'],
                 opacity: 0.10

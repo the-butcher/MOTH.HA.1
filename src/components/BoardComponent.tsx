@@ -11,12 +11,11 @@ import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 
 const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
 
-  // const { labels, recordKeyApp, handleRecordKey, handleClipPlane, handleCameraKey } = { ...props };
-  const { sun, handleSunInstant, confirmProps, cameraKey, handleCameraKey, clipPlane, handleClipPlane } = { ...props };
+  const { sun, handleSunInstant, confirmProps, cameraKey, handleCameraKey } = { ...props };
 
-  const getSliderHeight = () => {
-    return window.innerHeight - 160;
-  }
+  // const getSliderHeight = () => {
+  //   return window.innerHeight - 160;
+  // }
 
   // const getSliderWidth = () => {
   //   return window.innerWidth - 80;
@@ -37,24 +36,24 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const marks = [
-    {
-      value: 0.2,
-      label: '0.2m - ground',
-    },
-    {
-      value: 3.0,
-      label: '3.0m - 1st',
-    },
-    {
-      value: 5.8,
-      label: '5.8m - 2nd',
-    },
-    {
-      value: 8.6,
-      label: '8.6m - roof',
-    },
-  ];
+  // const marks = [
+  //   {
+  //     value: 0.2,
+  //     label: '0.2m - ground',
+  //   },
+  //   {
+  //     value: 3.0,
+  //     label: '3.0m - 1st',
+  //   },
+  //   {
+  //     value: 5.8,
+  //     label: '5.8m - 2nd',
+  //   },
+  //   {
+  //     value: 8.6,
+  //     label: '8.6m - roof',
+  //   },
+  // ];
 
   const valueLabelFormat = (value: number) => {
     return TimeUtil.toLocalTime(value);
@@ -63,16 +62,20 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
   const setSunInstantTo = useRef<number>(-1);
   const handleSunInstantChange = (value: number) => {
 
+    // console.log('handle sun change');
+
     handleSunInstant(value);
 
     window.clearTimeout(setSunInstantTo.current);
     setSunInstantTo.current = window.setTimeout(() => {
       handleSunInstantChange(Date.now());
-    }, 60000);
+    }, 600000);
 
   }
 
   const handleSunInstantCommit = (value: number) => {
+
+    // console.log('handle sun commit');
 
     handleSunInstant(value);
 
@@ -80,14 +83,14 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
     window.clearTimeout(setSunInstantTo.current);
     setSunInstantTo.current = window.setTimeout(() => {
       handleSunInstantChange(Date.now());
-    }, 60000);
+    }, 600000);
 
   }
 
   return (
     <>
 
-      <Slider
+      {/* <Slider
         sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '20px', bottom: '80px', height: `${getSliderHeight()}px` }}
         orientation="vertical"
         value={clipPlane}
@@ -97,7 +100,7 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
         step={0.7}
         marks={marks}
         onChange={(_e: Event, value: number | number[]) => handleClipPlane(value as number)}
-      />
+      /> */}
 
       <Slider
         sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
@@ -132,8 +135,18 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
           icon={<LocalDrinkIcon />}
         />
         <BottomNavigationAction
-          label="Haus"
-          value="home"
+          label="home0"
+          value="home0"
+          icon={<HomeIcon />}
+        />
+        <BottomNavigationAction
+          label="home1"
+          value="home1"
+          icon={<HomeIcon />}
+        />
+        <BottomNavigationAction
+          label="home3"
+          value="home3"
           icon={<HomeIcon />}
         />
         <BottomNavigationAction
