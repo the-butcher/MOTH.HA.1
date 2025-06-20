@@ -1,12 +1,12 @@
-import { IConfirmProps } from "./IConfirmProps";
-import { TCameraKey } from "./IOrbitProps";
+import { TPresetKey } from "./IOrbitProps";
+import { TStatusHandlerKey } from "./IStatusHandler";
 import { ISunProps } from "./ISunProps";
 
 export interface IBoardProps {
   sun: ISunProps,
-  confirmProps?: IConfirmProps; // for when a confirm is supposed to be rendered
-  cameraKey: TCameraKey; // current camera key
-  // handleClipPlane: (clipPlane: number) => void;
+  selectKey: TStatusHandlerKey | undefined;
+  presetKey: TPresetKey | undefined; // current preset key
   handleSunInstant: (sunInstant: number) => void;
-  handleCameraKey: (cameraKey: TCameraKey) => void;
+  handlePresetKey: (presetKey: TPresetKey | undefined) => void;
+  handleSelectKey: (selectKey: TStatusHandlerKey | undefined) => void;
 }

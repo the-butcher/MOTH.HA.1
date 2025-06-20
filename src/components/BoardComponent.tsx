@@ -1,21 +1,19 @@
-
-import { Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Slider, Typography } from '@mui/material';
-import { SyntheticEvent, useEffect, useRef } from 'react';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import { Button, ButtonGroup, IconButton, Slider, Stack, Switch, Typography } from '@mui/material';
+import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
+import { STATUS_HANDLERS } from '../types/IStatusHandler';
+import { ISwitchProps } from '../types/ISwitchProps';
+import { MqttUtil } from '../util/MqttUtil';
 import { TimeUtil } from '../util/TimeUtil';
 
 
 const BoardComponent = (props: IBoardProps) => {
 
-  const { sun, handleSunInstant, confirmProps, handleCameraKey } = { ...props }; //, cameraKey
+  const { sun, handleSunInstant, handlePresetKey, handleSelectKey, selectKey } = { ...props };
 
-  // const getSliderHeight = () => {
-  //   return window.innerHeight - 160;
-  // }
-
-  // const getSliderWidth = () => {
-  //   return window.innerWidth - 80;
-  // }
+  const [switchProps, setSwitchProps] = useState<ISwitchProps>();
+  const [switchActive, setSwitchActive] = useState<boolean>(false);
 
   /**
    * component init hook
@@ -31,25 +29,6 @@ const BoardComponent = (props: IBoardProps) => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // const marks = [
-  //   {
-  //     value: 0.2,
-  //     label: '0.2m - ground',
-  //   },
-  //   {
-  //     value: 3.0,
-  //     label: '3.0m - 1st',
-  //   },
-  //   {
-  //     value: 5.8,
-  //     label: '5.8m - 2nd',
-  //   },
-  //   {
-  //     value: 8.6,
-  //     label: '8.6m - roof',
-  //   },
-  // ];
 
   const valueLabelFormat = (value: number) => {
     return TimeUtil.toLocalTime(value);
@@ -83,6 +62,47 @@ const BoardComponent = (props: IBoardProps) => {
 
   }
 
+  useEffect(() => {
+
+    console.debug('⚙ updating board component (selectKey)', selectKey);
+
+    if (selectKey && STATUS_HANDLERS[selectKey].topic && STATUS_HANDLERS[selectKey].switchProps) {
+      setSwitchProps(STATUS_HANDLERS[selectKey].switchProps!);
+      MqttUtil.setBoardHandler({
+        topic: STATUS_HANDLERS[selectKey].topic,
+        value: STATUS_HANDLERS[selectKey].value,
+        handleResult
+      });
+      STATUS_HANDLERS[selectKey].statusQuery('RUNTIME');
+    } else {
+      setSwitchProps(undefined);
+      MqttUtil.clearBoardHandler();
+    }
+
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectKey]);
+
+  const handleResult = (result: boolean) => {
+    // console.log('handling result', result);
+    setSwitchActive(result);
+  }
+
+  const toggleSwitch = () => {
+
+    if (selectKey && STATUS_HANDLERS[selectKey].topic && STATUS_HANDLERS[selectKey].switchProps) {
+      STATUS_HANDLERS[selectKey].switchProps!.toggle();
+    }
+
+  };
+
+  const handleDeselect = () => {
+    console.debug('handling deselect');
+    setSwitchActive(false);
+    handleSelectKey(undefined);
+  }
+
+
   return (
     <>
 
@@ -98,31 +118,7 @@ const BoardComponent = (props: IBoardProps) => {
         onChange={(_e: Event, value: number | number[]) => handleClipPlane(value as number)}
       /> */}
 
-      <Slider
-        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
-        orientation="horizontal"
-        value={sun.sunInstant}
-        min={sun.sunriseInstant}
-        max={sun.sunsetInstant}
-        valueLabelDisplay="on"
-        step={1000 * 60 * 10}
-        getAriaValueText={valueLabelFormat}
-        valueLabelFormat={valueLabelFormat}
-        onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
-        onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
-      // marks={
-      //   [
-      //     {
-      //       value: sun.sunriseInstant,
-      //       label: valueLabelFormat(sun.sunriseInstant),
-      //     },
-      //     {
-      //       value: sun.sunsetInstant,
-      //       label: valueLabelFormat(sun.sunsetInstant),
-      //     }
-      //   ]
-      // }
-      />
+
 
       <div
         style={{
@@ -137,114 +133,117 @@ const BoardComponent = (props: IBoardProps) => {
           variant="text"
           sx={{ display: 'flex', flexDirection: 'row', zIndex: 300 }}
         >
-          <Button onClick={() => handleCameraKey('pumps')}><Typography>P</Typography></Button>
-          <Button onClick={() => handleCameraKey('home0')}><Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>0</Typography></Typography></Button>
-          <Button onClick={() => handleCameraKey('home1')}><Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>1</Typography></Typography></Button>
-          <Button onClick={() => handleCameraKey('home3')}><Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>3</Typography></Typography></Button>
-          <Button onClick={() => handleCameraKey('quarter')}><Typography>Q</Typography></Button>
+          <Button
+            onClick={() => handlePresetKey('pumps')}
+            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+          >
+            <Typography>P</Typography>
+          </Button>
+          <Button
+            onClick={() => handlePresetKey('home0')}
+            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+          >
+            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>0</Typography></Typography>
+          </Button>
+          <Button
+            onClick={() => handlePresetKey('home1')}
+            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+          >
+            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>1</Typography></Typography>
+          </Button>
+          <Button
+            onClick={() => handlePresetKey('home2')}
+            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+          >
+            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>2</Typography></Typography>
+          </Button>
+          <Button
+            onClick={() => handlePresetKey('home3')}
+            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+          >
+            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>3</Typography></Typography>
+          </Button>
+          <Button
+            onClick={() => handlePresetKey('quarter')}
+            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+          >
+            <Typography>Q</Typography>
+          </Button>
         </ButtonGroup>
       </div >
 
-
-      {/* <BottomNavigation sx={{ display: 'flex', flexDirection: 'row', zIndex: 300 }} value={cameraKey} onChange={(_e: SyntheticEvent, value: TCameraKey) => handleCameraKey(value)} showLabels={true}>
-        <BottomNavigationAction
-          label="Schuppen"
-          value="pumps"
-          icon={<LocalDrinkIcon />}
-        />
-        <BottomNavigationAction
-          label="home0"
-          value="home0"
-          icon={<HomeIcon />}
-        />
-        <BottomNavigationAction
-          label="home1"
-          value="home1"
-          icon={<HomeIcon />}
-        />
-        <BottomNavigationAction
-          label="home3"
-          value="home3"
-          icon={<HomeIcon />}
-        />
-        <BottomNavigationAction
-          label="Häuser"
-          value="quarter"
-          icon={<HolidayVillageIcon />}
-        />
-      </BottomNavigation> */}
-
       {
-        confirmProps ? <Dialog
-          open={true}
-          // onClose={handleCancel}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
+        switchProps ? <Stack
+          direction={'row'}
+          sx={{
+            position: 'fixed',
+            bottom: '6px',
+            margin: '6px 0px',
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        ><Stack
+          direction={'row'}
+          sx={{
+            padding: '0px 6px 0px 12px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.25)',
+            borderColor: 'divider',
+            borderRadius: '4px',
+            zIndex: 300
+          }}
         >
-          <DialogTitle id="alert-dialog-title">
-            {confirmProps.getTitle()}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              {confirmProps.getContent()}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button id={'cancelbutton'} onClick={confirmProps.handleCancel} autoFocus>no</Button>
-            <Button id={'confirmbutton'} onClick={confirmProps.handleConfirm}>yes</Button>
-          </DialogActions>
-        </Dialog> : null
+            <Typography>{switchProps.title}</Typography>
+            <Switch
+              sx={{
+                // margin: '3px'
+              }}
+              checked={switchActive}
+              onClick={() => toggleSwitch()}
+            />
+            <IconButton
+              onClick={() => handleDeselect()}
+              size="small"
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.0)',
+                color: '#CCCCCC'
+              }}
+            >
+              <HighlightOffIcon />
+            </IconButton>
+          </Stack>
+        </Stack> : <Slider
+          sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
+          orientation="horizontal"
+          value={sun.sunInstant}
+          min={sun.sunriseInstant}
+          max={sun.sunsetInstant}
+          valueLabelDisplay="on"
+          step={1000 * 60 * 10}
+          getAriaValueText={valueLabelFormat}
+          valueLabelFormat={valueLabelFormat}
+          onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
+          onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
+        />
       }
 
-      {/* <Paper
-        elevation={3}
-        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, width: `${getControlsWidth()}px`, height: `${getControlsHeight()}px`, right: '20px', top: '20px', backgroundColor: 'rgba(100, 100, 100, 0.60)' }}
-      >
-        <Stack direction={'row'}>
-          <Tabs
-            value={recordKeyApp}
-            onChange={(e, recordKey) => {
-              e.stopPropagation();
-              handleRecordKey(recordKey)
-            }}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ maxWidth: '70%' }}
-          >
-            {SPEED_DIAL_DEFS.map((action) => (
-              <Tab key={action.recordKey} icon={action.icon} value={action.recordKey} aria-label={action.recordKey} sx={{ minWidth: 'unset', flexGrow: 1, maxWidth: 'unset' }} />
-            ))}
-          </Tabs>
-          <div style={{ flexGrow: 5 }} />
-          <LockComponent />
-        </Stack>
-
-        <Grid container spacing={1} sx={{ padding: '10px', flexGrow: 5 }} >
-          {
-            props.labels.some(l => l.selected && l.recordKeyObj === recordKeyApp) && props.recordKeyApp !== 'instant' ? <Grid
-              item
-              xs={12}
-              sx={{ display: 'flex' }}
-            >
-              <ChartComponent {...props} height={getControlsHeight() - 150} />
-            </Grid> : labels.map((label) => (
-              <Grid
-                item
-                xs={6}
-                key={label.sensorId}
-              >
-                <GaugeComponent key={label.sensorId} {...label} height={(getControlsHeight() - 180) / Math.ceil(labels.length / 2)} />
-              </Grid>
-            ))
-          }
-        </Grid>
-
-      </Paper > */}
-      {/* {
-        labels.map((labels) => (
-          <LabelComponent key={labels.sensorId} {...labels} />
-        ))
-      } */}
+      {/* <Slider
+        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
+        orientation="horizontal"
+        value={sun.sunInstant}
+        min={sun.sunriseInstant}
+        max={sun.sunsetInstant}
+        valueLabelDisplay="on"
+        step={1000 * 60 * 10}
+        getAriaValueText={valueLabelFormat}
+        valueLabelFormat={valueLabelFormat}
+        onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
+        onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
+      /> */}
 
     </>
   );

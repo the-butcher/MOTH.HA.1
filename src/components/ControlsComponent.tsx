@@ -1,21 +1,19 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { easeInOut } from "motion";
 import { useEffect, useRef } from 'react';
-import { Group, Mesh, Raycaster, SphereGeometry, Vector2, Vector3 } from 'three';
+import { Group, Intersection, LineSegments, Mesh, Object3D, Object3DEventMap, Raycaster, SphereGeometry, Vector2, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import { IClientCoordinate, IConfirmProps } from '../types/IConfirmProps';
 import { MODEL_OFFSET_Y } from '../types/IModelProps';
-import { CAMERA_PROPS, IOrbitProps } from '../types/IOrbitProps';
+import { IOrbitProps, PRESET_PROPS } from '../types/IOrbitProps';
 import { STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { ScreenshotUtil } from '../util/ScreenshotUtil';
 import { ID_CANVAS } from './SceneComponent';
-// import { DepthOfField, EffectComposer } from "@react-three/postprocessing";
-import { DepthOfFieldEffect, EffectComposer, EffectPass, RenderPass, FXAAEffect } from "postprocessing";
+import { DepthOfFieldEffect, EffectComposer, EffectPass, FXAAEffect, RenderPass } from "postprocessing";
 
 const ControlsComponent = (props: IOrbitProps) => {
 
-  const { handleConfirmProps, cameraKey } = { ...props }; // , handleCameraKey, handleWorldFocusDistance
+  const { handleSelectKey: handleSelectKey, handlePresetKey, presetKey, selectKey } = { ...props };
 
   const { camera, gl, scene, invalidate } = useThree();
 
@@ -28,9 +26,6 @@ const ControlsComponent = (props: IOrbitProps) => {
   const pointerUpRef = useRef<Vector2>();
   const pointerDownRef = useRef<Vector2>();
   const raycasterRef = useRef<Raycaster>(new Raycaster());
-
-  // const cameraKeyRefA = useRef<TCameraKey>();
-  // const cameraKeyRefB = useRef<TCameraKey>();
 
   const cameraPositionCurr = useRef<Vector3>(new Vector3());
   const cameraPositionOrig = useRef<Vector3>(new Vector3());
@@ -136,18 +131,6 @@ const ControlsComponent = (props: IOrbitProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // useEffect(() => {
-
-  //   console.debug('⚙ updating constrols component (clipPlane)', clipPlane);
-
-  //   MaterialRepo.setClipPlane(clipPlane);
-  //   invalidate();
-
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [clipPlane]);
-
-
-
   useEffect(() => {
 
     console.debug('⚙ updating controls component (camera, gl)', camera, gl);
@@ -165,19 +148,19 @@ const ControlsComponent = (props: IOrbitProps) => {
     // controlsRef.current.minPolarAngle = 0; // Math.PI / 4; // how far above ground the map can be tilted, 0 == vertical
     // controlsRef.current.maxPolarAngle = Math.PI / 2;
 
-    const centerSphere = new Mesh(new SphereGeometry(0.05), MaterialRepo.getMaterialFace({
+    const centerSphere = new Mesh(new SphereGeometry(0.01), MaterialRepo.getMaterialFace({
       rgb: 0x00ff00,
       opacity: 1.00,
-      clip: false
+      clip: 'clip_none'
     }));
     centerHelperRef.current = centerSphere;
     centerHelperRef.current.name = 'ArrowHelper';
     scene.add(centerHelperRef.current);
 
-    const wFocusSphere = new Mesh(new SphereGeometry(0.05), MaterialRepo.getMaterialFace({
+    const wFocusSphere = new Mesh(new SphereGeometry(0.01), MaterialRepo.getMaterialFace({
       rgb: 0x0000ff,
       opacity: 1.00,
-      clip: false
+      clip: 'clip_none'
     }));
     wFocusHelperRef.current = wFocusSphere;
     wFocusHelperRef.current.name = 'ArrowHelper';
@@ -201,7 +184,7 @@ const ControlsComponent = (props: IOrbitProps) => {
       //     return;
       //   }
       // }
-      // handleCameraKey('user');
+      handlePresetKey(undefined);
     });
 
     // handleResize();
@@ -218,18 +201,15 @@ const ControlsComponent = (props: IOrbitProps) => {
 
   useEffect(() => {
 
-    console.debug('⚙ updating controls component (cameraKey)', cameraKey);
+    console.debug('⚙ updating controls component (presetKey)', presetKey);
 
-    // cameraKeyRefA.current = cameraKey;
-    // cameraKeyRefB.current = cameraKey;
-
-    if (cameraKey !== 'user') {
+    if (presetKey) {
 
       const cameraPositionDest = new Vector3();
       const cameraTargetDest = new Vector3();
       const wFocusTargetDest = new Vector3();
 
-      CAMERA_PROPS[cameraKey].apply(cameraPositionDest, cameraTargetDest, wFocusTargetDest);
+      PRESET_PROPS[presetKey].apply(cameraPositionDest, cameraTargetDest, wFocusTargetDest);
 
       cameraPositionOrig.current = camera.position.clone();
       cameraPositionDiff.current = cameraPositionDest.clone().sub(cameraPositionOrig.current);
@@ -240,12 +220,12 @@ const ControlsComponent = (props: IOrbitProps) => {
       wFocusTargetOrig.current = wFocusHelperRef.current!.position.clone();
       wFocusTargetDiff.current = wFocusTargetDest.clone().sub(wFocusTargetOrig.current);
 
-      const clipPlaneDest = CAMERA_PROPS[cameraKey].clipPlane;
+      const clipPlaneDest = PRESET_PROPS[presetKey].clipPlane;
       clipPlaneOrig.current = clipPlaneCurr.current;
       clipPlaneDiff.current = clipPlaneDest - clipPlaneOrig.current;
 
       tsAnimOrig.current = Date.now();
-      tsAnimDest.current = tsAnimOrig.current + 2500;
+      tsAnimDest.current = tsAnimOrig.current + 2000;
 
       // trigger first animation frame
       invalidate();
@@ -253,7 +233,35 @@ const ControlsComponent = (props: IOrbitProps) => {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cameraKey]);
+  }, [presetKey]);
+
+  useEffect(() => {
+
+    console.debug('⚙ updating controls component (selectKey)', selectKey);
+
+    // deselect anything other than
+    Object.keys(STATUS_HANDLERS).forEach(key => {
+      const curConfirm = STATUS_HANDLERS[key as TStatusHandlerKey].switchProps;
+      if (key !== selectKey && curConfirm) {
+        // console.log('deselect: ', key);
+        curConfirm.deselect();
+      }
+    });
+
+    if (selectKey) {
+
+      const curConfirm = STATUS_HANDLERS[selectKey as TStatusHandlerKey].switchProps;
+      if (curConfirm) {
+        // console.log('select: ', selectKey);
+        curConfirm.select();
+      }
+
+    }
+
+    invalidate();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectKey]);
 
   const updateControls = (fraction: number) => {
 
@@ -277,7 +285,18 @@ const ControlsComponent = (props: IOrbitProps) => {
 
   }
 
+  const filterByClipPlane = (i: Intersection<Object3D<Object3DEventMap>>): boolean => {
+    if (i.object instanceof Mesh || i.object instanceof LineSegments) {
+      if (i.object.material.clippingPlanes && i.object.material.clippingPlanes.length > 0 && i.point.y > (clipPlaneCurr.current + MODEL_OFFSET_Y)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   useFrame(() => { // { gl, scene, camera }s
+
+    MaterialRepo.updateMaterialLineResolution();
 
     const tsAnimN = Date.now();
     if (tsAnimN < tsAnimDest.current) {
@@ -292,6 +311,9 @@ const ControlsComponent = (props: IOrbitProps) => {
 
       // console.log('fraction', 1);
       updateControls(1);
+
+      // orbit helper point needs to be placed after animation
+      centerHelperRef.current?.position.set(controlsRef.current!.target.x, controlsRef.current!.target.y, controlsRef.current!.target.z);
 
       tsAnimOrig.current = -1;
       tsAnimDest.current = -1;
@@ -309,7 +331,7 @@ const ControlsComponent = (props: IOrbitProps) => {
       // console.log('intersect a, clipPlane', clipPlane);
 
       raycasterRef.current.setFromCamera(new Vector2(0, 0), camera);
-      const intersects = raycasterRef.current.intersectObjects(scene.children).filter(i => i.point.y < (clipPlaneCurr.current + MODEL_OFFSET_Y));
+      const intersects = raycasterRef.current.intersectObjects(scene.children).filter(filterByClipPlane);
       for (let intersectIndex = 0; intersectIndex < intersects.length; intersectIndex++) {
         const intersect = intersects[intersectIndex];
         if (intersect.object.name !== 'ArrowHelper' && intersect.object.parent?.name !== 'ArrowHelper') {
@@ -325,13 +347,10 @@ const ControlsComponent = (props: IOrbitProps) => {
         }
       }
 
-      const targetPos = controlsRef.current!.target;
-      centerHelperRef.current?.position.set(targetPos.x, targetPos.y, targetPos.z);
+      centerHelperRef.current?.position.set(controlsRef.current!.target.x, controlsRef.current!.target.y, controlsRef.current!.target.z);
 
-      worldFocusDistanceRef.current = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
-
-      console.log('pos', camera.position.x, ',', camera.position.y, ',', camera.position.z);
-      console.log('tgt', targetPos.x, ',', targetPos.y, ',', targetPos.z);
+      // console.log('pos', camera.position.x, ',', camera.position.y, ',', camera.position.z);
+      // console.log('tgt', controlsRef.current!.target.x, ',', controlsRef.current!.target.y, ',', controlsRef.current!.target.z);
 
       if (pointerDownRef.current) {
 
@@ -354,16 +373,15 @@ const ControlsComponent = (props: IOrbitProps) => {
 
               raycasterRef.current.setFromCamera(screenCoordinate, camera);
 
-              const intersects = raycasterRef.current.intersectObjects(scene.children).filter(i => i.point.y < (clipPlaneCurr.current + MODEL_OFFSET_Y));
+              const intersects = raycasterRef.current.intersectObjects(scene.children).filter(filterByClipPlane);
               for (let intersectIndex = 0; intersectIndex < intersects.length; intersectIndex++) {
 
                 if (intersectIndex === 0) {
                   wFocusHelperRef.current!.position.set(intersects[intersectIndex].point.x, intersects[intersectIndex].point.y, intersects[intersectIndex].point.z);
                   worldFocusDistanceRef.current = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
-                  console.log('pos', wFocusHelperRef.current!.position.x, ',', wFocusHelperRef.current!.position.y, ',', wFocusHelperRef.current!.position.z);
+                  // console.log('pos', wFocusHelperRef.current!.position.x, ',', wFocusHelperRef.current!.position.y, ',', wFocusHelperRef.current!.position.z);
                 }
                 const intersect = intersects[intersectIndex];
-                // console.log('intersect', intersect);
                 if (intersect.object.name !== '' && intersect.object.name !== 'ArrowHelper') {
 
                   // const sphere = new Mesh(new SphereGeometry(0.02), MaterialRepo.getMaterialFace({
@@ -376,7 +394,7 @@ const ControlsComponent = (props: IOrbitProps) => {
                   // selectHelperRef.current?.add(sphere);
 
                   const statusHandler = STATUS_HANDLERS[intersect.object.name as TStatusHandlerKey];
-                  if (statusHandler?.confirmProps) {
+                  if (statusHandler?.switchProps) {
                     hitsByNamedHandler[intersect.object.name] = hitsByNamedHandler[intersect.object.name] ? hitsByNamedHandler[intersect.object.name] + (3 - radius) : 1;
                   }
 
@@ -387,29 +405,38 @@ const ControlsComponent = (props: IOrbitProps) => {
             }
           }
 
-          let maxConfirmProps: IConfirmProps | undefined;
           let maxHits = -1;
+          let maxSelectKey: TStatusHandlerKey | undefined;
           Object.keys(hitsByNamedHandler).forEach(key => {
             const keyHits = hitsByNamedHandler[key];
-            if (keyHits > maxHits && STATUS_HANDLERS[key as TStatusHandlerKey].confirmProps) {
+            if (keyHits > maxHits && STATUS_HANDLERS[key as TStatusHandlerKey].switchProps) {
+              maxSelectKey = key as TStatusHandlerKey;
               maxHits = keyHits;
-              maxConfirmProps = STATUS_HANDLERS[key as TStatusHandlerKey].confirmProps;
             }
           });
-
-          if (maxConfirmProps) {
-            handleConfirmProps({
-              ...maxConfirmProps,
-              handleCancel: (e: IClientCoordinate) => {
-                maxConfirmProps?.handleCancel(e);
-                handleConfirmProps(undefined);
-              },
-              handleConfirm: (e: IClientCoordinate) => {
-                maxConfirmProps?.handleConfirm(e);
-                handleConfirmProps(undefined);
-              }
-            });
+          if (maxSelectKey) {
+            handleSelectKey(maxSelectKey); // can also be undefined
           }
+
+          // if (maxConfirm) {
+          //   console.log('select: ', maxSelectKey);
+
+          //   handleConfirmProps(maxConfirm);
+          //   // maxConfirm.select();
+          //   // handleConfirmProps({
+          //   //   ...maxConfirmProps,
+          //   //   handleCancel: (e: IClientCoordinate) => {
+          //   //     maxConfirmProps?.handleCancel(e);
+          //   //     handleConfirmProps(undefined);
+          //   //   },
+          //   //   handleConfirm: (e: IClientCoordinate) => {
+          //   //     maxConfirmProps?.handleConfirm(e);
+          //   //     handleConfirmProps(undefined);
+          //   //   }
+          //   // });
+          // } else {
+          //   console.log('no selection!');
+          // }
 
         }
 
@@ -421,11 +448,13 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     }
 
+    worldFocusDistanceRef.current = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
+
     effectComposerRef.current!.removePass(effectPassRef.current!);
     effectPassRef.current!.dispose();
     effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
       worldFocusDistance: worldFocusDistanceRef.current,
-      worldFocusRange: worldFocusDistanceRef.current / 3,
+      worldFocusRange: Math.max(3, worldFocusDistanceRef.current / 3),
       bokehScale: 5
     }));
     effectComposerRef.current!.addPass(effectPassRef.current);

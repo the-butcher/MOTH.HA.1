@@ -30,7 +30,8 @@ export class ThemeUtil {
         MuiTypography: {
           styleOverrides: {
             root: {
-              paddingBottom: '0px !important'
+              paddingBottom: '0px !important',
+              color: '#ffffff'
             }
           }
         },
@@ -58,15 +59,20 @@ export class ThemeUtil {
             },
           },
         },
+        MuiButtonGroup: {
+          styleOverrides: {
+            firstButton: {
+              borderColor: 'rgba(255, 255, 255, 0.25) !important',
+            },
+            middleButton: {
+              borderColor: 'rgba(255, 255, 255, 0.25) !important',
+            }
+          }
+        },
         MuiButtonBase: {
           styleOverrides: {
             root: {
-              '&.MuiSpeedDial-fab': {
-                backgroundColor: '#56c937',
-              },
-              '&.MuiSpeedDial-fab:hover': {
-                backgroundColor: '#56c937',
-              },
+              // backgroundColor: 'rgba(255, 255, 255, 0.25) !important'
             },
           },
         },

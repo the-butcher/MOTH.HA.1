@@ -9,6 +9,7 @@ import { IModelProps } from '../types/IModelProps';
 import { STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { PolygonUtil } from '../util/PolygonUtil';
+import { PRESET_PROPS, TPresetKey } from '../types/IOrbitProps';
 
 const ModelComponent = (props: IModelProps) => {
 
@@ -111,7 +112,10 @@ const ModelComponent = (props: IModelProps) => {
 
           face.name = faceName; // reassign, since the original occurence of name may have been somewhere else in the hierarchy
 
+          // if there is a status handler with that key, add it to its faces container
           STATUS_HANDLERS[faceName as TStatusHandlerKey]?.faces.push(face);
+          // if there are preset props with that key, add it to its faces container
+          PRESET_PROPS[faceName as TPresetKey]?.faces.push(face);
 
           face.material = MaterialRepo.getMaterialFace(faceDesc);
           if (faceDesc.lineDesc.lineStyle !== 'none') {
@@ -122,13 +126,15 @@ const ModelComponent = (props: IModelProps) => {
             sgmtsArray.forEach(sgmts => {
               if (faceDesc!.lineDesc.lineStyle === 'thin') {
                 face.parent?.add(sgmts);
-                // todo :: add to segments on status handler if applicable
+                // if there is a status handler with that key, add it to its sgmts container
                 STATUS_HANDLERS[faceName as TStatusHandlerKey]?.sgmts.push(sgmts);
+                // if there are preset props with that key, add it to its sgmts container
+                PRESET_PROPS[faceName as TPresetKey]?.sgmts.push(sgmts);
               } else if (faceDesc!.lineDesc.lineStyle === 'wide') {
                 const line2 = PolygonUtil.toLine2(sgmts, faceDesc!.lineDesc);
                 face.parent?.add(line2);
+                // if there is a status handler with that key, add it to its lines container
                 STATUS_HANDLERS[faceName as TStatusHandlerKey]?.lines.push(line2);
-                // todo :: add to outlines on status handler if applicable
               }
             });
 
@@ -212,6 +218,7 @@ const ModelComponent = (props: IModelProps) => {
             textGroupOuter.add(textGroupInner);
             scene.add(textGroupOuter);
 
+            // if there is a status handler with that key, add it to its texts container
             STATUS_HANDLERS[lineName as TStatusHandlerKey]?.texts.push(textGroupInner);
 
           } else {
@@ -220,11 +227,13 @@ const ModelComponent = (props: IModelProps) => {
 
             if (lineDesc.lineStyle === 'thin') {
               line1.material = MaterialRepo.getMaterialSgmt(lineDesc);
+              // if there is a status handler with that key, add it to its sgmts container
               STATUS_HANDLERS[lineName as TStatusHandlerKey]?.sgmts.push(line1);
             } else if (lineDesc.lineStyle === 'wide') {
               const line2 = PolygonUtil.toLine2(line1, lineDesc);
               line1.visible = false;
               line1.parent?.add(line2);
+              // if there is a status handler with that key, add it to its lines container
               STATUS_HANDLERS[lineName as TStatusHandlerKey]?.lines.push(line2);
             }
 

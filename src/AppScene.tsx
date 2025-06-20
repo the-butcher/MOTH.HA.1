@@ -4,72 +4,61 @@ import { useEffect, useRef, useState } from 'react';
 import BoardComponent from './components/BoardComponent';
 import SceneComponent from './components/SceneComponent';
 import { IBoardProps } from './types/IBoardProps';
-import { IConfirmProps } from './types/IConfirmProps';
-import { TCameraKey } from './types/IOrbitProps';
+import { TPresetKey } from './types/IOrbitProps';
 import { ISceneProps } from './types/ISceneProps';
+import { TStatusHandlerKey } from './types/IStatusHandler';
 import { ISunProps } from './types/ISunProps';
+import { MqttUtil } from './util/MqttUtil';
 import { ObjectUtil } from './util/ObjectUtil';
 import { ThemeUtil } from './util/ThemeUtil';
 import { TimeUtil } from './util/TimeUtil';
 import { WeatherUtil } from './util/WeatherUtil';
-import { MqttUtil } from './util/MqttUtil';
 
 const theme = ThemeUtil.createTheme();
 
 function AppScene() {
 
-  // const handleClipPlane = (clipPlane: number) => {
+  const handlePresetKey = (presetKey: TPresetKey | undefined) => {
 
-  //   console.log('📞 handleClipPlane', clipPlane);
+    console.debug('📞 handlePresetKey', presetKey);
 
-  //   clipPlaneRef.current = clipPlane;
-
-  //   boardPropsRef.current = {
-  //     ...boardPropsRef.current,
-  //     clipPlane: clipPlaneRef.current
-  //   };
-  //   setBoardProps(boardPropsRef.current);
-
-  //   scenePropsRef.current = {
-  //     ...scenePropsRef.current,
-  //     orbit: {
-  //       ...scenePropsRef.current.orbit,
-  //       clipPlane: clipPlaneRef.current
-  //     },
-  //   };
-  //   setSceneProps(scenePropsRef.current);
-
-  // }
-
-  const handleCameraKey = (cameraKey: TCameraKey) => {
-
-    console.debug('📞 handleCameraKey', cameraKey);
-
-    cameraKeyRef.current = cameraKey;
+    presetKeyRef.current = presetKey;
 
     scenePropsRef.current = {
       ...scenePropsRef.current,
       orbit: {
         ...scenePropsRef.current.orbit,
-        cameraKey: cameraKeyRef.current
+        presetKey: presetKeyRef.current
       }
     };
     setSceneProps(scenePropsRef.current);
 
     boardPropsRef.current = {
       ...boardPropsRef.current,
-      cameraKey: cameraKeyRef.current
+      presetKey: presetKeyRef.current
     };
     setBoardProps(boardPropsRef.current);
 
   }
 
-  const handleConfirmProps = (confirmProps: IConfirmProps | undefined) => {
+  const handleSelectKey = (selectKey: TStatusHandlerKey | undefined) => {
 
-    console.debug('📞 handleConfirmProps', confirmProps);
+    console.debug('📞 handleSelectKey', selectKey);
+
+    selectKeyRef.current = selectKey;
+
+    scenePropsRef.current = {
+      ...scenePropsRef.current,
+      orbit: {
+        ...scenePropsRef.current.orbit,
+        selectKey: selectKeyRef.current
+      }
+    };
+    setSceneProps(scenePropsRef.current);
+
     boardPropsRef.current = {
       ...boardPropsRef.current,
-      confirmProps
+      selectKey: selectKeyRef.current
     };
     setBoardProps(boardPropsRef.current);
 
@@ -107,16 +96,19 @@ function AppScene() {
 
     console.debug('📞 handleModelComplete');
 
-    // window.setTimeout(() => {
-    MqttUtil.setup();
-    // }, 1000);
+    selectKeyRef.current = undefined;
 
+    MqttUtil.setup();
 
     scenePropsRef.current = {
       ...scenePropsRef.current,
       model: {
         ...scenePropsRef.current.model,
         modelComplete: true
+      },
+      orbit: {
+        ...scenePropsRef.current.orbit,
+        selectKey: selectKeyRef.current
       }
     };
     setSceneProps(scenePropsRef.current);
@@ -124,16 +116,17 @@ function AppScene() {
   };
 
   // const clipPlaneRef = useRef<number>(8.6);
-  const cameraKeyRef = useRef<TCameraKey>('home3');
+  const selectKeyRef = useRef<TStatusHandlerKey | undefined>('weather___');
+  const presetKeyRef = useRef<TPresetKey | undefined>('home3');
   const sunPropsRef = useRef<ISunProps>(TimeUtil.getSunProps());
   const scenePropsRef = useRef<ISceneProps>({
     orbit: {
       id: ObjectUtil.createId(),
       stamp: ObjectUtil.createId(),
-      cameraKey: cameraKeyRef.current,
-      // clipPlane: clipPlaneRef.current,
-      handleConfirmProps,
-      handleCameraKey
+      selectKey: selectKeyRef.current,
+      presetKey: presetKeyRef.current,
+      handleSelectKey,
+      handlePresetKey
     },
     model: {
       id: ObjectUtil.createId(),
@@ -145,12 +138,12 @@ function AppScene() {
     }
   });
   const boardPropsRef = useRef<IBoardProps>({
-    // clipPlane: clipPlaneRef.current,
     sun: sunPropsRef.current,
-    cameraKey: cameraKeyRef.current,
-    // handleClipPlane,
+    selectKey: selectKeyRef.current,
+    presetKey: presetKeyRef.current,
     handleSunInstant,
-    handleCameraKey
+    handlePresetKey,
+    handleSelectKey
   });
 
   const [sceneProps, setSceneProps] = useState<ISceneProps>(scenePropsRef.current);

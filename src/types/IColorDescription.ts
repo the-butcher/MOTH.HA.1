@@ -1,103 +1,151 @@
+export type TClip = 'clip_none' | 'clip__000' | 'clip__245';
+
 export interface IColorDescription {
     rgb: number;
     opacity: number;
-    clip: boolean;
+    clip: TClip;
 }
 
-export type TColorKey = 'face_gray___clip' | 'face_gray_noclip' | 'face_green___clip' | 'face_green_noclip' | 'face_blue_noclip' | 'face_yellow___clip' | 'face_red___clip' | 'face_red_noclip' | 'face_red_noclip' | 'line_gray___clip' | 'line_gray_noclip' | 'line_green___clip' | 'line_green_noclip' | 'line_blue_noclip' | 'line_red___clip' | 'line_red_noclip' | 'sgmt_blue_noclip' | 'sgmt_red___clip' | 'sgmt_red_noclip';
+export type TColorKey =
+    'face_gray___clip__000' | 'face_gray___clip__245' | 'face_gray___clip_none' |
+    'face_green___clip__000' | 'face_green___clip__245' | 'face_green___clip_none' |
+    'face_blue___clip__245' | 'face_blue___clip_none' |
+    'face_yellow___clip' |
+    'face_red___clip' | 'face_red_noclip' |
+    'line_gray___clip__000' | 'line_gray___clip__245' | 'line_gray___clip_none' |
+    'line_green___clip__000' | 'line_green___clip__245' | 'line_green___clip_none' |
+    'line_blue___clip__000' | 'line_blue___clip__245' | 'line_blue___clip_none' |
+    'line_red___clip' | 'line_red_noclip' |
+    'sgmt_blue_noclip' |
+    'sgmt_red___clip' | 'sgmt_red_noclip';
 
-// face_gray___clip___clip
-// face_gray___clip_noclip
+// face_gray___clip__000___clip
+// face_gray___clip__000_noclip
 
 export const COLOR_DESCRIPTIONS: { [K in TColorKey]: IColorDescription } = {
-    face_gray___clip: {
+    face_gray___clip__000: {
         rgb: 0xFFFFFF,
         opacity: 1.00,
-        clip: true
+        clip: 'clip__000'
     },
-    face_gray_noclip: {
+    face_gray___clip__245: {
         rgb: 0xFFFFFF,
         opacity: 1.00,
-        clip: false
+        clip: 'clip__245'
     },
-    face_green___clip: {
+    face_gray___clip_none: {
+        rgb: 0xFFFFFF,
+        opacity: 1.00,
+        clip: 'clip_none'
+    },
+    face_green___clip__000: {
         rgb: 0x33DD33,
         opacity: 1.00,
-        clip: true
+        clip: 'clip__000'
     },
-    face_green_noclip: {
+    face_green___clip__245: {
         rgb: 0x33DD33,
         opacity: 1.00,
-        clip: false
+        clip: 'clip__245'
     },
-    face_blue_noclip: {
+    face_green___clip_none: {
+        rgb: 0x33DD33,
+        opacity: 1.00,
+        clip: 'clip_none'
+    },
+    face_blue___clip__245: {
         rgb: 0x3333FF,
         opacity: 0.75,
-        clip: false
+        clip: 'clip__245'
+    },
+    face_blue___clip_none: {
+        rgb: 0x3333FF,
+        opacity: 0.75,
+        clip: 'clip_none'
     },
     face_yellow___clip: {
         rgb: 0xCCCC00,
         opacity: 1.00,
-        clip: true
+        clip: 'clip__000'
     },
     face_red___clip: {
         rgb: 0xFF4444,
         opacity: 1.00,
-        clip: true
+        clip: 'clip__000'
     },
     face_red_noclip: {
         rgb: 0xFF4444,
         opacity: 1.00,
-        clip: false
+        clip: 'clip_none'
     },
-    line_gray___clip: {
+    line_gray___clip__000: {
         rgb: 0x444444,
         opacity: 0.90,
-        clip: true
+        clip: 'clip__000'
     },
-    line_gray_noclip: {
+    line_gray___clip__245: {
         rgb: 0x444444,
         opacity: 0.90,
-        clip: false
+        clip: 'clip__245'
     },
-    line_green___clip: {
+    line_gray___clip_none: {
+        rgb: 0x444444,
+        opacity: 0.90,
+        clip: 'clip_none'
+    },
+    line_green___clip__000: {
         rgb: 0x225522,
         opacity: 0.90,
-        clip: true
+        clip: 'clip__000'
     },
-    line_green_noclip: {
+    line_green___clip__245: {
         rgb: 0x225522,
         opacity: 0.90,
-        clip: false
+        clip: 'clip__245'
     },
-    line_blue_noclip: {
-        rgb: 0x3333FF,
+    line_green___clip_none: {
+        rgb: 0x225522,
         opacity: 0.90,
-        clip: false
+        clip: 'clip_none'
+    },
+    line_blue___clip__000: {
+        rgb: 0x6666CC,
+        opacity: 0.90,
+        clip: 'clip__000'
+    },
+    line_blue___clip__245: {
+        rgb: 0x6666CC,
+        opacity: 0.90,
+        clip: 'clip__245'
+    },
+    line_blue___clip_none: {
+        rgb: 0x6666CC,
+        opacity: 0.90,
+        clip: 'clip_none'
     },
     line_red___clip: {
         rgb: 0xFF3333,
         opacity: 0.90,
-        clip: true
+        clip: 'clip__000'
     },
     line_red_noclip: {
         rgb: 0xFF3333,
         opacity: 0.90,
-        clip: true
+        clip: 'clip__000'
     },
     sgmt_blue_noclip: {
         rgb: 0x5555FF,
         opacity: 0.90,
-        clip: false
+        clip: 'clip_none'
     },
     sgmt_red___clip: {
         rgb: 0xFF5555,
         opacity: 0.90,
-        clip: true
+        clip: 'clip__000'
     },
     sgmt_red_noclip: {
         rgb: 0xFF5555,
         opacity: 0.90,
-        clip: true
+        clip: 'clip__000'
     },
 };
