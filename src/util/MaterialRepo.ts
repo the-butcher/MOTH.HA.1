@@ -9,12 +9,12 @@ export class MaterialRepo {
   private static MATERIALS_LINE: { [k in string]: LineMaterial } = {};
   private static MATERIALS_SGMT: { [k in string]: LineBasicMaterial } = {};
   private static CLIP_PLANE_000 = new Plane(new Vector3(0, -1, 0), MODEL_OFFSET_Y);
-  private static CLIP_PLANE_245 = new Plane(new Vector3(0, -1, 0), MODEL_OFFSET_Y + 245);
+  private static CLIP_PLANE_245 = new Plane(new Vector3(0, -1, 0), MODEL_OFFSET_Y + 2.45);
 
   static setClipPlane(clipPlane: number) {
     // console.log('clipPlane (repo)', clipPlane);
     MaterialRepo.CLIP_PLANE_000.constant = clipPlane + MODEL_OFFSET_Y;
-    MaterialRepo.CLIP_PLANE_245.constant = clipPlane + MODEL_OFFSET_Y + 245;
+    MaterialRepo.CLIP_PLANE_245.constant = clipPlane + MODEL_OFFSET_Y + 2.45;
   }
 
   static toCode(type: string, rgb: number, opacity: number, clip: TClip): string {

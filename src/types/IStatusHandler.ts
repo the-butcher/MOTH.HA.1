@@ -1,21 +1,20 @@
 import { invalidate } from "@react-three/fiber";
 import { Group, LineSegments, Mesh } from "three";
 import { Line2 } from "three/examples/jsm/Addons.js";
+import { IWeatherForecast } from "../util/IWeatherForecast";
 import { MaterialRepo } from "../util/MaterialRepo";
 import { MqttUtil } from "../util/MqttUtil";
+import { PolygonUtil } from "../util/PolygonUtil";
 import { COLOR_DESCRIPTIONS, TColorKey } from "./IColorDescription";
 import { ISwitchProps } from "./ISwitchProps";
-import { PolygonUtil } from "../util/PolygonUtil";
-import { IWeatherForecast } from "../util/IWeatherForecast";
-import { ObjectUtil } from "../util/ObjectUtil";
 
-export type TStatusHandlerKey = 'weather___' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
+export type TStatusHandlerKey = 'weather___' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'status_pure_1' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
 export type TStatusResult = 'ON' | 'OFF' | undefined;
 export type TQueryTime = 'STARTUP' | 'RUNTIME'
 
 export interface IStatusHandler {
-    topic: string; // the url to get this elements status from (other elements may use the same url, only one call shall be made)
-    value: string;
+    topic?: string; // the url to get this elements status from (other elements may use the same url, only one call shall be made)
+    value?: string;
     statusHndlr: (status: never) => TStatusResult; // todo some container that holds all instances (Meshes) that a specific status may apply to
     statusQuery: (queryTime: TQueryTime) => void;
     switchProps?: ISwitchProps;
@@ -58,18 +57,15 @@ const setBarrelTopColors = () => {
 
     let colorDescFace = COLOR_DESCRIPTIONS['face_gray___clip_none'];
     let colorDescSgmt = COLOR_DESCRIPTIONS['line_gray___clip_none'];
-    // let colorDescLine = COLOR_DESCRIPTIONS['line_gray___clip__000_none'];
 
     if (POWER_PUMP_1) {
 
         if (VALUE_COUNTER_1 > counter1Min) {
             colorDescFace = COLOR_DESCRIPTIONS['face_blue___clip_none'];
             colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_blue_noclip'];
-            // colorDescLine = COLOR_DESCRIPTIONS['line_blue___clip_none'];
         } else {
             colorDescFace = COLOR_DESCRIPTIONS['face_red_noclip'];
             colorDescSgmt = COLOR_DESCRIPTIONS['sgmt_red_noclip'];
-            // colorDescLine = COLOR_DESCRIPTIONS['line_red_noclip'];
         }
 
     } else {
@@ -85,9 +81,6 @@ const setBarrelTopColors = () => {
     STATUS_HANDLERS['switch_pump_1'].sgmts.forEach(sgmt => {
         sgmt.material = MaterialRepo.getMaterialSgmt(colorDescSgmt);
     });
-    // STATUS_HANDLERS['switch_pump_1'].lines.forEach(line => {
-    //     line.material = MaterialRepo.getMaterialLine(colorDescLine);
-    // });
 
     invalidate();
 
@@ -95,8 +88,6 @@ const setBarrelTopColors = () => {
 
 export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     weather___: {
-        topic: ObjectUtil.createId(),
-        value: ObjectUtil.createId(),
         statusHndlr: (status: IWeatherForecast) => {
             // nothing
 
@@ -127,7 +118,6 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth_295D3: {
         topic: `aranet/295D3`,
-        value: ObjectUtil.createId(),
         statusHndlr: (status: never) => {
 
             const rad = status['rad'];
@@ -160,7 +150,6 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth____66: {
         topic: `moth/ip__66`,
-        value: ObjectUtil.createId(),
         statusHndlr: (status: never) => {
 
             const co2Lpf = status['co2_lpf'];
@@ -204,7 +193,6 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth___178: {
         topic: `moth/ip_178`,
-        value: ObjectUtil.createId(),
         statusHndlr: (status: never) => {
 
             const co2Lpf = status['co2_lpf'];
@@ -248,7 +236,6 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth___130: {
         topic: `moth/ip_130`,
-        value: ObjectUtil.createId(),
         statusHndlr: (status: never) => {
 
             const pm025 = status['pm025'];
@@ -282,7 +269,6 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     barrel_cnt: {
         topic: `stat/${topicShed}/RESULT`,
-        value: ObjectUtil.createId(),
         statusHndlr: (status: never) => {
 
             // console.log('barrel_cnt :: statusHndlr', status)
@@ -397,6 +383,20 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         texts: [],
         actTo: -1
     },
+    status_pure_1: {
+        statusHndlr: () => {
+            // nothing, just a container for lines
+            return undefined;
+        },
+        statusQuery: () => {
+            // nothing
+        },
+        faces: [],
+        sgmts: [],
+        lines: [],
+        texts: [],
+        actTo: -1
+    },
     switch_pure_1: {
         topic: `stat/${topicPure1}/RESULT`,
         value: 'POWER',
@@ -405,21 +405,14 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             // console.log('switch_pure_1 :: statusHndlr', status)
 
             POWER_PURE_1 = status['POWER'] && status['POWER'] === 'ON';
-
-            const colorDescFace = POWER_PURE_1 ? COLOR_DESCRIPTIONS['face_blue___clip__245'] : COLOR_DESCRIPTIONS['face_gray___clip__245'];
-            const colorDescSgmt = POWER_PURE_1 ? COLOR_DESCRIPTIONS['line_blue___clip__245'] : COLOR_DESCRIPTIONS['line_gray___clip__245'];
-
-            STATUS_HANDLERS['switch_pure_1'].faces.forEach(face => {
-                face.material = MaterialRepo.getMaterialFace(colorDescFace);
-            });
-            STATUS_HANDLERS['switch_pure_1'].sgmts.forEach(sgmt => {
-                sgmt.material = MaterialRepo.getMaterialSgmt(colorDescSgmt);
+            STATUS_HANDLERS['status_pure_1'].lines.forEach(line => {
+                line.visible = POWER_PURE_1;
             });
 
             invalidate();
             // TODO :: introduce a way to notify a switch component, if displayed
 
-            return POWER_PURE_1;
+            return POWER_PURE_1 ? 'ON' : 'OFF';
 
         },
         statusQuery: () => {

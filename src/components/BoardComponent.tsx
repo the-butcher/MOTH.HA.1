@@ -66,7 +66,7 @@ const BoardComponent = (props: IBoardProps) => {
 
     console.debug('⚙ updating board component (selectKey)', selectKey);
 
-    if (selectKey && STATUS_HANDLERS[selectKey].topic && STATUS_HANDLERS[selectKey].switchProps) {
+    if (selectKey && STATUS_HANDLERS[selectKey].topic && STATUS_HANDLERS[selectKey].value && STATUS_HANDLERS[selectKey].switchProps) {
       setSwitchProps(STATUS_HANDLERS[selectKey].switchProps!);
       MqttUtil.setBoardHandler({
         topic: STATUS_HANDLERS[selectKey].topic,
@@ -84,7 +84,7 @@ const BoardComponent = (props: IBoardProps) => {
   }, [selectKey]);
 
   const handleResult = (result: boolean) => {
-    // console.log('handling result', result);
+    console.log('handling result', result);
     setSwitchActive(result);
   }
 
