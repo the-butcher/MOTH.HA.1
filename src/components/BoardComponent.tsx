@@ -1,17 +1,13 @@
-import HolidayVillageIcon from '@mui/icons-material/HolidayVillage';
-import HomeIcon from '@mui/icons-material/Home';
 
-import { BottomNavigation, BottomNavigationAction, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Slider } from '@mui/material';
+import { Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Slider, Typography } from '@mui/material';
 import { SyntheticEvent, useEffect, useRef } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
-import { TCameraKey } from '../types/IOrbitProps';
 import { TimeUtil } from '../util/TimeUtil';
 
-import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 
-const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
+const BoardComponent = (props: IBoardProps) => {
 
-  const { sun, handleSunInstant, confirmProps, cameraKey, handleCameraKey } = { ...props };
+  const { sun, handleSunInstant, confirmProps, handleCameraKey } = { ...props }; //, cameraKey
 
   // const getSliderHeight = () => {
   //   return window.innerHeight - 160;
@@ -114,21 +110,43 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
         valueLabelFormat={valueLabelFormat}
         onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
         onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
-        marks={
-          [
-            {
-              value: sun.sunriseInstant,
-              label: valueLabelFormat(sun.sunriseInstant),
-            },
-            {
-              value: sun.sunsetInstant,
-              label: valueLabelFormat(sun.sunsetInstant),
-            }
-          ]
-        }
+      // marks={
+      //   [
+      //     {
+      //       value: sun.sunriseInstant,
+      //       label: valueLabelFormat(sun.sunriseInstant),
+      //     },
+      //     {
+      //       value: sun.sunsetInstant,
+      //       label: valueLabelFormat(sun.sunsetInstant),
+      //     }
+      //   ]
+      // }
       />
 
-      <BottomNavigation sx={{ display: 'flex', flexDirection: 'row', zIndex: 300 }} value={cameraKey} onChange={(_e: SyntheticEvent, value: TCameraKey) => handleCameraKey(value)} showLabels={true}>
+      <div
+        style={{
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          zIndex: 300,
+          paddingTop: '6px'
+        }}
+      >
+        <ButtonGroup
+          variant="text"
+          sx={{ display: 'flex', flexDirection: 'row', zIndex: 300 }}
+        >
+          <Button onClick={() => handleCameraKey('pumps')}><Typography>P</Typography></Button>
+          <Button onClick={() => handleCameraKey('home0')}><Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>0</Typography></Typography></Button>
+          <Button onClick={() => handleCameraKey('home1')}><Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>1</Typography></Typography></Button>
+          <Button onClick={() => handleCameraKey('home3')}><Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>3</Typography></Typography></Button>
+          <Button onClick={() => handleCameraKey('quarter')}><Typography>Q</Typography></Button>
+        </ButtonGroup>
+      </div >
+
+
+      {/* <BottomNavigation sx={{ display: 'flex', flexDirection: 'row', zIndex: 300 }} value={cameraKey} onChange={(_e: SyntheticEvent, value: TCameraKey) => handleCameraKey(value)} showLabels={true}>
         <BottomNavigationAction
           label="Schuppen"
           value="pumps"
@@ -154,7 +172,7 @@ const BoardComponent = (props: IBoardProps) => { //  // props: IBoardProps
           value="quarter"
           icon={<HolidayVillageIcon />}
         />
-      </BottomNavigation>
+      </BottomNavigation> */}
 
       {
         confirmProps ? <Dialog

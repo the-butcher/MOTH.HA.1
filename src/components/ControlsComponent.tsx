@@ -38,6 +38,10 @@ const ControlsComponent = (props: IOrbitProps) => {
   const cameraTargetCurr = useRef<Vector3>(new Vector3());
   const cameraTargetOrig = useRef<Vector3>(new Vector3());
   const cameraTargetDiff = useRef<Vector3>(new Vector3());
+  const wFocusTargetCurr = useRef<Vector3>(new Vector3());
+  const wFocusTargetOrig = useRef<Vector3>(new Vector3());
+  const wFocusTargetDiff = useRef<Vector3>(new Vector3());
+
   const worldFocusDistanceRef = useRef<number>(0);
 
   const clipPlaneCurr = useRef<number>(8.6);
@@ -223,8 +227,9 @@ const ControlsComponent = (props: IOrbitProps) => {
 
       const cameraPositionDest = new Vector3();
       const cameraTargetDest = new Vector3();
+      const wFocusTargetDest = new Vector3();
 
-      CAMERA_PROPS[cameraKey].apply(cameraPositionDest, cameraTargetDest);
+      CAMERA_PROPS[cameraKey].apply(cameraPositionDest, cameraTargetDest, wFocusTargetDest);
 
       cameraPositionOrig.current = camera.position.clone();
       cameraPositionDiff.current = cameraPositionDest.clone().sub(cameraPositionOrig.current);
@@ -232,11 +237,12 @@ const ControlsComponent = (props: IOrbitProps) => {
       cameraTargetOrig.current = controlsRef.current!.target.clone();
       cameraTargetDiff.current = cameraTargetDest.clone().sub(cameraTargetOrig.current);
 
+      wFocusTargetOrig.current = wFocusHelperRef.current!.position.clone();
+      wFocusTargetDiff.current = wFocusTargetDest.clone().sub(wFocusTargetOrig.current);
 
       const clipPlaneDest = CAMERA_PROPS[cameraKey].clipPlane;
       clipPlaneOrig.current = clipPlaneCurr.current;
       clipPlaneDiff.current = clipPlaneDest - clipPlaneOrig.current;
-
 
       tsAnimOrig.current = Date.now();
       tsAnimDest.current = tsAnimOrig.current + 2500;
@@ -253,9 +259,11 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     cameraPositionCurr.current = cameraPositionOrig.current.clone().add(cameraPositionDiff.current.clone().multiplyScalar(fraction));
     cameraTargetCurr.current = cameraTargetOrig.current.clone().add(cameraTargetDiff.current.clone().multiplyScalar(fraction));
+    wFocusTargetCurr.current = wFocusTargetOrig.current.clone().add(wFocusTargetDiff.current.clone().multiplyScalar(fraction));
 
     camera.position.set(cameraPositionCurr.current.x, cameraPositionCurr.current.y, cameraPositionCurr.current.z);
     controlsRef.current!.target.set(cameraTargetCurr.current.x, cameraTargetCurr.current.y, cameraTargetCurr.current.z);
+    wFocusHelperRef.current!.position.set(wFocusTargetCurr.current.x, wFocusTargetCurr.current.y, wFocusTargetCurr.current.z);
 
     if (clipPlaneDiff.current !== 0) {
       clipPlaneCurr.current = clipPlaneOrig.current + clipPlaneDiff.current * fraction;
@@ -352,6 +360,7 @@ const ControlsComponent = (props: IOrbitProps) => {
                 if (intersectIndex === 0) {
                   wFocusHelperRef.current!.position.set(intersects[intersectIndex].point.x, intersects[intersectIndex].point.y, intersects[intersectIndex].point.z);
                   worldFocusDistanceRef.current = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
+                  console.log('pos', wFocusHelperRef.current!.position.x, ',', wFocusHelperRef.current!.position.y, ',', wFocusHelperRef.current!.position.z);
                 }
                 const intersect = intersects[intersectIndex];
                 // console.log('intersect', intersect);
