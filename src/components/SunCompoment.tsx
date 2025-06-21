@@ -33,7 +33,7 @@ const SunCompoment = (props: ISunProps) => {
     light.shadow.camera.near = 15;
     light.shadow.camera.far = 150;
     light.shadow.camera.lookAt(0, 0, 0);
-    light.shadow.bias = -0.0005;
+    light.shadow.bias = -0.001;
 
     const maxTextureSize = gl.capabilities.maxTextureSize;
     light.shadow.mapSize.width = maxTextureSize / textureFraction;
@@ -46,7 +46,7 @@ const SunCompoment = (props: ISunProps) => {
 
     console.debug('✨ building sun component');
 
-    configureLight(lightRef.current, 8);
+    configureLight(lightRef.current, 4);
 
     // scene.add(new DirectionalLightHelper(lightRef.current));
     // scene.add(new CameraHelper(lightRef.current.shadow.camera));

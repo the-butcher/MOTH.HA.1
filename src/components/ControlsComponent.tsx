@@ -225,7 +225,7 @@ const ControlsComponent = (props: IOrbitProps) => {
       clipPlaneDiff.current = clipPlaneDest - clipPlaneOrig.current;
 
       tsAnimOrig.current = Date.now();
-      tsAnimDest.current = tsAnimOrig.current + 2000;
+      tsAnimDest.current = tsAnimOrig.current + 1000;
 
       // trigger first animation frame
       invalidate();
@@ -298,12 +298,16 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     MaterialRepo.updateMaterialLineResolution();
 
+    let isAnimated = false;
+
     const tsAnimN = Date.now();
     if (tsAnimN < tsAnimDest.current) {
 
       const fraction = (tsAnimN - tsAnimOrig.current) / (tsAnimDest.current - tsAnimOrig.current);
       // console.log('fraction', easeInOut(fraction));
       updateControls(easeInOut(easeInOut(fraction)));
+
+      isAnimated = true;
 
       invalidate();
 
@@ -322,9 +326,9 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     }
 
-    if (pointerDownRef.current) {
-      // console.log('nav');
-    }
+    // const isMouseNav = !!pointerDownRef.current;
+    // const isAnimated = tsAnimDest.current > 0;
+    // console.log('isMouseNav', isMouseNav, 'isAnimated', isAnimated);
 
     if (pointerUpRef.current) {
 
@@ -450,14 +454,19 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     worldFocusDistanceRef.current = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
 
-    effectComposerRef.current!.removePass(effectPassRef.current!);
-    effectPassRef.current!.dispose();
-    effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
-      worldFocusDistance: worldFocusDistanceRef.current,
-      worldFocusRange: Math.max(3, worldFocusDistanceRef.current / 3),
-      bokehScale: 5
-    }));
-    effectComposerRef.current!.addPass(effectPassRef.current);
+    if (effectPassRef.current) {
+      effectComposerRef.current!.removePass(effectPassRef.current!);
+      effectPassRef.current!.dispose();
+      effectPassRef.current = undefined;
+    }
+    if (!isAnimated) {
+      effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
+        worldFocusDistance: worldFocusDistanceRef.current,
+        worldFocusRange: Math.max(3, worldFocusDistanceRef.current / 3),
+        bokehScale: 5
+      }));
+      effectComposerRef.current!.addPass(effectPassRef.current);
+    }
     effectComposerRef.current!.render();
 
     // scene.environment!.needsUpdate = true;

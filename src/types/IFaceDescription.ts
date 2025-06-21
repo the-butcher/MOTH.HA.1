@@ -1,7 +1,7 @@
 import { COLOR_DESCRIPTIONS, IColorDescription } from "./IColorDescription";
 import { ILineDescription } from "./ILineDescription";
 
-export type TFaceDescKey = 'home0' | 'home1' | 'home2' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3' | 'handrail___clip' | 'handrail_noclip' | 'walls_shed' | 'walls_house___clip' | 'walls_house_noclip' | 'barrel_top' | 'barrel_bot' | 'barrel_mid' | 'lawn' | 'hedge___clip' | 'hedge_noclip' | 'tree' | 'stairs' | 'umbrella' | 'pavement' | 'misc_gray';
+export type TFaceDescKey = 'home0' | 'home1' | 'home2' | 'status_pure_1' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3' | 'handrail___clip' | 'handrail_noclip' | 'walls_shed' | 'walls_house___clip' | 'walls_house_noclip' | 'barrel_top' | 'barrel_bot' | 'barrel_mid' | 'lawn' | 'hedge___clip' | 'hedge_noclip' | 'tree' | 'stairs' | 'umbrella' | 'pavement' | 'misc_gray';
 
 export interface IFaceDescription extends IColorDescription {
     lineDesc: ILineDescription;
@@ -30,6 +30,13 @@ export const FACE_DESCRIPTIONS: { [K in TFaceDescKey]: IFaceDescription } = {
         lineDesc: {
             ...COLOR_DESCRIPTIONS['line_gray___clip__000'],
             lineStyle: 'none'
+        }
+    },
+    status_pure_1: {
+        ...COLOR_DESCRIPTIONS['face_blue___clip__245'],
+        lineDesc: {
+            ...COLOR_DESCRIPTIONS['line_blue___clip__245'],
+            lineStyle: 'thin'
         }
     },
     switch_pure_1: {

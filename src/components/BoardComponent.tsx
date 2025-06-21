@@ -1,5 +1,8 @@
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import { Button, ButtonGroup, IconButton, Slider, Stack, Switch, Typography } from '@mui/material';
+import HolidayVillageIcon from '@mui/icons-material/HolidayVillage';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import WaterDropIcon from '@mui/icons-material/WaterDrop';
+import { Divider, IconButton, Slider, Stack, SvgIcon, Switch, Typography } from '@mui/material';
 import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
 import { STATUS_HANDLERS } from '../types/IStatusHandler';
@@ -7,10 +10,9 @@ import { ISwitchProps } from '../types/ISwitchProps';
 import { MqttUtil } from '../util/MqttUtil';
 import { TimeUtil } from '../util/TimeUtil';
 
-
 const BoardComponent = (props: IBoardProps) => {
 
-  const { sun, handleSunInstant, handlePresetKey, handleSelectKey, selectKey } = { ...props };
+  const { sun, handleSunInstant, handlePresetKey, handleSelectKey, selectKey, handleToggleStats } = { ...props };
 
   const [switchProps, setSwitchProps] = useState<ISwitchProps>();
   const [switchActive, setSwitchActive] = useState<boolean>(false);
@@ -84,8 +86,10 @@ const BoardComponent = (props: IBoardProps) => {
   }, [selectKey]);
 
   const handleResult = (result: boolean) => {
-    console.log('handling result', result);
+
+    console.debug('📞 handling mqtt result', result);
     setSwitchActive(result);
+
   }
 
   const toggleSwitch = () => {
@@ -106,99 +110,190 @@ const BoardComponent = (props: IBoardProps) => {
   return (
     <>
 
-      {/* <Slider
-        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '20px', bottom: '80px', height: `${getSliderHeight()}px` }}
-        orientation="vertical"
-        value={clipPlane}
-        min={marks[0].value}
-        max={marks[marks.length - 1].value}
-        valueLabelDisplay="off"
-        step={0.7}
-        marks={marks}
-        onChange={(_e: Event, value: number | number[]) => handleClipPlane(value as number)}
-      /> */}
-
-
-
-      <div
-        style={{
-          width: '100%',
-          display: 'flex',
+      <Stack
+        direction={'row'}
+        sx={{
           justifyContent: 'center',
-          zIndex: 300,
-          paddingTop: '6px'
+          paddingTop: '12px',
         }}
       >
-        <ButtonGroup
-          variant="text"
-          sx={{ display: 'flex', flexDirection: 'row', zIndex: 300 }}
+        <Stack
+          direction={'row'}
+          sx={{
+            zIndex: 300,
+            justifyContent: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.25) !important',
+            borderRadius: '3px',
+            padding: '6px'
+          }}
         >
-          <Button
+          <IconButton
             onClick={() => handlePresetKey('pumps')}
-            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+            sx={{
+              width: '42px',
+              height: '32px',
+              borderRadius: '2px'
+            }}
           >
-            <Typography>P</Typography>
-          </Button>
-          <Button
+            <WaterDropIcon />
+          </IconButton>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              margin: '0px 6px'
+            }}
+          />
+          <IconButton
             onClick={() => handlePresetKey('home0')}
-            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+            sx={{
+              width: '42px',
+              height: '32px',
+              borderRadius: '2px'
+            }}
           >
-            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>0</Typography></Typography>
-          </Button>
-          <Button
+            <SvgIcon>
+              <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24" fill="white" stroke="none"              >
+                <path d="M 12,22.729158 18.644807,17.555959 20.125443,16.409368 12,10.089579 3.8745566,16.409368 5.3461647,17.555959 Z" />
+              </svg>
+            </SvgIcon>
+          </IconButton>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              margin: '0px 6px'
+            }}
+          />
+          <IconButton
             onClick={() => handlePresetKey('home1')}
-            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+            sx={{
+              width: '42px',
+              height: '32px',
+              borderRadius: '2px'
+            }}
           >
-            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>1</Typography></Typography>
-          </Button>
-          <Button
+            <SvgIcon>
+              <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24" fill="white" stroke="none"              >
+                <path d="M 12,18.189793 18.644807,13.016594 20.125443,11.870003 12,5.5502139 3.8745566,11.870003 5.3461647,13.016594 Z" />
+                <path d="M 11.990972,20.482973 5.3371364,15.309774 3.8745566,16.447337 12,22.767126 20.125443,16.447337 18.653835,15.300746 Z" />
+              </svg>
+            </SvgIcon>
+          </IconButton>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              margin: '0px 6px'
+            }}
+          />
+          <IconButton
             onClick={() => handlePresetKey('home2')}
-            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+            sx={{
+              width: '42px',
+              height: '32px',
+              borderRadius: '2px'
+            }}
           >
-            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>2</Typography></Typography>
-          </Button>
-          <Button
+            <SvgIcon>
+              <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24" fill="white" stroke="none"              >
+                <path d="M 11.990972,20.482973 5.3371364,15.309774 3.8745566,16.447337 12,22.767126 20.125443,16.447337 18.653835,15.300746 Z" />
+                <path d="M 11.990972,15.901962 5.3371364,10.728763 3.8745566,11.866326 12,18.186115 20.125443,11.866326 18.653835,10.719735 Z" />
+                <path d="M 12,13.692073 18.644807,8.5188744 20.125443,7.3722834 12,1.0524941 3.8745566,7.3722834 5.3461647,8.5188744 Z" />
+              </svg>
+            </SvgIcon>
+          </IconButton>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              margin: '0px 6px'
+            }}
+          />
+          <IconButton
             onClick={() => handlePresetKey('home3')}
-            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+            sx={{
+              width: '42px',
+              height: '32px',
+              borderRadius: '2px'
+            }}
           >
-            <Typography>H<Typography component={'span'} sx={{ fontSize: '0.6rem' }}>3</Typography></Typography>
-          </Button>
-          <Button
+            <SvgIcon>
+              <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24" fill="white" stroke="none"              >
+                <path d="M 12.093252,2.7828221 5.1803681,9.6957055 V 21.217178 h 5.7607369 v -5.760736 h 2.304294 v 5.760736 h 5.760736 V 9.6957055 Z" />
+              </svg>
+            </SvgIcon>
+          </IconButton>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              margin: '0px 6px'
+            }}
+          />
+          <IconButton
             onClick={() => handlePresetKey('quarter')}
-            sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25) !important' }}
+            sx={{
+              width: '42px',
+              height: '32px',
+              borderRadius: '2px'
+            }}
           >
-            <Typography>Q</Typography>
-          </Button>
-        </ButtonGroup>
-      </div >
+            <HolidayVillageIcon />
+          </IconButton>
 
-      {
-        switchProps ? <Stack
-          direction={'row'}
+        </Stack>
+      </Stack>
+
+      <Stack
+        direction={'row'}
+        sx={{
+          position: 'fixed',
+          display: 'flex',
+          flexDirection: 'row',
+          zIndex: 300,
+          left: '0px',
+          bottom: '6px',
+          width: '100%',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '0px 12px'
+        }}
+      >
+        <IconButton
+          onClick={() => handleToggleStats()}
+          size="small"
           sx={{
-            position: 'fixed',
-            bottom: '6px',
-            margin: '6px 0px',
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        ><Stack
-          direction={'row'}
-          sx={{
-            padding: '0px 6px 0px 12px',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.25)',
-            borderColor: 'divider',
-            borderRadius: '4px',
-            zIndex: 300
+            backgroundColor: 'rgba(255, 255, 255, 0.0)',
+            color: '#CCCCCC',
+            marginRight: '12px'
           }}
         >
-            <Typography>{switchProps.title}</Typography>
+          <ShowChartIcon />
+        </IconButton>
+        {
+          switchProps ? <Stack
+            direction={'row'}
+            sx={{
+              padding: '0px 12px 0px 12px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderColor: 'divider',
+              borderRadius: '4px',
+              zIndex: 300,
+              marginBottom: '6px'
+            }}
+          >
+            <Typography
+              variant='h6'
+              sx={{
+                fontSize: '1rem'
+              }}
+            >{switchProps.title}</Typography>
             <Switch
+              size="medium"
               sx={{
                 // margin: '3px'
               }}
@@ -216,34 +311,29 @@ const BoardComponent = (props: IBoardProps) => {
               <HighlightOffIcon />
             </IconButton>
           </Stack>
-        </Stack> : <Slider
-          sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
-          orientation="horizontal"
-          value={sun.sunInstant}
-          min={sun.sunriseInstant}
-          max={sun.sunsetInstant}
-          valueLabelDisplay="on"
-          step={1000 * 60 * 10}
-          getAriaValueText={valueLabelFormat}
-          valueLabelFormat={valueLabelFormat}
-          onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
-          onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
-        />
-      }
+            :
+            <Slider
+              sx={{
+                zIndex: 300,
+                padding: '0px',
+                margin: '0px'
+                // margin: '0px 12px'
+              }}
+              orientation="horizontal"
+              value={sun.sunInstant}
+              min={sun.sunriseInstant}
+              max={sun.sunsetInstant}
+              valueLabelDisplay="on"
+              step={1000 * 60 * 10}
+              getAriaValueText={valueLabelFormat}
+              valueLabelFormat={valueLabelFormat}
+              onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
+              onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
+            />
 
-      {/* <Slider
-        sx={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 300, left: '30px', bottom: '6px', width: 'calc(100% - 60px)' }}
-        orientation="horizontal"
-        value={sun.sunInstant}
-        min={sun.sunriseInstant}
-        max={sun.sunsetInstant}
-        valueLabelDisplay="on"
-        step={1000 * 60 * 10}
-        getAriaValueText={valueLabelFormat}
-        valueLabelFormat={valueLabelFormat}
-        onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}
-        onChangeCommitted={(_e: Event | SyntheticEvent<Element, Event>, value: number | number[]) => handleSunInstantCommit(value as number)}
-      /> */}
+        }
+
+      </Stack >
 
     </>
   );

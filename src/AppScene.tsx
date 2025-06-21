@@ -18,6 +18,20 @@ const theme = ThemeUtil.createTheme();
 
 function AppScene() {
 
+  const handleToggleStats = () => {
+
+    console.debug('📞 handleToggleStats');
+
+    showStatsRef.current = !showStatsRef.current;
+
+    scenePropsRef.current = {
+      ...scenePropsRef.current,
+      showStats: showStatsRef.current
+    };
+    setSceneProps(scenePropsRef.current);
+
+  }
+
   const handlePresetKey = (presetKey: TPresetKey | undefined) => {
 
     console.debug('📞 handlePresetKey', presetKey);
@@ -119,6 +133,7 @@ function AppScene() {
   const selectKeyRef = useRef<TStatusHandlerKey | undefined>('weather___');
   const presetKeyRef = useRef<TPresetKey | undefined>('home3');
   const sunPropsRef = useRef<ISunProps>(TimeUtil.getSunProps());
+  const showStatsRef = useRef<boolean>(false);
   const scenePropsRef = useRef<ISceneProps>({
     orbit: {
       id: ObjectUtil.createId(),
@@ -135,7 +150,8 @@ function AppScene() {
       sun: sunPropsRef.current,
       modelComplete: false,
       handleModelComplete
-    }
+    },
+    showStats: showStatsRef.current
   });
   const boardPropsRef = useRef<IBoardProps>({
     sun: sunPropsRef.current,
@@ -143,7 +159,8 @@ function AppScene() {
     presetKey: presetKeyRef.current,
     handleSunInstant,
     handlePresetKey,
-    handleSelectKey
+    handleSelectKey,
+    handleToggleStats
   });
 
   const [sceneProps, setSceneProps] = useState<ISceneProps>(scenePropsRef.current);

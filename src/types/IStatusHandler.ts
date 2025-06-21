@@ -405,8 +405,20 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             // console.log('switch_pure_1 :: statusHndlr', status)
 
             POWER_PURE_1 = status['POWER'] && status['POWER'] === 'ON';
-            STATUS_HANDLERS['status_pure_1'].lines.forEach(line => {
-                line.visible = POWER_PURE_1;
+            // STATUS_HANDLERS['status_pure_1'].lines.forEach(line => {
+            //     line.visible = POWER_PURE_1;
+            // });
+
+            // const colorDescFace = POWER_PURE_1 ? COLOR_DESCRIPTIONS['face_blue___clip__245'] : COLOR_DESCRIPTIONS['face_gray___clip__245'];
+            // const colorDescSgmt = POWER_PURE_1 ? COLOR_DESCRIPTIONS['line_blue___clip__245'] : COLOR_DESCRIPTIONS['line_gray___clip__245'];
+
+            STATUS_HANDLERS['status_pure_1'].faces.forEach(face => {
+                face.visible = POWER_PURE_1;
+                // face.material = MaterialRepo.getMaterialFace(colorDescFace);
+            });
+            STATUS_HANDLERS['status_pure_1'].sgmts.forEach(sgmt => {
+                sgmt.visible = POWER_PURE_1;
+                // sgmt.material = MaterialRepo.getMaterialSgmt(colorDescSgmt);
             });
 
             invalidate();

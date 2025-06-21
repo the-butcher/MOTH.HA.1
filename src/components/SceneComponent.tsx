@@ -13,7 +13,7 @@ export const ID_CANVAS = 'dashcanvas';
 
 const SceneComponent = (props: ISceneProps) => {
 
-  const { orbit, model } = { ...props };
+  const { orbit, model, showStats } = { ...props };
   const canvasRef = createRef<HTMLCanvasElement>();
 
   useEffect(() => {
@@ -46,7 +46,10 @@ const SceneComponent = (props: ISceneProps) => {
 
       {/* <axesHelper /> */}
       {/* <gridHelper /> */}
-      <Stats />
+      {
+        showStats ? <Stats className='statspanel' /> : null
+      }
+
 
     </Canvas>
   );

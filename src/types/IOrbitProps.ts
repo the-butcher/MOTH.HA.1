@@ -9,27 +9,43 @@ export interface IPresetProps {
   equals: (posistion: Vector3, target: Vector3) => boolean;
 }
 
-export type TPresetKey = 'pumps' | 'home0' | 'home1' | 'home2' | 'home3' | 'quarter' | 'user';
+export type TPresetKey = 'pumps' | 'home0' | 'home1' | 'home2' | 'home3' | 'quarter';
 
-export const CAMERA_POSITIONS: { [K in TPresetKey]: Vector3 } = {
+export const CAMERA_POSITIONS_PORTRAIT: { [K in TPresetKey]: Vector3 } = {
   'pumps': new Vector3(-2.606316550234446, 5.573445005196212, -2.574183676578704),
-  'home0': new Vector3(-13.1, 17.2, -25.1),
-  'home1': new Vector3(-13.1, 20.0, -25.1),
-  'home2': new Vector3(-13.1, 22.8, -25.1),
-  'home3': new Vector3(-27.11462252850753, 7.170372208075888, 3.3851106655435768),
-  'quarter': new Vector3(-30.45090193818403, 14.736196882882762, -36.08947504792695),
-  'user': new Vector3()
-}
+  'home0': new Vector3(-23.92, 23.10, -31.97),
+  'home1': new Vector3(-23.92, 25.90, -31.97),
+  'home2': new Vector3(-23.92, 28.70, -31.97),
+  'home3': new Vector3(-23.92, 12.00, -31.97).multiplyScalar(1.4),
+  'quarter': new Vector3(-47.82122098139755, 30.60846253048619, -52.577751231462614)
+};
 
-export const CAMERA_TARGETS: { [K in TPresetKey]: Vector3 } = {
+export const CAMERA_TARGETS_PORTRAIT: { [K in TPresetKey]: Vector3 } = {
   'pumps': new Vector3(-9.577474807034104, -2.5560233325780883, -16.300346163339597),
-  'home0': new Vector3(0.36, -2.7, -6.18),
-  'home1': new Vector3(0.36, 0.1, -6.18),
-  'home2': new Vector3(0.36, 2.9, -6.18),
-  'home3': new Vector3(-4.857485561634025, 1.392515836707786, -4.783590931805891),
-  'quarter': new Vector3(-4.473854194388395, 2.363560431817357, -5.589525052934382),
-  'user': new Vector3()
-}
+  'home0': new Vector3(-0.04, -2.70, -5.88),
+  'home1': new Vector3(-0.04, 0.10, -5.88),
+  'home2': new Vector3(-0.04, 2.90, -5.88),
+  'home3': new Vector3(-0.04, 2.90, -5.88),
+  'quarter': new Vector3(-4.316680036981539, 1.6980772085064948, -6.304850625092192)
+};
+
+export const CAMERA_POSITIONS_LANDSCAPE: { [K in TPresetKey]: Vector3 } = {
+  'pumps': new Vector3(-2.606316550234446, 5.573445005196212, -2.574183676578704),
+  'home0': new Vector3(-11.99, 10.21, -18.93).multiplyScalar(1.1),
+  'home1': new Vector3(-11.99, 13.01, -18.93).multiplyScalar(1.1),
+  'home2': new Vector3(-11.99, 15.81, -18.93).multiplyScalar(1.1),
+  'home3': new Vector3(-11.99, 6.00, -18.93).multiplyScalar(1.4),
+  'quarter': new Vector3(-24.995553088620653, 15.439957365592065, -28.299599140949535)
+};
+
+export const CAMERA_TARGETS_LANDSCAPE: { [K in TPresetKey]: Vector3 } = {
+  'pumps': new Vector3(-9.577474807034104, -2.5560233325780883, -16.300346163339597),
+  'home0': new Vector3(-0.05, -2.70, -5.88),
+  'home1': new Vector3(-0.05, 0.10, -5.88),
+  'home2': new Vector3(-0.05, 2.90, -5.88),
+  'home3': new Vector3(-0.05, 0.90, -5.88),
+  'quarter': new Vector3(-4.316680036981535, 1.6980772085064593, -6.304850625092199)
+};
 
 export const WFOCUS_TARGETS: { [K in TPresetKey]: Vector3 } = {
   'pumps': new Vector3(-8.055409469246245, -2.700001555476562, -13.210163558725592),
@@ -37,11 +53,22 @@ export const WFOCUS_TARGETS: { [K in TPresetKey]: Vector3 } = {
   'home1': new Vector3(0.36, 0.1, -6.18),
   'home2': new Vector3(0.36, 2.9, -6.18),
   'home3': new Vector3(-4.032296553887772, 3.0152412584874564, -6.685930244012403),
-  'quarter': new Vector3(-4.032296553887772, 3.0152412584874564, -6.685930244012403),
-  'user': new Vector3()
-}
+  'quarter': new Vector3(-4.032296553887772, 3.0152412584874564, -6.685930244012403)
+};
 
 const tolerance = 0.1;
+
+const apply = (presetKey: TPresetKey, posistion: Vector3, target: Vector3, wFocus: Vector3) => {
+  // console.log('screen', screen.orientation)
+  if (screen.orientation.type.startsWith('portrait')) {
+    posistion.set(CAMERA_POSITIONS_PORTRAIT[presetKey].x, CAMERA_POSITIONS_PORTRAIT[presetKey].y, CAMERA_POSITIONS_PORTRAIT[presetKey].z);
+    target.set(CAMERA_TARGETS_PORTRAIT[presetKey].x, CAMERA_TARGETS_PORTRAIT[presetKey].y, CAMERA_TARGETS_PORTRAIT[presetKey].z);
+  } else {
+    posistion.set(CAMERA_POSITIONS_LANDSCAPE[presetKey].x, CAMERA_POSITIONS_LANDSCAPE[presetKey].y, CAMERA_POSITIONS_LANDSCAPE[presetKey].z);
+    target.set(CAMERA_TARGETS_LANDSCAPE[presetKey].x, CAMERA_TARGETS_LANDSCAPE[presetKey].y, CAMERA_TARGETS_LANDSCAPE[presetKey].z);
+  }
+  wFocus.set(WFOCUS_TARGETS[presetKey].x, WFOCUS_TARGETS[presetKey].y, WFOCUS_TARGETS[presetKey].z);
+}
 
 export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
   'pumps': {
@@ -49,12 +76,13 @@ export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
     faces: [],
     sgmts: [],
     apply: (posistion: Vector3, target: Vector3, wFocus: Vector3) => {
-      posistion.set(CAMERA_POSITIONS['pumps'].x, CAMERA_POSITIONS['pumps'].y, CAMERA_POSITIONS['pumps'].z);
-      target.set(CAMERA_TARGETS['pumps'].x, CAMERA_TARGETS['pumps'].y, CAMERA_TARGETS['pumps'].z);
-      wFocus.set(WFOCUS_TARGETS['pumps'].x, WFOCUS_TARGETS['pumps'].y, WFOCUS_TARGETS['pumps'].z);
+      apply('pumps', posistion, target, wFocus);
+      // posistion.set(CAMERA_POSITIONS['pumps'].x, CAMERA_POSITIONS['pumps'].y, CAMERA_POSITIONS['pumps'].z);
+      // target.set(CAMERA_TARGETS['pumps'].x, CAMERA_TARGETS['pumps'].y, CAMERA_TARGETS['pumps'].z);
+      // wFocus.set(WFOCUS_TARGETS['pumps'].x, WFOCUS_TARGETS['pumps'].y, WFOCUS_TARGETS['pumps'].z);
     },
     equals: (posistion: Vector3, target: Vector3) => {
-      return posistion.clone().sub(CAMERA_POSITIONS['pumps'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS['pumps'].clone()).length() < tolerance;
+      return posistion.clone().sub(CAMERA_POSITIONS_PORTRAIT['pumps'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS_PORTRAIT['pumps'].clone()).length() < tolerance;
     }
   },
   'home0': {
@@ -62,12 +90,13 @@ export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
     faces: [],
     sgmts: [],
     apply: (posistion: Vector3, target: Vector3, wFocus: Vector3) => {
-      posistion.set(CAMERA_POSITIONS['home0'].x, CAMERA_POSITIONS['home0'].y, CAMERA_POSITIONS['home0'].z);
-      target.set(CAMERA_TARGETS['home0'].x, CAMERA_TARGETS['home0'].y, CAMERA_TARGETS['home0'].z);
-      wFocus.set(WFOCUS_TARGETS['home0'].x, WFOCUS_TARGETS['home0'].y, WFOCUS_TARGETS['home0'].z);
+      apply('home0', posistion, target, wFocus);
+      // posistion.set(CAMERA_POSITIONS['home0'].x, CAMERA_POSITIONS['home0'].y, CAMERA_POSITIONS['home0'].z);
+      // target.set(CAMERA_TARGETS['home0'].x, CAMERA_TARGETS['home0'].y, CAMERA_TARGETS['home0'].z);
+      // wFocus.set(WFOCUS_TARGETS['home0'].x, WFOCUS_TARGETS['home0'].y, WFOCUS_TARGETS['home0'].z);
     },
     equals: (posistion: Vector3, target: Vector3) => {
-      return posistion.clone().sub(CAMERA_POSITIONS['home0'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS['home0'].clone()).length() < tolerance;
+      return posistion.clone().sub(CAMERA_POSITIONS_PORTRAIT['home0'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS_PORTRAIT['home0'].clone()).length() < tolerance;
     }
   },
   'home1': {
@@ -75,12 +104,13 @@ export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
     faces: [],
     sgmts: [],
     apply: (posistion: Vector3, target: Vector3, wFocus: Vector3) => {
-      posistion.set(CAMERA_POSITIONS['home1'].x, CAMERA_POSITIONS['home1'].y, CAMERA_POSITIONS['home1'].z);
-      target.set(CAMERA_TARGETS['home1'].x, CAMERA_TARGETS['home1'].y, CAMERA_TARGETS['home1'].z);
-      wFocus.set(WFOCUS_TARGETS['home1'].x, WFOCUS_TARGETS['home1'].y, WFOCUS_TARGETS['home1'].z);
+      apply('home1', posistion, target, wFocus);
+      // posistion.set(CAMERA_POSITIONS['home1'].x, CAMERA_POSITIONS['home1'].y, CAMERA_POSITIONS['home1'].z);
+      // target.set(CAMERA_TARGETS['home1'].x, CAMERA_TARGETS['home1'].y, CAMERA_TARGETS['home1'].z);
+      // wFocus.set(WFOCUS_TARGETS['home1'].x, WFOCUS_TARGETS['home1'].y, WFOCUS_TARGETS['home1'].z);
     },
     equals: (posistion: Vector3, target: Vector3) => {
-      return posistion.clone().sub(CAMERA_POSITIONS['home1'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS['home1'].clone()).length() < tolerance;
+      return posistion.clone().sub(CAMERA_POSITIONS_PORTRAIT['home1'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS_PORTRAIT['home1'].clone()).length() < tolerance;
     }
   },
   'home2': {
@@ -88,12 +118,13 @@ export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
     faces: [],
     sgmts: [],
     apply: (posistion: Vector3, target: Vector3, wFocus: Vector3) => {
-      posistion.set(CAMERA_POSITIONS['home2'].x, CAMERA_POSITIONS['home2'].y, CAMERA_POSITIONS['home2'].z);
-      target.set(CAMERA_TARGETS['home2'].x, CAMERA_TARGETS['home2'].y, CAMERA_TARGETS['home2'].z);
-      wFocus.set(WFOCUS_TARGETS['home2'].x, WFOCUS_TARGETS['home2'].y, WFOCUS_TARGETS['home2'].z);
+      apply('home2', posistion, target, wFocus);
+      // posistion.set(CAMERA_POSITIONS['home2'].x, CAMERA_POSITIONS['home2'].y, CAMERA_POSITIONS['home2'].z);
+      // target.set(CAMERA_TARGETS['home2'].x, CAMERA_TARGETS['home2'].y, CAMERA_TARGETS['home2'].z);
+      // wFocus.set(WFOCUS_TARGETS['home2'].x, WFOCUS_TARGETS['home2'].y, WFOCUS_TARGETS['home2'].z);
     },
     equals: (posistion: Vector3, target: Vector3) => {
-      return posistion.clone().sub(CAMERA_POSITIONS['home2'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS['home2'].clone()).length() < tolerance;
+      return posistion.clone().sub(CAMERA_POSITIONS_PORTRAIT['home2'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS_PORTRAIT['home2'].clone()).length() < tolerance;
     }
   },
   'home3': {
@@ -101,12 +132,13 @@ export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
     faces: [],
     sgmts: [],
     apply: (posistion: Vector3, target: Vector3, wFocus: Vector3) => {
-      posistion.set(CAMERA_POSITIONS['home3'].x, CAMERA_POSITIONS['home3'].y, CAMERA_POSITIONS['home3'].z);
-      target.set(CAMERA_TARGETS['home3'].x, CAMERA_TARGETS['home3'].y, CAMERA_TARGETS['home3'].z);
-      wFocus.set(WFOCUS_TARGETS['home3'].x, WFOCUS_TARGETS['home3'].y, WFOCUS_TARGETS['home3'].z);
+      apply('home3', posistion, target, wFocus);
+      // posistion.set(CAMERA_POSITIONS['home3'].x, CAMERA_POSITIONS['home3'].y, CAMERA_POSITIONS['home3'].z);
+      // target.set(CAMERA_TARGETS['home3'].x, CAMERA_TARGETS['home3'].y, CAMERA_TARGETS['home3'].z);
+      // wFocus.set(WFOCUS_TARGETS['home3'].x, WFOCUS_TARGETS['home3'].y, WFOCUS_TARGETS['home3'].z);
     },
     equals: (posistion: Vector3, target: Vector3) => {
-      return posistion.clone().sub(CAMERA_POSITIONS['home3'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS['home3'].clone()).length() < tolerance;
+      return posistion.clone().sub(CAMERA_POSITIONS_PORTRAIT['home3'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS_PORTRAIT['home3'].clone()).length() < tolerance;
     }
   },
   'quarter': {
@@ -114,23 +146,13 @@ export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
     faces: [],
     sgmts: [],
     apply: (posistion: Vector3, target: Vector3, wFocus: Vector3) => {
-      posistion.set(CAMERA_POSITIONS['quarter'].x, CAMERA_POSITIONS['quarter'].y, CAMERA_POSITIONS['quarter'].z);
-      target.set(CAMERA_TARGETS['quarter'].x, CAMERA_TARGETS['quarter'].y, CAMERA_TARGETS['quarter'].z);
-      wFocus.set(WFOCUS_TARGETS['quarter'].x, WFOCUS_TARGETS['quarter'].y, WFOCUS_TARGETS['quarter'].z);
+      apply('quarter', posistion, target, wFocus);
+      // posistion.set(CAMERA_POSITIONS['quarter'].x, CAMERA_POSITIONS['quarter'].y, CAMERA_POSITIONS['quarter'].z);
+      // target.set(CAMERA_TARGETS['quarter'].x, CAMERA_TARGETS['quarter'].y, CAMERA_TARGETS['quarter'].z);
+      // wFocus.set(WFOCUS_TARGETS['quarter'].x, WFOCUS_TARGETS['quarter'].y, WFOCUS_TARGETS['quarter'].z);
     },
     equals: (posistion: Vector3, target: Vector3) => {
-      return posistion.clone().sub(CAMERA_POSITIONS['quarter'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS['quarter'].clone()).length() < tolerance;
-    }
-  },
-  'user': {
-    clipPlane: -1,
-    faces: [],
-    sgmts: [],
-    apply: () => {
-      // do nothing
-    },
-    equals: () => {
-      return false; // always false
+      return posistion.clone().sub(CAMERA_POSITIONS_PORTRAIT['quarter'].clone()).length() < tolerance && target.clone().sub(CAMERA_TARGETS_PORTRAIT['quarter'].clone()).length() < tolerance;
     }
   }
 }

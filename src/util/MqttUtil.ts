@@ -65,7 +65,7 @@ export class MqttUtil {
                     MqttUtil.HANDLERS_BY_TOPIC[topic].forEach(handler => {
                         const result = handler.statusHndlr(status as never);
                         if (this.BOARD_HANDLER?.topic === topic && this.BOARD_HANDLER?.value === handler.value && result) {
-                            console.log('topic', topic, 'value', handler.value, 'status', status, 'result', result);
+                            // console.log('topic', topic, 'value', handler.value, 'status', status, 'result', result);
                             this.BOARD_HANDLER.handleResult(result === 'ON');
                         }
                     });

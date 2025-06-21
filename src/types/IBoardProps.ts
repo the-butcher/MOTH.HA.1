@@ -9,4 +9,5 @@ export interface IBoardProps {
   handleSunInstant: (sunInstant: number) => void;
   handlePresetKey: (presetKey: TPresetKey | undefined) => void;
   handleSelectKey: (selectKey: TStatusHandlerKey | undefined) => void;
+  handleToggleStats: () => void;
 }
