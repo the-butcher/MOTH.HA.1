@@ -15,6 +15,7 @@ export type TUnit = 'barrel_switch' | 'co2_ppm' | 'temperature_celsius' | 'batte
 
 export interface IStatusResult {
     statusKey: TStatusKey;
+    title: string;
     values: IStatusValue[];
     switch?: {
         status: boolean
@@ -126,6 +127,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'weather___',
+                title: 'weather forecast',
                 values: [
                     {
                         key: 'temperature (°C)',
@@ -176,6 +178,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'moth_295D3',
+                title: 'aranet radiation',
                 values: [
                     {
                         key: 'radiation (µSv/h)',
@@ -239,6 +242,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'moth____66',
+                title: 'moth CO₂ sensor',
                 values: [
                     {
                         key: 'CO₂ (ppm)',
@@ -308,6 +312,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'moth___178',
+                title: 'moth CO₂ sensor',
                 values: [
                     {
                         key: 'CO₂ (ppm)',
@@ -366,6 +371,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'moth___130',
+                title: 'moth PM sensor',
                 values: [
                     {
                         key: 'PM2.5 (µg/m³)',
@@ -430,6 +436,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             // has no graphical representation
             return {
                 statusKey: 'barrel_cnt',
+                title: 'barrel water counter',
                 values: []
             };
 
@@ -471,6 +478,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'barrel_top',
+                title: 'barrel water sensor',
                 values: [
                     {
                         key: 'barrel top',
@@ -516,6 +524,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'barrel_bot',
+                title: 'barrel water sensor',
                 values: [
                     {
                         key: 'barrel bot',
@@ -546,6 +555,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             // nothing, just a container for lines
             return {
                 statusKey: 'status_pure_1',
+                title: 'air purifier indicator',
                 values: []
             };
         },
@@ -581,6 +591,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'switch_pure_1',
+                title: 'air purifier',
                 values: [],
                 switch: {
                     status: POWER_PURE_1
@@ -595,7 +606,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPure1}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
         },
         switchProps: {
-            title: 'air purifier',
+            // title: 'air purifier',
             toggle: () => {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPure1}/Power`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
@@ -630,6 +641,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'switch_pump_1',
+                title: 'ground ⤴ barrel',
                 values: [],
                 switch: {
                     status: POWER_PUMP_1
@@ -644,7 +656,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
         },
         switchProps: {
-            title: 'ground ⤴ barrel',
+            // title: 'ground ⤴ barrel',
             toggle: () => {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/Power1`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
@@ -709,6 +721,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'switch_pump_2',
+                title: 'barrel ⤳ garden',
                 values: [],
                 switch: {
                     status: POWER_PUMP_2
@@ -725,7 +738,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             }
         },
         switchProps: {
-            title: 'barrel ⤳ garden',
+            // title: 'barrel ⤳ garden',
             toggle: () => {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/Power2`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
@@ -779,6 +792,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
 
             return {
                 statusKey: 'switch_pump_3',
+                title: 'barrel ⤳ pump1',
                 values: [],
                 switch: {
                     status: POWER_PUMP_3

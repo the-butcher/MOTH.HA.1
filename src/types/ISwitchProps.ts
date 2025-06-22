@@ -4,7 +4,7 @@ export interface IClientCoordinate {
 }
 
 export interface ISwitchProps {
-    title: string;
+    // title: string;
     // content: string;
     /**
      * create visual selection in 3d display

@@ -46,7 +46,7 @@ const BoardComponent = (props: IBoardProps) => {
   const setSunInstantTo = useRef<number>(-1);
   const handleSunInstantChange = (value: number) => {
 
-    // console.log('handle sun change');
+    console.debug('📞 handle sun change');
 
     handleSunInstant(value);
 
@@ -59,7 +59,7 @@ const BoardComponent = (props: IBoardProps) => {
 
   const handleSunInstantCommit = (value: number) => {
 
-    // console.log('handle sun commit');
+    console.debug('📞 handle sun commit');
 
     handleSunInstant(value);
 
@@ -73,7 +73,7 @@ const BoardComponent = (props: IBoardProps) => {
 
   useEffect(() => {
 
-    console.log('⚙ updating board component (selectKey)', selectKey);
+    console.debug('⚙ updating board component (selectKey)', selectKey);
 
     if (selectKey) {
 
@@ -109,14 +109,9 @@ const BoardComponent = (props: IBoardProps) => {
 
   const handleResult = (result: IStatusResult) => {
 
-    console.log('📞 handling result in board component', result);
+    console.debug('📞 handling result in board component', result);
+
     setStatusResult(result);
-
-    // TODO :: build UI elements from result
-    // TODO :: values
-    // TODO :: switch if present
-
-    // setSwitchActive(result);
 
   }
 
@@ -129,7 +124,7 @@ const BoardComponent = (props: IBoardProps) => {
   };
 
   const handleDeselect = () => {
-    console.debug('handling deselect');
+    console.debug('📞 handling deselect');
     handleSelectKey(undefined);
   }
 
@@ -322,7 +317,7 @@ const BoardComponent = (props: IBoardProps) => {
                   <HighlightOffIcon />
                 </IconButton>
               }
-              title={<Typography>{statusResult.statusKey}</Typography>}
+              title={<Typography>{statusResult.title}</Typography>}
             />
             <CardContent
               sx={{
@@ -347,12 +342,12 @@ const BoardComponent = (props: IBoardProps) => {
                   >
                     {
                       statusResult.values.map(v => <ListItem
+                        key={`${statusResult.statusKey}_${v.key}`}
                         sx={{
                           padding: '0px 12px !important'
                         }}
                       >
                         <ListItemIcon
-                          key={`${statusResult.statusKey}_${v.key}`}
                           sx={{
                             minWidth: 'unset'
                           }}
