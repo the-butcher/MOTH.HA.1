@@ -1,15 +1,15 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { easeInOut } from "motion";
+import { DepthOfFieldEffect, EffectComposer, EffectPass, RenderPass, SMAAEffect } from "postprocessing";
 import { useEffect, useRef } from 'react';
 import { Group, Intersection, LineSegments, Mesh, Object3D, Object3DEventMap, Raycaster, SphereGeometry, Vector2, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { MODEL_OFFSET_Y } from '../types/IModelProps';
 import { IOrbitProps, PRESET_PROPS } from '../types/IOrbitProps';
-import { STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
+import { STATUS_HANDLERS, TStatusKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { ScreenshotUtil } from '../util/ScreenshotUtil';
 import { ID_CANVAS } from './SceneComponent';
-import { DepthOfFieldEffect, EffectComposer, EffectPass, FXAAEffect, RenderPass } from "postprocessing";
 
 const ControlsComponent = (props: IOrbitProps) => {
 
@@ -123,7 +123,7 @@ const ControlsComponent = (props: IOrbitProps) => {
     }));
 
     effectComposerRef.current.addPass(new RenderPass(scene, camera));
-    effectComposerRef.current.addPass(new EffectPass(camera, new FXAAEffect()));
+    effectComposerRef.current.addPass(new EffectPass(camera, new SMAAEffect()));
     effectComposerRef.current.addPass(effectPassRef.current);
 
     MaterialRepo.setClipPlane(clipPlaneCurr.current);
@@ -225,7 +225,7 @@ const ControlsComponent = (props: IOrbitProps) => {
       clipPlaneDiff.current = clipPlaneDest - clipPlaneOrig.current;
 
       tsAnimOrig.current = Date.now();
-      tsAnimDest.current = tsAnimOrig.current + 1000;
+      tsAnimDest.current = tsAnimOrig.current + 2000;
 
       // trigger first animation frame
       invalidate();
@@ -241,7 +241,7 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     // deselect anything other than
     Object.keys(STATUS_HANDLERS).forEach(key => {
-      const curConfirm = STATUS_HANDLERS[key as TStatusHandlerKey].switchProps;
+      const curConfirm = STATUS_HANDLERS[key as TStatusKey].switchProps;
       if (key !== selectKey && curConfirm) {
         // console.log('deselect: ', key);
         curConfirm.deselect();
@@ -250,7 +250,7 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     if (selectKey) {
 
-      const curConfirm = STATUS_HANDLERS[selectKey as TStatusHandlerKey].switchProps;
+      const curConfirm = STATUS_HANDLERS[selectKey as TStatusKey].switchProps;
       if (curConfirm) {
         // console.log('select: ', selectKey);
         curConfirm.select();
@@ -389,16 +389,17 @@ const ControlsComponent = (props: IOrbitProps) => {
                 if (intersect.object.name !== '' && intersect.object.name !== 'ArrowHelper') {
 
                   // const sphere = new Mesh(new SphereGeometry(0.02), MaterialRepo.getMaterialFace({
-                  //   rgb: 0x0000FF,
-                  //   opacity: 0.5
+                  //   rgb: 0x0000ff,
+                  //   opacity: 1.00,
+                  //   clip: 'clip_none'
                   // }));
                   // sphere.position.x = intersect.point.x;
                   // sphere.position.y = intersect.point.y;
                   // sphere.position.z = intersect.point.z;
                   // selectHelperRef.current?.add(sphere);
 
-                  const statusHandler = STATUS_HANDLERS[intersect.object.name as TStatusHandlerKey];
-                  if (statusHandler?.switchProps) {
+                  const statusHandler = STATUS_HANDLERS[intersect.object.name as TStatusKey];
+                  if (statusHandler) {
                     hitsByNamedHandler[intersect.object.name] = hitsByNamedHandler[intersect.object.name] ? hitsByNamedHandler[intersect.object.name] + (3 - radius) : 1;
                   }
 
@@ -409,12 +410,15 @@ const ControlsComponent = (props: IOrbitProps) => {
             }
           }
 
+          // console.log('hitsByNamedHandler', hitsByNamedHandler);
+
           let maxHits = -1;
-          let maxSelectKey: TStatusHandlerKey | undefined;
+          let maxSelectKey: TStatusKey | undefined;
           Object.keys(hitsByNamedHandler).forEach(key => {
             const keyHits = hitsByNamedHandler[key];
-            if (keyHits > maxHits && STATUS_HANDLERS[key as TStatusHandlerKey].switchProps) {
-              maxSelectKey = key as TStatusHandlerKey;
+            // console.log('keyHits', keyHits);
+            if (keyHits > maxHits) { //  && STATUS_HANDLERS[key as TStatusKey].switchProps
+              maxSelectKey = key as TStatusKey;
               maxHits = keyHits;
             }
           });

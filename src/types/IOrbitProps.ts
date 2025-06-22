@@ -1,5 +1,5 @@
 import { LineSegments, Mesh, Vector3 } from "three";
-import { TStatusHandlerKey } from "./IStatusHandler";
+import { TStatusKey } from "./IStatusHandler";
 
 export interface IPresetProps {
   clipPlane: number;
@@ -160,8 +160,8 @@ export const PRESET_PROPS: { [K in TPresetKey]: IPresetProps } = {
 export interface IOrbitProps {
   id: string;
   stamp: string;
-  selectKey: TStatusHandlerKey | undefined;
+  selectKey: TStatusKey | undefined;
   presetKey: TPresetKey | undefined;
-  handleSelectKey: (selectKey: TStatusHandlerKey | undefined) => void;
+  handleSelectKey: (selectKey: TStatusKey | undefined) => void;
   handlePresetKey: (presetKey: TPresetKey | undefined) => void;
 }

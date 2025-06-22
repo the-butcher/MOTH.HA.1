@@ -11,10 +11,16 @@ OK introduce a second reference point so focus to that point can be preserved wh
 OK store a wfocus point for each camera key and animate like camera pos
 OK restore orbit center after animation
 OK filter intersections by height only on instances having cli materials
--- by using forecast early hours become unavailble later in the day and light intensities become negative, likely due to naive interpolation
--- page becomes unresponsive after a while (maybe after many text updates)
--- reduce weather information to maybe a single symbol
 OK add UI for "devices", pumps, switches, ...
+OK page becomes unresponsive after a while (maybe after many text updates) :: texts were updated too often, dispose of geometry was added, text geometry resolution reduced
+-- when using forecast early hours become unavailble later in the day and light intensities become negative, likely due to naive interpolation
+-- reduce weather information to maybe a single symbol
+-- show connection state of sensors, switches
+
+- sensors
+  - moth, 1xPM, 2xCO2
+  - Aranet Radiation, needs to be close to Raspberry, OK with radiation, not OK with CO2
+  -
 
 possible improvements:
 

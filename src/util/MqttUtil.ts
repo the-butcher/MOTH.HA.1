@@ -1,15 +1,20 @@
 import mqtt, { MqttClient } from 'mqtt';
-import { IStatusHandler, STATUS_HANDLERS, TStatusHandlerKey } from '../types/IStatusHandler';
+import { IStatusHandler, IStatusResult, STATUS_HANDLERS, TStatusKey } from '../types/IStatusHandler';
+
 
 export interface IBoardHandler {
-    topic?: string;
-    value?: string;
-    handleResult: (result: boolean) => void;
+    statusKey: string;
+    handleResult: (result: IStatusResult) => void;
 }
 
 export class MqttUtil {
 
     public static MQTT_CLIENT: MqttClient;
+
+    /**
+     * last known stati by status key
+     */
+    static RESULTS_BY_KEY: { [K: string]: IStatusResult } = {};
 
     /**
      * references to handlers, primarily taking care of 3d representation
@@ -19,6 +24,9 @@ export class MqttUtil {
 
     static setBoardHandler(boardHandler: IBoardHandler): void {
         MqttUtil.BOARD_HANDLER = boardHandler;
+        if (this.RESULTS_BY_KEY[boardHandler.statusKey]) {
+            boardHandler.handleResult(this.RESULTS_BY_KEY[boardHandler.statusKey]);
+        }
     }
 
     static clearBoardHandler(): void {
@@ -45,7 +53,7 @@ export class MqttUtil {
             // console.log('collecting handlers by topic');
 
             handlerKeys.forEach(handlerKey => {
-                const handler = STATUS_HANDLERS[handlerKey as TStatusHandlerKey];
+                const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
                 // first handler for this topic?
                 if (handler.topic) {
                     if (!MqttUtil.HANDLERS_BY_TOPIC[handler.topic]) {
@@ -60,21 +68,27 @@ export class MqttUtil {
 
             this.MQTT_CLIENT.on('message', (topic, message) => {
                 const status = JSON.parse(message.toString());
-                // console.log(`Received Message: ${message} On topic: ${topic}`);
                 if (MqttUtil.HANDLERS_BY_TOPIC[topic]) {
                     MqttUtil.HANDLERS_BY_TOPIC[topic].forEach(handler => {
                         const result = handler.statusHndlr(status as never);
-                        if (this.BOARD_HANDLER?.topic === topic && this.BOARD_HANDLER?.value === handler.value && result) {
+                        this.RESULTS_BY_KEY[handler.statusKey] = result;
+                        if (this.BOARD_HANDLER?.statusKey === handler.statusKey) {
                             // console.log('topic', topic, 'value', handler.value, 'status', status, 'result', result);
-                            this.BOARD_HANDLER.handleResult(result === 'ON');
+                            this.BOARD_HANDLER.handleResult(result);
                         }
                     });
                 }
             });
 
-            // issue any triggering messages for initial state
+            // initialize all handlers
             handlerKeys.forEach(handlerKey => {
-                const handler = STATUS_HANDLERS[handlerKey as TStatusHandlerKey];
+                const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
+                handler.initialize();
+            });
+
+            // query handler stati (if the handler has implemented it)
+            handlerKeys.forEach(handlerKey => {
+                const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
                 handler.statusQuery('STARTUP');
             });
 

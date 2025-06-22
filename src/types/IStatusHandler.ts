@@ -8,14 +8,35 @@ import { PolygonUtil } from "../util/PolygonUtil";
 import { COLOR_DESCRIPTIONS, TColorKey } from "./IColorDescription";
 import { ISwitchProps } from "./ISwitchProps";
 
-export type TStatusHandlerKey = 'weather___' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'status_pure_1' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
-export type TStatusResult = 'ON' | 'OFF' | undefined;
+export type TStatusKey = 'weather___' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'status_pure_1' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
+// export type TStatusResult = 'ON' | 'OFF' | undefined;
 export type TQueryTime = 'STARTUP' | 'RUNTIME'
+export type TUnit = 'barrel_switch' | 'co2_ppm' | 'temperature_celsius' | 'battery_percent' | 'radiation_microsivert_per_hour' | 'pressure_hectopascal' | 'pm025_microgram_per_cube_meter'
+
+export interface IStatusResult {
+    statusKey: TStatusKey;
+    values: IStatusValue[];
+    switch?: {
+        status: boolean
+    };
+}
+
+export interface IStatusValue {
+    key: string;
+    unit: TUnit;
+    // unit: string;
+    value: string;
+}
 
 export interface IStatusHandler {
     topic?: string; // the url to get this elements status from (other elements may use the same url, only one call shall be made)
-    value?: string;
-    statusHndlr: (status: never) => TStatusResult; // todo some container that holds all instances (Meshes) that a specific status may apply to
+    statusKey: TStatusKey;
+    /**
+     * initialize this handler (i.e. create some 3d elements if needed)
+     * @returns
+     */
+    initialize: () => void;
+    statusHndlr: (status: never) => IStatusResult; // todo some container that holds all instances (Meshes) that a specific status may apply to
     statusQuery: (queryTime: TQueryTime) => void;
     switchProps?: ISwitchProps;
     faces: Mesh[];
@@ -30,13 +51,14 @@ const topicPump = 'plug_153';
 const topicShed = 'shed_024';
 
 export let VALUE_COUNTER_1 = 0;
+export let LITER_COUNTER_1 = 0;
 export let POWER_PURE_1 = false;
 export let POWER_PUMP_1 = false;
 export let POWER_PUMP_2 = false;
 export let POWER_PUMP_3 = false;
 const counter1Min = 225;
 
-const setVisible = (statusHandler: TStatusHandlerKey, visible: boolean) => {
+const setVisible = (statusHandler: TStatusKey, visible: boolean) => {
 
     STATUS_HANDLERS[statusHandler].faces.forEach(face => {
         face.visible = visible;
@@ -69,10 +91,8 @@ const setBarrelTopColors = () => {
         }
 
     } else {
-
         // TODO reset the liter display, test code below
         // PolygonUtil.createTextMesh('', STATUS_HANDLERS['switch_pump_1'].texts[0]);
-
     }
 
     STATUS_HANDLERS['switch_pump_1'].faces.forEach(face => {
@@ -86,8 +106,9 @@ const setBarrelTopColors = () => {
 
 };
 
-export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
+export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
     weather___: {
+        statusKey: 'weather___',
         statusHndlr: (status: IWeatherForecast) => {
             // nothing
 
@@ -103,12 +124,25 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
                 invalidate();
             }, 500);
 
-            return undefined;
+            return {
+                statusKey: 'weather___',
+                values: [
+                    {
+                        key: 'temperature (°C)',
+                        unit: 'temperature_celsius',
+                        value: deg
+                    }
+                ]
+            };
+
         },
-        statusQuery: () => {
+        initialize: () => {
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip_none']);
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip_none']);
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray___clip_none']);
+        },
+        statusQuery: () => {
+            // nothing
         },
         faces: [],
         sgmts: [],
@@ -118,9 +152,13 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth_295D3: {
         topic: `aranet/295D3`,
+        statusKey: 'moth_295D3',
         statusHndlr: (status: never) => {
 
-            const rad = status['rad'];
+            // console.log('aranet/295D3', status);
+
+            const rad = status['rad'] as number;
+            const bat = status['bat'] as number;
 
             let colorDescKeyRad: TColorKey = 'face_green___clip__000';
             if (rad >= 10) {
@@ -132,15 +170,32 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth_295D3'].actTo);
             STATUS_HANDLERS['moth_295D3'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${rad}µSv/h`, STATUS_HANDLERS['moth_295D3'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyRad]);
+                PolygonUtil.createTextMesh(`${rad}µSv/h`, STATUS_HANDLERS['moth_295D3'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyRad], 'moth_295D3');
                 invalidate();
             }, 500);
 
-            return undefined;
+            return {
+                statusKey: 'moth_295D3',
+                values: [
+                    {
+                        key: 'radiation (µSv/h)',
+                        unit: 'radiation_microsivert_per_hour',
+                        value: rad?.toFixed(2)
+                    },
+                    {
+                        key: 'battery (%)',
+                        unit: 'battery_percent',
+                        value: bat?.toFixed(0)
+                    }
+                ]
+            };
 
         },
-        statusQuery: () => {
+        initialize: () => {
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth_295D3'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip__000']);
+        },
+        statusQuery: () => {
+            // nothing
         },
         faces: [],
         sgmts: [],
@@ -150,11 +205,15 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth____66: {
         topic: `moth/ip__66`,
+        statusKey: 'moth____66',
         statusHndlr: (status: never) => {
 
-            const co2Lpf = status['co2_lpf'];
-            const deg = status['deg'];
-            // console.log('moth/ip__66', co2Lpf, status, STATUS_HANDLERS['moth____66'].texts[0]);
+            const co2Lpf = status['co2_lpf'] as number;
+            const deg = status['deg'] as number;
+            const bat = status['bat'] as number;
+            const hpa = status['hpa'] as number;
+
+            // console.log('moth/ip__66', status);
 
             let colorDescKeyLpf: TColorKey = 'face_green___clip__000';
             if (co2Lpf >= 1000) {
@@ -173,17 +232,39 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth____66'].actTo);
             STATUS_HANDLERS['moth____66'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth____66'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf]);
-                PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['moth____66'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyDeg]);
+                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth____66'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf], 'moth____66');
+                PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['moth____66'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyDeg], 'moth____66');
                 invalidate();
             }, 500);
 
-            return undefined;
+            return {
+                statusKey: 'moth____66',
+                values: [
+                    {
+                        key: 'CO₂ (ppm)',
+                        unit: 'co2_ppm',
+                        value: co2Lpf.toFixed(0)
+                    },
+                    {
+                        key: 'battery (%)',
+                        unit: 'battery_percent',
+                        value: bat?.toFixed(0)
+                    },
+                    {
+                        key: 'pressure (hpa)',
+                        unit: 'pressure_hectopascal',
+                        value: hpa.toFixed(0)
+                    }
+                ]
+            };
 
         },
-        statusQuery: () => {
+        initialize: () => {
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth____66'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip__000']);
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth____66'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip__000']);
+        },
+        statusQuery: () => {
+            // nothing
         },
         faces: [],
         sgmts: [],
@@ -193,11 +274,15 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth___178: {
         topic: `moth/ip_178`,
+        statusKey: 'moth___178',
         statusHndlr: (status: never) => {
 
-            const co2Lpf = status['co2_lpf'];
-            const deg = status['deg'];
-            // console.log('moth/ip_178', co2Lpf, status, STATUS_HANDLERS['moth___178'].texts[0]);
+            const co2Lpf = status['co2_lpf'] as number;
+            const deg = status['deg'] as number;
+            const bat = status['bat'] as number;
+            const hpa = status['hpa'] as number;
+
+            // console.log('moth/ip_178', status);
 
             let colorDescKeyLpf: TColorKey = 'face_green___clip__000';
             if (co2Lpf >= 1000) {
@@ -216,17 +301,39 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth___178'].actTo);
             STATUS_HANDLERS['moth___178'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth___178'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf]);
-                PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['moth___178'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyDeg]);
+                PolygonUtil.createTextMesh(`${co2Lpf}ppm`, STATUS_HANDLERS['moth___178'].texts[1], COLOR_DESCRIPTIONS[colorDescKeyLpf], 'moth___178');
+                PolygonUtil.createTextMesh(`${deg}°C`, STATUS_HANDLERS['moth___178'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyDeg], 'moth___178');
                 invalidate();
             }, 500);
 
-            return undefined;
+            return {
+                statusKey: 'moth___178',
+                values: [
+                    {
+                        key: 'CO₂ (ppm)',
+                        unit: 'co2_ppm',
+                        value: co2Lpf.toFixed(0)
+                    },
+                    {
+                        key: 'battery (%)',
+                        unit: 'battery_percent',
+                        value: bat.toFixed(0)
+                    },
+                    {
+                        key: 'pressure (hpa)',
+                        unit: 'pressure_hectopascal',
+                        value: hpa.toFixed(0)
+                    }
+                ]
+            };
 
         },
-        statusQuery: () => {
+        initialize: () => {
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___178'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip__000']);
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___178'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip__000']);
+        },
+        statusQuery: () => {
+            // nothing
         },
         faces: [],
         sgmts: [],
@@ -236,10 +343,12 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     moth___130: {
         topic: `moth/ip_130`,
+        statusKey: 'moth___130',
         statusHndlr: (status: never) => {
 
-            const pm025 = status['pm025'];
-            // console.log('moth/ip_130', pm025, status, STATUS_HANDLERS['moth___130'].texts[0]);
+            const pm025 = status['pm025'] as number;
+
+            // console.log('moth/ip_130', status);
 
             let colorDescKeyPm025: TColorKey = 'face_green___clip__000';
             if (pm025 >= 15) {
@@ -251,15 +360,27 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             // TODO :: multiple messages coming almost at the same time -> debounce
             window.clearTimeout(STATUS_HANDLERS['moth___130'].actTo);
             STATUS_HANDLERS['moth___130'].actTo = window.setTimeout(() => {
-                PolygonUtil.createTextMesh(`${pm025}µg/m³`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyPm025]);
+                PolygonUtil.createTextMesh(`${pm025}µg/m³`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS[colorDescKeyPm025], 'moth___130');
                 invalidate();
             }, 500);
 
-            return undefined;
+            return {
+                statusKey: 'moth___130',
+                values: [
+                    {
+                        key: 'PM2.5 (µg/m³)',
+                        unit: 'pm025_microgram_per_cube_meter',
+                        value: pm025.toFixed(0)
+                    }
+                ]
+            };
 
         },
-        statusQuery: () => {
+        initialize: () => {
             PolygonUtil.createTextMesh(`###`, STATUS_HANDLERS['moth___130'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip__000']);
+        },
+        statusQuery: () => {
+            // nothing
         },
         faces: [],
         sgmts: [],
@@ -269,6 +390,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     barrel_cnt: {
         topic: `stat/${topicShed}/RESULT`,
+        statusKey: 'barrel_cnt',
         statusHndlr: (status: never) => {
 
             // console.log('barrel_cnt :: statusHndlr', status)
@@ -278,17 +400,21 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
             } else if (status['Var1']) {
                 VALUE_COUNTER_1 = parseInt(status['Var1']);
             }
+
             setBarrelTopColors();
             if (VALUE_COUNTER_1 && POWER_PUMP_1) {
 
-                // console.log('counter1', STATUS_COUNTER_1, status);
+                const liters = Math.round(VALUE_COUNTER_1 / 350);
+                if (liters != LITER_COUNTER_1) {
+                    // console.log('counter1', VALUE_COUNTER_1, liters, status);
+                    LITER_COUNTER_1 = liters;
+                    PolygonUtil.createTextMesh(`~ ${LITER_COUNTER_1.toFixed()} liter`, STATUS_HANDLERS['switch_pump_1'].texts[0], {
+                        rgb: 0xFFFFFF,
+                        opacity: 1,
+                        clip: 'clip_none'
+                    });
+                }
 
-                const liters = VALUE_COUNTER_1 / 350;
-                PolygonUtil.createTextMesh(`~ ${liters.toFixed()} liter`, STATUS_HANDLERS['switch_pump_1'].texts[0], {
-                    rgb: 0xFFFFFF,
-                    opacity: 1,
-                    clip: 'clip_none'
-                });
 
                 window.clearTimeout(STATUS_HANDLERS['barrel_cnt'].actTo);
                 STATUS_HANDLERS['barrel_cnt'].actTo = window.setTimeout(() => {
@@ -301,8 +427,15 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
             }
 
-            return undefined;
+            // has no graphical representation
+            return {
+                statusKey: 'barrel_cnt',
+                values: []
+            };
 
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: () => {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicShed}/Counter1`, '+0', { qos: 0, retain: false });
@@ -315,7 +448,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     barrel_top: {
         topic: `stat/${topicShed}/RESULT`,
-        value: 'POWER1',
+        statusKey: 'barrel_top',
         statusHndlr: (status: never) => {
 
             // console.log('barrel_top :: statusHndlr', status)
@@ -336,8 +469,20 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
             }
 
-            return undefined;
+            return {
+                statusKey: 'barrel_top',
+                values: [
+                    {
+                        key: 'barrel top',
+                        unit: 'barrel_switch',
+                        value: switch1 ? 'wet' : 'dry'
+                    }
+                ]
+            };
 
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: () => {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicShed}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
@@ -350,7 +495,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     barrel_bot: {
         topic: `stat/${topicShed}/RESULT`,
-        value: 'POWER2',
+        statusKey: 'barrel_bot',
         statusHndlr: (status: never) => {
 
             // console.log('barrel_bot :: statusHndlr', status)
@@ -369,8 +514,20 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
                 invalidate();
             }
 
-            return undefined;
+            return {
+                statusKey: 'barrel_bot',
+                values: [
+                    {
+                        key: 'barrel bot',
+                        unit: 'barrel_switch',
+                        value: switch2 ? 'wet' : 'dry'
+                    }
+                ]
+            };
 
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: (queryTime: TQueryTime) => {
             if (queryTime === 'RUNTIME') {
@@ -384,9 +541,16 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
         actTo: -1
     },
     status_pure_1: {
+        statusKey: 'status_pure_1',
         statusHndlr: () => {
             // nothing, just a container for lines
-            return undefined;
+            return {
+                statusKey: 'status_pure_1',
+                values: []
+            };
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: () => {
             // nothing
@@ -399,33 +563,33 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     switch_pure_1: {
         topic: `stat/${topicPure1}/RESULT`,
-        value: 'POWER',
+        statusKey: 'switch_pure_1',
         statusHndlr: (status: never) => {
 
             // console.log('switch_pure_1 :: statusHndlr', status)
 
             POWER_PURE_1 = status['POWER'] && status['POWER'] === 'ON';
-            // STATUS_HANDLERS['status_pure_1'].lines.forEach(line => {
-            //     line.visible = POWER_PURE_1;
-            // });
-
-            // const colorDescFace = POWER_PURE_1 ? COLOR_DESCRIPTIONS['face_blue___clip__245'] : COLOR_DESCRIPTIONS['face_gray___clip__245'];
-            // const colorDescSgmt = POWER_PURE_1 ? COLOR_DESCRIPTIONS['line_blue___clip__245'] : COLOR_DESCRIPTIONS['line_gray___clip__245'];
 
             STATUS_HANDLERS['status_pure_1'].faces.forEach(face => {
                 face.visible = POWER_PURE_1;
-                // face.material = MaterialRepo.getMaterialFace(colorDescFace);
             });
             STATUS_HANDLERS['status_pure_1'].sgmts.forEach(sgmt => {
                 sgmt.visible = POWER_PURE_1;
-                // sgmt.material = MaterialRepo.getMaterialSgmt(colorDescSgmt);
             });
 
             invalidate();
-            // TODO :: introduce a way to notify a switch component, if displayed
 
-            return POWER_PURE_1 ? 'ON' : 'OFF';
+            return {
+                statusKey: 'switch_pure_1',
+                values: [],
+                switch: {
+                    status: POWER_PURE_1
+                }
+            };
 
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: () => {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPure1}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
@@ -436,18 +600,14 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPure1}/Power`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
             select: () => {
-
                 STATUS_HANDLERS['switch_pure_1'].lines.forEach(line => {
                     line.visible = true;
                 });
-
             },
             deselect: () => {
-
                 STATUS_HANDLERS['switch_pure_1'].lines.forEach(line => {
                     line.visible = false;
                 });
-
             },
         },
         faces: [],
@@ -458,23 +618,27 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     switch_pump_1: {
         topic: `stat/${topicPump}/RESULT`,
-        value: 'POWER1',
+        statusKey: 'switch_pump_1',
         statusHndlr: (status: never) => {
 
             // console.log('switch_pump_1 :: statusHndlr', status)
 
             if (status['POWER1']) {
-
                 POWER_PUMP_1 = status['POWER1'] === 'ON';
-
                 setBarrelTopColors();
-
-                return POWER_PUMP_1 ? 'ON' : 'OFF';
-
             }
 
-            return undefined;
+            return {
+                statusKey: 'switch_pump_1',
+                values: [],
+                switch: {
+                    status: POWER_PUMP_1
+                }
+            };
 
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: () => {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
@@ -485,18 +649,14 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/Power1`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
             select: () => {
-
                 STATUS_HANDLERS['switch_pump_1'].lines.forEach(line => {
                     line.visible = true;
                 });
-
             },
             deselect: () => {
-
                 STATUS_HANDLERS['switch_pump_1'].lines.forEach(line => {
                     line.visible = false;
                 });
-
             },
         },
         faces: [],
@@ -507,7 +667,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     switch_pump_2: {
         topic: `stat/${topicPump}/RESULT`,
-        value: 'POWER2',
+        statusKey: 'switch_pump_2',
         statusHndlr: (status: never) => {
 
             // console.log('switch_pump_2 :: statusHndlr', status)
@@ -528,7 +688,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
                 }
 
-                const statusHandlerKeys: TStatusHandlerKey[] = ['switch_pump_2', 'switch_pump_3'];
+                const statusHandlerKeys: TStatusKey[] = ['switch_pump_2', 'switch_pump_3'];
                 statusHandlerKeys.forEach(statusHandlerKey => {
                     STATUS_HANDLERS[statusHandlerKey].faces.forEach(face => {
                         face.material = MaterialRepo.getMaterialFace(colorDescFace);
@@ -543,12 +703,21 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
                 invalidate();
 
-                return POWER_PUMP_2 ? 'ON' : 'OFF';
+                // return POWER_PUMP_2 ? 'ON' : 'OFF';
 
             }
 
-            return undefined;
+            return {
+                statusKey: 'switch_pump_2',
+                values: [],
+                switch: {
+                    status: POWER_PUMP_2
+                }
+            };
 
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: (queryTime: TQueryTime) => {
             if (queryTime === 'RUNTIME') {
@@ -561,18 +730,14 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPump}/Power2`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
             select: () => {
-
                 STATUS_HANDLERS['switch_pump_2'].lines.forEach(line => {
                     line.visible = true;
                 });
-
             },
             deselect: () => {
-
                 STATUS_HANDLERS['switch_pump_2'].lines.forEach(line => {
                     line.visible = false;
                 });
-
             },
         },
         faces: [],
@@ -583,7 +748,7 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
     },
     switch_pump_3: {
         topic: `stat/${topicPump}/RESULT`,
-        value: 'POWER3',
+        statusKey: 'switch_pump_3',
         statusHndlr: (status: never) => {
 
             // console.log('switch_pump_3 :: statusHndlr', status);
@@ -608,12 +773,21 @@ export const STATUS_HANDLERS: { [K in TStatusHandlerKey]: IStatusHandler } = {
 
                 invalidate();
 
-                return POWER_PUMP_3 ? 'ON' : 'OFF';
+                // return POWER_PUMP_3 ? 'ON' : 'OFF';
 
             }
 
-            return undefined;
+            return {
+                statusKey: 'switch_pump_3',
+                values: [],
+                switch: {
+                    status: POWER_PUMP_3
+                }
+            };
 
+        },
+        initialize: () => {
+            // nothing
         },
         statusQuery: (queryTime: TQueryTime) => {
             if (queryTime === 'RUNTIME') {

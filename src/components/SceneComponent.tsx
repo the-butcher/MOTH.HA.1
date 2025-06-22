@@ -31,12 +31,21 @@ const SceneComponent = (props: ISceneProps) => {
     <Canvas
       ref={canvasRef}
       style={{ position: 'absolute', height: '100%', width: '100%' }}
-      gl={{ antialias: true, localClippingEnabled: true, preserveDrawingBuffer: true }}
+      gl={{
+        localClippingEnabled: true,
+        preserveDrawingBuffer: true,
+        /**
+         * https://github.com/pmndrs/postprocessing
+         */
+        powerPreference: "high-performance",
+        antialias: false,
+        stencil: false,
+        depth: false
+      }}
       frameloop="demand" // demand
       shadows={{ type: PCFSoftShadowMap, enabled: true, autoUpdate: false }}
       camera={{ position: [0, 0, 0], fov: 30, near: 1, far: 1000 }}
     >
-
 
       <ControlsComponent key={orbit.id} {...orbit} />
       <ModelComponent key={model.id} {...model} />
@@ -49,7 +58,6 @@ const SceneComponent = (props: ISceneProps) => {
       {
         showStats ? <Stats className='statspanel' /> : null
       }
-
 
     </Canvas>
   );

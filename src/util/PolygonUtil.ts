@@ -23,7 +23,7 @@ export class PolygonUtil {
 
     }
 
-    static createTextMesh(label: string, parent: Group, colorDesc: IColorDescription) {
+    static createTextMesh(label: string, parent: Group, colorDesc: IColorDescription, name: string = '') {
 
         this.getFont().then(() => {
 
@@ -44,7 +44,7 @@ export class PolygonUtil {
             const textMesh = new Mesh(textGeom, MaterialRepo.getMaterialFace(colorDesc));
             textMesh.castShadow = true;
             textMesh.receiveShadow = true;
-            textMesh.name = 'ArrowHelper';
+            textMesh.name = name; //'ArrowHelper'; // not selectable by convention
 
             const children = [...parent.children];
             children.forEach(child => {

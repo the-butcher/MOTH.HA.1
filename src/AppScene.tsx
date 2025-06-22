@@ -6,7 +6,7 @@ import SceneComponent from './components/SceneComponent';
 import { IBoardProps } from './types/IBoardProps';
 import { TPresetKey } from './types/IOrbitProps';
 import { ISceneProps } from './types/ISceneProps';
-import { TStatusHandlerKey } from './types/IStatusHandler';
+import { TStatusKey } from './types/IStatusHandler';
 import { ISunProps } from './types/ISunProps';
 import { MqttUtil } from './util/MqttUtil';
 import { ObjectUtil } from './util/ObjectUtil';
@@ -55,7 +55,7 @@ function AppScene() {
 
   }
 
-  const handleSelectKey = (selectKey: TStatusHandlerKey | undefined) => {
+  const handleSelectKey = (selectKey: TStatusKey | undefined) => {
 
     console.debug('📞 handleSelectKey', selectKey);
 
@@ -130,7 +130,7 @@ function AppScene() {
   };
 
   // const clipPlaneRef = useRef<number>(8.6);
-  const selectKeyRef = useRef<TStatusHandlerKey | undefined>('weather___');
+  const selectKeyRef = useRef<TStatusKey | undefined>('weather___');
   const presetKeyRef = useRef<TPresetKey | undefined>('home3');
   const sunPropsRef = useRef<ISunProps>(TimeUtil.getSunProps());
   const showStatsRef = useRef<boolean>(false);
