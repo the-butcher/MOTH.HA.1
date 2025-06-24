@@ -30,7 +30,8 @@ export class TimeUtil {
     return {
       sunInstant: Date.now(),
       sunriseInstant: times.sunrise.getTime(),
-      sunsetInstant: times.sunset.getTime()
+      sunsetInstant: times.sunset.getTime(),
+      lights: []
     };
 
   }

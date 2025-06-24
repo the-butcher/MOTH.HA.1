@@ -1,6 +1,6 @@
 import { COLOR_DESCRIPTIONS, IColorDescription } from "./IColorDescription";
 
-export type TLineDescKey = 'weather___' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'status_pure_1' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3' | 'barrel_top' | 'barrel_bot' | 'misc_gray';
+export type TLineDescKey = 'weather___' | 'light_01' | 'light_02' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'status_pure_1' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3' | 'barrel_top' | 'barrel_bot' | 'misc_gray';
 export type TLineStyle = 'none' | 'thin' | 'wide';
 
 export interface ILineDescription extends IColorDescription {
@@ -10,6 +10,14 @@ export interface ILineDescription extends IColorDescription {
 export const LINE_DESCRIPTIONS: { [K in TLineDescKey]: ILineDescription } = {
     weather___: {
         ...COLOR_DESCRIPTIONS['line_gray___clip__000'],
+        lineStyle: 'thin'
+    },
+    light_01: {
+        ...COLOR_DESCRIPTIONS['line_gray___clip__245'],
+        lineStyle: 'thin'
+    },
+    light_02: {
+        ...COLOR_DESCRIPTIONS['line_gray___clip__245'],
         lineStyle: 'thin'
     },
     moth_295D3: {

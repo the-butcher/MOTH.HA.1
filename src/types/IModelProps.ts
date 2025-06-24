@@ -1,3 +1,4 @@
+import { SpotLight } from 'three';
 import { ISunProps } from './ISunProps';
 
 export const MODEL_OFFSET_Y = -2.7;
@@ -8,7 +9,7 @@ export interface IModelProps {
   scene: string;
   sun: ISunProps;
   modelComplete: boolean;
-  handleModelComplete: () => void;
+  handleModelComplete: (lights: SpotLight[]) => void;
 }
 
 // export interface IClipPlane {

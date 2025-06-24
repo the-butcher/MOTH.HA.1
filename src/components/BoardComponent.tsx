@@ -1,3 +1,4 @@
+import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import BatteryStdIcon from '@mui/icons-material/BatteryStd';
 import BlurOnIcon from '@mui/icons-material/BlurOn';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -8,7 +9,6 @@ import HolidayVillageIcon from '@mui/icons-material/HolidayVillage';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SpeedIcon from '@mui/icons-material/Speed';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import { Card, CardContent, CardHeader, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Slider, Stack, SvgIcon, Switch, Typography } from '@mui/material';
 import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 import { IBoardProps } from '../types/IBoardProps';
@@ -143,7 +143,7 @@ const BoardComponent = (props: IBoardProps) => {
           sx={{
             zIndex: 300,
             justifyContent: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.25) !important',
+            backgroundColor: 'rgba(0, 0, 0, 0.25) !important',
             borderRadius: '3px',
             padding: '6px'
           }}
@@ -285,7 +285,7 @@ const BoardComponent = (props: IBoardProps) => {
           onClick={() => handleToggleStats()}
           size="small"
           sx={{
-            backgroundColor: 'rgba(255, 255, 255, 0.0)',
+            backgroundColor: 'rgba(0, 0, 0, 0.0)',
             color: '#CCCCCC',
             marginRight: '12px',
             pointerEvents: 'auto'
@@ -297,7 +297,7 @@ const BoardComponent = (props: IBoardProps) => {
           statusResult ? <Card
             sx={{
               width: '300px',
-              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
               pointerEvents: 'auto'
             }}
           >
@@ -311,7 +311,7 @@ const BoardComponent = (props: IBoardProps) => {
                   onClick={() => handleDeselect()}
                   size="small"
                   sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.0)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.0)',
                   }}
                 >
                   <HighlightOffIcon />
@@ -354,8 +354,9 @@ const BoardComponent = (props: IBoardProps) => {
                         >
                           {(() => {
                             switch (v.unit) {
-                              case 'temperature_celsius': return <DeviceThermostatIcon />
                               case 'co2_ppm': return <Co2Icon />
+                              case 'temperature_celsius': return <DeviceThermostatIcon />
+                              case 'humidity_relative': return <WaterDropIcon />
                               case 'pressure_hectopascal': return <SpeedIcon />
                               case 'battery_percent': return <BatteryStdIcon />
                               case 'radiation_microsivert_per_hour': return <SvgIcon>
@@ -460,7 +461,7 @@ const BoardComponent = (props: IBoardProps) => {
             min={sun.sunriseInstant}
             max={sun.sunsetInstant}
             valueLabelDisplay="on"
-            step={1000 * 60 * 10}
+            step={1000 * 60}
             getAriaValueText={valueLabelFormat}
             valueLabelFormat={valueLabelFormat}
             onChange={(_e: Event, value: number | number[]) => handleSunInstantChange(value as number)}

@@ -42,7 +42,7 @@ const SceneComponent = (props: ISceneProps) => {
         stencil: false,
         depth: false
       }}
-      frameloop="demand" // demand
+      frameloop="always" // demand
       shadows={{ type: PCFSoftShadowMap, enabled: true, autoUpdate: false }}
       camera={{ position: [0, 0, 0], fov: 30, near: 1, far: 1000 }}
     >

@@ -14,13 +14,13 @@ export class MqttUtil {
     /**
      * last known stati by status key
      */
-    static RESULTS_BY_KEY: { [K: string]: IStatusResult } = {};
+    public static RESULTS_BY_KEY: { [K: string]: IStatusResult } = {};
 
     /**
      * references to handlers, primarily taking care of 3d representation
      */
     static HANDLERS_BY_TOPIC: { [K in string]: IStatusHandler[] } = {};
-    static BOARD_HANDLER: IBoardHandler | undefined;
+    public static BOARD_HANDLER: IBoardHandler | undefined;
 
     static setBoardHandler(boardHandler: IBoardHandler): void {
         MqttUtil.BOARD_HANDLER = boardHandler;
@@ -80,17 +80,17 @@ export class MqttUtil {
                 }
             });
 
-            // initialize all handlers
-            handlerKeys.forEach(handlerKey => {
-                const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
-                handler.initialize();
-            });
-
             // query handler stati (if the handler has implemented it)
             handlerKeys.forEach(handlerKey => {
                 const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
                 handler.statusQuery('STARTUP');
             });
+
+            // // initialize all handlers
+            // handlerKeys.forEach(handlerKey => {
+            //     const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
+            //     handler.initialize();
+            // });
 
         });
 

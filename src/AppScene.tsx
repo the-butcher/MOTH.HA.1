@@ -1,12 +1,13 @@
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
+import { SpotLight } from 'three';
 import BoardComponent from './components/BoardComponent';
 import SceneComponent from './components/SceneComponent';
 import { IBoardProps } from './types/IBoardProps';
 import { TPresetKey } from './types/IOrbitProps';
 import { ISceneProps } from './types/ISceneProps';
-import { TStatusKey } from './types/IStatusHandler';
+import { POWER_LIGHTS, STATUS_HANDLERS, TStatusKey } from './types/IStatusHandler';
 import { ISunProps } from './types/ISunProps';
 import { MqttUtil } from './util/MqttUtil';
 import { ObjectUtil } from './util/ObjectUtil';
@@ -106,11 +107,26 @@ function AppScene() {
 
   }
 
-  const handleModelComplete = () => {
+  const handleModelComplete = (lights: SpotLight[]) => {
 
-    console.debug('📞 handleModelComplete');
+    console.debug('📞 handleModelComplete (lights', lights);
 
-    selectKeyRef.current = undefined;
+    // selectKeyRef.current = undefined;
+
+    const handlerKeys = Object.keys(STATUS_HANDLERS);
+    // initialize all handlers
+    handlerKeys.forEach(handlerKey => {
+      const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
+      handler.initialize();
+      handler.switchProps?.deselect();
+    });
+
+    setTimeout(() => {
+      const lightKeys = Object.keys(POWER_LIGHTS);
+      lightKeys.forEach(lightKey => {
+        STATUS_HANDLERS[lightKey as TStatusKey].switchProps?.toggle();
+      })
+    }, 1000);
 
     MqttUtil.setup();
 
@@ -118,6 +134,10 @@ function AppScene() {
       ...scenePropsRef.current,
       model: {
         ...scenePropsRef.current.model,
+        sun: {
+          ...sunPropsRef.current,
+          lights
+        },
         modelComplete: true
       },
       orbit: {

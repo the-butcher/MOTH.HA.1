@@ -8,4 +8,13 @@ export class ObjectUtil {
       .toString(16)
       .substring(0, 5);
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static arrayEquals(a: any, b: any): boolean {
+    return Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((val, index) => val === b[index]);
+  }
+
 }

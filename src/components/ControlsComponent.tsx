@@ -225,7 +225,7 @@ const ControlsComponent = (props: IOrbitProps) => {
       clipPlaneDiff.current = clipPlaneDest - clipPlaneOrig.current;
 
       tsAnimOrig.current = Date.now();
-      tsAnimDest.current = tsAnimOrig.current + 2000;
+      tsAnimDest.current = tsAnimOrig.current + 1250;
 
       // trigger first animation frame
       invalidate();
@@ -456,22 +456,26 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     }
 
-    worldFocusDistanceRef.current = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
+    if (wFocusHelperRef.current) {
+      worldFocusDistanceRef.current = camera.position.clone().sub(wFocusHelperRef.current!.position).length();
+    }
 
-    if (effectPassRef.current) {
-      effectComposerRef.current!.removePass(effectPassRef.current!);
-      effectPassRef.current!.dispose();
-      effectPassRef.current = undefined;
+    if (effectComposerRef.current) {
+      if (effectPassRef.current) {
+        effectComposerRef.current!.removePass(effectPassRef.current!);
+        effectPassRef.current!.dispose();
+        effectPassRef.current = undefined;
+      }
+      if (!isAnimated) {
+        effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
+          worldFocusDistance: worldFocusDistanceRef.current,
+          worldFocusRange: Math.max(3, worldFocusDistanceRef.current / 3),
+          bokehScale: 5
+        }));
+        effectComposerRef.current!.addPass(effectPassRef.current);
+      }
+      effectComposerRef.current!.render();
     }
-    if (!isAnimated) {
-      effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
-        worldFocusDistance: worldFocusDistanceRef.current,
-        worldFocusRange: Math.max(3, worldFocusDistanceRef.current / 3),
-        bokehScale: 5
-      }));
-      effectComposerRef.current!.addPass(effectPassRef.current);
-    }
-    effectComposerRef.current!.render();
 
     // scene.environment!.needsUpdate = true;
     // gl.clear();

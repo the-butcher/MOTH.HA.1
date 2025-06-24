@@ -1,36 +1,117 @@
-import { BufferAttribute, BufferGeometry, Group, LineSegments, Mesh, Vector3 } from "three";
-import { Font, Line2, LineGeometry, TextGeometry, TTFLoader } from "three/examples/jsm/Addons.js";
+import { BufferAttribute, BufferGeometry, Group, LineSegments, Mesh, ShapeGeometry, Vector2, Vector3 } from "three";
+import { Font, Line2, LineGeometry, SVGLoader, TextGeometry, TTFLoader } from "three/examples/jsm/Addons.js";
 import { Edge3D } from "../impl/Edge3D";
 import { Triangle3D } from "../impl/Triangle3D";
+import { IColorDescription } from "../types/IColorDescription";
 import { IEdge3D, TEdgeComparison } from "../types/IEdge3D";
 import { ILineDescription, LINE_DESCRIPTIONS } from "../types/ILineDescription";
 import { ITriangle3D } from "../types/ITriangle3D";
 import { MaterialRepo } from "./MaterialRepo";
-import { IColorDescription } from "../types/IColorDescription";
 
 
 export class PolygonUtil {
 
-    static font: Font;
+    static FONTS_BY_URL: { [K: string]: Font } = {};
 
-    static async getFont(): Promise<Font> {
+    static async getFont(url: string): Promise<Font> {
 
-        if (!this.font) {
-            const fontData = await new TTFLoader().loadAsync('./smb.ttf');
-            this.font = new Font(fontData);
+        if (!this.FONTS_BY_URL[url]) {
+            const fontData = await new TTFLoader().loadAsync(url);
+            this.FONTS_BY_URL[url] = new Font(fontData);
         }
-        return this.font;
+        return this.FONTS_BY_URL[url];
 
+    }
+
+    static async createSymbolMesh(url: string, parent: Group, colorDesc: IColorDescription, name: string = ''): Promise<void> {
+
+        new SVGLoader().loadAsync(url).then(data => {
+
+            const paths = data.paths;
+            for (let i = 0; i < paths.length; i++) {
+
+                const path = paths[i];
+
+                const meshMaterial = MaterialRepo.getMaterialFace(colorDesc);
+                const lineMaterial = MaterialRepo.getMaterialSgmt({
+                    ...LINE_DESCRIPTIONS['misc_gray'],
+                    opacity: 0.1
+                });
+
+                const group = new Group();
+
+                const shapes = SVGLoader.createShapes(path);
+                for (let j = 0; j < shapes.length; j++) {
+
+                    const shape = shapes[j];
+                    const meshGeometry = new ShapeGeometry(shape);
+                    const mesh = new Mesh(meshGeometry, meshMaterial);
+                    group.add(mesh);
+
+                    const points = shape.extractPoints(2);
+
+                    const lineSegmentPositionsA: number[] = [];
+                    const collectPoints = (points2: Vector2[]) => {
+                        for (let i = 0; i < points2.length - 1; i++) {
+                            lineSegmentPositionsA.push(points2[i].x);
+                            lineSegmentPositionsA.push(points2[i].y);
+                            lineSegmentPositionsA.push(0);
+                            lineSegmentPositionsA.push(points2[i + 1].x);
+                            lineSegmentPositionsA.push(points2[i + 1].y);
+                            lineSegmentPositionsA.push(0);
+                        }
+                    }
+                    collectPoints(points.shape);
+                    points.holes.forEach(hole => collectPoints(hole));
+                    const lineSegmentPositionsB = new Float32Array(lineSegmentPositionsA);
+
+                    const lineGeometry = new BufferGeometry();
+                    lineGeometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
+
+                    const lineSegments = new LineSegments(lineGeometry, lineMaterial);
+                    lineSegments.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+                    lineSegments.updateMatrixWorld();
+                    lineSegments.name = name;
+
+                    group.add(lineSegments);
+
+                }
+
+                group.scale.set(0.01, 0.01, 0.01);
+                parent.add(group);
+
+            }
+
+            return;
+
+        });
+
+    }
+
+    static clearChildren(parent: Group) {
+        if (parent?.children) {
+            const children = [...parent.children];
+            // console.log('children', children);
+            children.forEach(child => {
+                if (child instanceof Group) {
+                    PolygonUtil.clearChildren(child);
+                } else if (child instanceof Mesh || child instanceof LineSegments) {
+                    child.geometry.dispose();
+                }
+                parent.remove(child);
+            });
+        }
+        parent?.clear(); // just to be sure
     }
 
     static createTextMesh(label: string, parent: Group, colorDesc: IColorDescription, name: string = '') {
 
-        this.getFont().then(() => {
+        this.getFont('./smb.ttf').then((font: Font) => { // './smb.ttf'
 
             // console.log('create text');
 
             const textGeom = new TextGeometry(label, {
-                font: this.font,
+                font,
                 size: 0.3,
                 depth: 0.00,
                 curveSegments: 2,
@@ -46,12 +127,7 @@ export class PolygonUtil {
             textMesh.receiveShadow = true;
             textMesh.name = name; //'ArrowHelper'; // not selectable by convention
 
-            const children = [...parent.children];
-            children.forEach(child => {
-                parent.remove(child);
-                (child as Mesh).geometry.dispose();
-            });
-            parent.clear(); // just to be sure
+            PolygonUtil.clearChildren(parent);
             parent.add(textMesh);
 
             const outerRings: IEdge3D[][] = PolygonUtil.findOuterRings(textMesh);

@@ -1,10 +1,91 @@
+import { invalidate } from "@react-three/fiber";
+import { COLOR_DESCRIPTIONS } from "../types/IColorDescription";
+import { STATUS_HANDLERS } from "../types/IStatusHandler";
 import { IWeatherForecast } from "./IWeatherForecast";
-import { JsonLoader } from "./JsonLoader";
-import { TimeUtil } from "./TimeUtil";
+import { ObjectUtil } from "./ObjectUtil";
+import { PolygonUtil } from "./PolygonUtil";
+
+/**
+ * alternative: https://api.open-meteo.com/v1/forecast?timezone=Europe/Berlin&latitude=48.21&longitude=16.45&hourly=temperature_2m,weathercode,precipitation_probability,cloud_cover&daily=sunrise,sunset&forecast_days=1
+ * weather font: https://github.com/erikflowers/weather-icons
+ *
+ * https://open-meteo.com/en/docs?hourly=temperature_2m,weather_code,cloud_cover&forecast_days=1
+ *
+ * F00D,  0 Clear sky
+ * F00C   1 Mainly clear
+ * F002,  2 partly cloudy
+ * F013,  3 overcast
+ * F021, 45 Fog
+ * F063, 48 depositing rime fog
+ * F017, 51, Drizzle: Light,
+ * F01A, 53, 55	Drizzle: moderate, and dense intensity
+ * F019, 56, 57	Freezing Drizzle: Light and dense intensity
+ * F015, 61, Rain: Slight,
+ * F019, 63, 65	Rain: moderate and heavy intensity
+ * ?, 66, 67	Freezing Rain: Light and heavy intensity
+ * F01B, 71, 73, 75	Snow fall: Slight, moderate, and heavy intensity
+ * ? 77	Snow grains
+ * F015, 80, 81, 82	Rain showers: Slight, moderate, and violent
+ * 85, 86	Snow showers slight and heavy
+ * F016, 95   Thunderstorm: Slight or moderate
+ * F01D, 96, 99 *	Thunderstorm with slight and heavy hail
+ *
+ */
 
 export class WeatherUtil {
 
     static FORECASTS: IWeatherForecast[] = [];
+    static SYMBOLS_LAST: string[] = [];
+
+    static getSymbols(forecast: IWeatherForecast): string[] {
+
+        if (forecast.weathercode === 0) {
+            return [
+                './w_sun_00.svg' // clear sky
+            ];
+        } else if (forecast.weathercode === 1) {
+            return [
+                './w_cloudy_01.svg' // mainly clear, TODO :: with moon
+            ];
+        }
+
+        const symbols = [];
+        if (forecast.cloudcover < 0.75) {
+            if (forecast.weathercode > 3) { // some kind of precipitation symbol needed
+                symbols.push('./w_cloud_sun_open.svg');
+            } else {
+                symbols.push('./w_cloud_sun_closed.svg');
+            }
+        } else {
+            if (forecast.weathercode > 3) { // some kind of precipitation symbol needed
+                symbols.push('./w_cloud_open.svg');
+            } else {
+                symbols.push('./w_cloud_closed.svg');
+            }
+        }
+
+
+
+        return symbols;
+
+    }
+
+    static async renderForecast(forecast: IWeatherForecast): Promise<void> {
+
+        const symbols = WeatherUtil.getSymbols(forecast);
+        if (!ObjectUtil.arrayEquals(this.SYMBOLS_LAST, symbols)) {
+            this.SYMBOLS_LAST = symbols;
+            PolygonUtil.clearChildren(STATUS_HANDLERS['weather___'].texts[1]);
+            for (let i = 0; i < symbols.length; i++) {
+                await PolygonUtil.createSymbolMesh(symbols[i], STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip_none']);
+            }
+            requestAnimationFrame(() => {
+                invalidate();
+            });
+        }
+
+
+    }
 
     static getForecast(instant: number): IWeatherForecast {
 
@@ -21,17 +102,20 @@ export class WeatherUtil {
 
         if (forecastA && forecastB) {
             const fraction = (instant - forecastA.instant) / (forecastB.instant - forecastA.instant);
+            const weathercode = fraction < 0.5 ? forecastA.weathercode : forecastB.weathercode;
             return {
                 instant,
+                weathercode,
                 precipitation: forecastA.precipitation + (forecastB.precipitation - forecastA.precipitation) * fraction,
-                sunshine: forecastA.sunshine + (forecastB.sunshine - forecastA.sunshine) * fraction,
+                cloudcover: forecastA.cloudcover + (forecastB.cloudcover - forecastA.cloudcover) * fraction,
                 temperature: forecastA.temperature + (forecastB.temperature - forecastA.temperature) * fraction
             }
         } else {
             return {
                 instant,
+                weathercode: -1,
                 precipitation: -1,
-                sunshine: -1,
+                cloudcover: -1,
                 temperature: -1
             }
         }
@@ -43,17 +127,194 @@ export class WeatherUtil {
 
         // console.log('iso', new Date().toISOString());
 
-        let loader = new JsonLoader('https://dataset.api.hub.geosphere.at/v1/timeseries/forecast/ensemble-v1-1h-2500m', 'GET');
-        loader = loader.withParameter("parameters", "rain_p90,sundur_p90,t2m_p90");
-        loader = loader.withParameter("lat_lon", "48.22,16.50"); //closest grid point, close to "opel-werk");
-        loader = loader.withParameter("start", `${new Date().toISOString().substring(0, 10)}T00:01:00.000`);
-        loader = loader.withParameter("end", `${new Date(Date.now() + TimeUtil.MILLISECONDS_PER__DAY).toISOString().substring(0, 10)}T00:00:00.000Z`);
+        // let loader = new JsonLoader('https://api.open-meteo.com/v1/forecast', 'GET');
+        // loader = loader.withParameter('timezone', 'Europe/Berlin');
+        // loader = loader.withParameter('latitude', '48.21');
+        // loader = loader.withParameter('longitude', '16.45');
+        // loader = loader.withParameter('hourly', 'temperature_2m,weathercode,precipitation_probability,cloud_cover');
+        // loader = loader.withParameter('forecast_days', '1');
 
-        const geosphereResponse: never = await loader.load() as never;
-        const instants: number[] = (geosphereResponse['timestamps'] as string[]).map(d => Date.parse(d));
-        const precipitations: number[] = geosphereResponse['features'][0]['properties']['parameters']['rain_p90']['data'] as number[];
-        const sunshines: number[] = (geosphereResponse['features'][0]['properties']['parameters']['sundur_p90']['data'] as number[]).map(s => s / 3600);
-        const temperatures: number[] = geosphereResponse['features'][0]['properties']['parameters']['t2m_p90']['data'] as number[];
+        // const openMeteoResponse: never = await loader.load() as never;
+        // console.log('openMeteoResponse', openMeteoResponse);
+
+        const openMeteoResponse = {
+            "latitude": 48.2,
+            "longitude": 16.46,
+            "generationtime_ms": 0.0820159912109375,
+            "utc_offset_seconds": 7200,
+            "timezone": "Europe/Berlin",
+            "timezone_abbreviation": "GMT+2",
+            "elevation": 162,
+            "hourly_units": {
+                "time": "iso8601",
+                "temperature_2m": "°C",
+                "weathercode": "wmo code",
+                "precipitation_probability": "%",
+                "cloud_cover": "%"
+            },
+            "hourly": {
+                "time": [
+                    "2025-06-24T00:00",
+                    "2025-06-24T01:00",
+                    "2025-06-24T02:00",
+                    "2025-06-24T03:00",
+                    "2025-06-24T04:00",
+                    "2025-06-24T05:00",
+                    "2025-06-24T06:00",
+                    "2025-06-24T07:00",
+                    "2025-06-24T08:00",
+                    "2025-06-24T09:00",
+                    "2025-06-24T10:00",
+                    "2025-06-24T11:00",
+                    "2025-06-24T12:00",
+                    "2025-06-24T13:00",
+                    "2025-06-24T14:00",
+                    "2025-06-24T15:00",
+                    "2025-06-24T16:00",
+                    "2025-06-24T17:00",
+                    "2025-06-24T18:00",
+                    "2025-06-24T19:00",
+                    "2025-06-24T20:00",
+                    "2025-06-24T21:00",
+                    "2025-06-24T22:00",
+                    "2025-06-24T23:00"
+                ],
+                "temperature_2m": [
+                    20,
+                    20.8,
+                    20.8,
+                    20.4,
+                    20.3,
+                    19.7,
+                    19.1,
+                    20.2,
+                    21.7,
+                    22.9,
+                    24.6,
+                    25.7,
+                    26.9,
+                    28,
+                    29.2,
+                    30,
+                    30.1,
+                    30.2,
+                    30.2,
+                    29.5,
+                    28.3,
+                    26.6,
+                    24.4,
+                    23
+                ],
+                "weathercode": [
+                    3,
+                    3,
+                    2,
+                    2,
+                    2,
+                    2,
+                    2,
+                    2,
+                    1,
+                    1,
+                    3,
+                    3,
+                    2,
+                    2,
+                    2,
+                    1,
+                    1,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "precipitation_probability": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "cloud_cover": [
+                    100,
+                    100,
+                    100,
+                    79,
+                    83,
+                    64,
+                    84,
+                    47,
+                    24,
+                    34,
+                    72,
+                    100,
+                    92,
+                    38,
+                    62,
+                    38,
+                    11,
+                    35,
+                    23,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        };
+
+        const instants: number[] = (openMeteoResponse['hourly']['time'] as string[]).map(d => Date.parse(d));
+        const temperatures: number[] = openMeteoResponse['hourly']['temperature_2m'] as number[];
+        const precipitations: number[] = openMeteoResponse['hourly']['precipitation_probability'] as number[];
+        const weathercodes: number[] = openMeteoResponse['hourly']['weathercode'] as number[];
+        const cloudcovers: number[] = openMeteoResponse['hourly']['cloud_cover'] as number[];
+
+        for (let i = 0; i < instants.length; i++) {
+            WeatherUtil.FORECASTS.push({
+                instant: instants[i],
+                precipitation: precipitations[i],
+                weathercode: weathercodes[i],
+                temperature: temperatures[i],
+                cloudcover: cloudcovers[i] / 100 // to range 0-1
+            });
+        }
+
+        // console.log(instants, instants.map(i => new Date(i)));
+
+        // let loader = new JsonLoader('https://dataset.api.hub.geosphere.at/v1/timeseries/forecast/ensemble-v1-1h-2500m', 'GET');
+        // loader = loader.withParameter("parameters", "rain_p90,sundur_p90,t2m_p90");
+        // loader = loader.withParameter("lat_lon", "48.22,16.50"); //closest grid point, close to "opel-werk");
+        // loader = loader.withParameter("start", `${new Date().toISOString().substring(0, 10)}T00:01:00.000`);
+        // loader = loader.withParameter("end", `${new Date(Date.now() + TimeUtil.MILLISECONDS_PER__DAY).toISOString().substring(0, 10)}T00:00:00.000Z`);
+
+        // const geosphereResponse: never = await loader.load() as never;
+        // const instants: number[] = (geosphereResponse['timestamps'] as string[]).map(d => Date.parse(d));
+        // const precipitations: number[] = geosphereResponse['features'][0]['properties']['parameters']['rain_p90']['data'] as number[];
+        // const sunshines: number[] = (geosphereResponse['features'][0]['properties']['parameters']['sundur_p90']['data'] as number[]).map(s => s / 3600);
+        // const temperatures: number[] = geosphereResponse['features'][0]['properties']['parameters']['t2m_p90']['data'] as number[];
 
         // const instants = [
         //     1750208400000,
@@ -90,20 +351,20 @@ export class WeatherUtil {
         // [0, 0.9821666666666667, 0.9636666666666667, 0.9549166666666666, 0.9749166666666667, 0.9640000000000001, 0.9619444444444445, 0.24483333333333332, 0, 0, 0, 0, 0]
         // [27.9, 28.6, 29.1, 29.3, 29, 28.7, 28, 26.6, 25.1, 23.9, 22.5, 21.1, 19.6]
 
-        console.log('instants', instants);
-        console.log('precipitations', precipitations);
-        console.log('instsunshinesants', sunshines);
-        console.log('temperatures', temperatures);
-        // console.log(instants.map(i => new Date(i).toLocaleTimeString()), sunshines)
+        // console.log('instants', instants);
+        // console.log('precipitations', precipitations);
+        // console.log('instsunshinesants', sunshines);
+        // console.log('temperatures', temperatures);
+        // // console.log(instants.map(i => new Date(i).toLocaleTimeString()), sunshines)
 
-        for (let i = 0; i < instants.length; i++) {
-            WeatherUtil.FORECASTS.push({
-                instant: instants[i],
-                precipitation: precipitations[i],
-                sunshine: sunshines[i],
-                temperature: temperatures[i]
-            });
-        }
+        // for (let i = 0; i < instants.length; i++) {
+        //     WeatherUtil.FORECASTS.push({
+        //         instant: instants[i],
+        //         precipitation: precipitations[i],
+        //         sunshine: sunshines[i],
+        //         temperature: temperatures[i]
+        //     });
+        // }
 
         // https://dataset.api.hub.geosphere.at/v1/timeseries/forecast/ensemble-v1-1h-2500m?parameters=rain_p90,sundur_p90,t2m_p90&lat_lon=48.22,16.50&start=2025-06-16T00:01:00.000Z&end=2025-06-17T00:00:00.000Z
 

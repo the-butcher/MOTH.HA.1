@@ -1,15 +1,15 @@
 import { useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
-import { Group, LineSegments, Mesh, Object3D, Object3DEventMap, Vector3 } from 'three';
+import { Group, LineSegments, Mesh, Object3D, Object3DEventMap, SpotLight, SphereGeometry, Vector3 } from 'three';
 import { ColladaLoader } from 'three/examples/jsm/Addons.js';
 import { IEdge3D } from '../types/IEdge3D';
 import { FACE_DESCRIPTIONS, IFaceDescription, TFaceDescKey } from '../types/IFaceDescription';
 import { ILineDescription, LINE_DESCRIPTIONS, TLineDescKey } from '../types/ILineDescription';
 import { IModelProps } from '../types/IModelProps';
+import { PRESET_PROPS, TPresetKey } from '../types/IOrbitProps';
 import { STATUS_HANDLERS, TStatusKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { PolygonUtil } from '../util/PolygonUtil';
-import { PRESET_PROPS, TPresetKey } from '../types/IOrbitProps';
 
 const ModelComponent = (props: IModelProps) => {
 
@@ -54,6 +54,8 @@ const ModelComponent = (props: IModelProps) => {
 
     const loader = new ColladaLoader();
     loader.loadAsync(sceneUrl).then((result) => {
+
+      const lights: SpotLight[] = [];
 
       // TODO :: get the scene centered where do these values come from
       // result.scene.position.x = 1.5;
@@ -151,6 +153,7 @@ const ModelComponent = (props: IModelProps) => {
 
       });
 
+
       allLines.forEach((line1) => {
 
         let lineName: string = '';
@@ -221,9 +224,40 @@ const ModelComponent = (props: IModelProps) => {
             // if there is a status handler with that key, add it to its texts container
             STATUS_HANDLERS[lineName as TStatusKey]?.texts.push(textGroupInner);
 
+          } else if (lineName.startsWith('light')) {
+
+            const positions: number[] = [...line1.geometry.attributes['position'].array];
+            const p0 = line1.localToWorld(new Vector3(positions[3], positions[4], positions[5]));
+
+            const light = new SpotLight();
+            light.position.set(p0.x, p0.y, p0.z);
+            lights.push(light);
+
+            const lightMaterial = MaterialRepo.getMaterialFace({
+              rgb: 0xccccaa,
+              opacity: 1.00,
+              clip: 'clip__245'
+            });
+            lightMaterial.emissive = lightMaterial.color;
+            lightMaterial.emissiveIntensity = 0.50;
+            const lightSphere = new Mesh(new SphereGeometry(0.10), lightMaterial);
+            lightSphere.position.set(p0.x, p0.y, p0.z);
+            lightSphere.name = lineName as TStatusKey;
+            lightSphere.castShadow = false;
+            lightSphere.receiveShadow = true;
+
+            line1.visible = false;
+            // dont add the light yet, will be passed through properties to SunComponent
+            scene.add(lightSphere);
+
+            STATUS_HANDLERS[lineName as TStatusKey]?.faces.push(lightSphere);
+            STATUS_HANDLERS[lineName as TStatusKey]?.lights.push(light);
+
           } else {
 
             line1.name = lineName; // reassign, since the original occurence of name may have been somewhere else in the hierarchy
+
+            // console.log('line1.name', line1.name);
 
             if (lineDesc.lineStyle === 'thin') {
               line1.material = MaterialRepo.getMaterialSgmt(lineDesc);
@@ -249,7 +283,7 @@ const ModelComponent = (props: IModelProps) => {
 
       groupRef.current.add(result.scene);
       window.setTimeout(() => {
-        handleModelComplete();
+        handleModelComplete(lights);
       }, 250)
 
       invalidate();

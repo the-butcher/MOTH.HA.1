@@ -22,6 +22,8 @@ export type TColorKey =
 // face_gray___clip__000___clip
 // face_gray___clip__000_noclip
 
+const LINE_OPACITY = 0.75;
+
 export const COLOR_DESCRIPTIONS: { [K in TColorKey]: IColorDescription } = {
     face_gray___clip__000: {
         rgb: 0xFFFFFF,
@@ -80,72 +82,72 @@ export const COLOR_DESCRIPTIONS: { [K in TColorKey]: IColorDescription } = {
     },
     line_gray___clip__000: {
         rgb: 0x444444,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__000'
     },
     line_gray___clip__245: {
         rgb: 0x444444,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__245'
     },
     line_gray___clip_none: {
         rgb: 0x444444,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip_none'
     },
     line_green___clip__000: {
         rgb: 0x225522,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__000'
     },
     line_green___clip__245: {
         rgb: 0x225522,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__245'
     },
     line_green___clip_none: {
         rgb: 0x225522,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip_none'
     },
     line_blue___clip__000: {
         rgb: 0x6666CC,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__000'
     },
     line_blue___clip__245: {
         rgb: 0x6666CC,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__245'
     },
     line_blue___clip_none: {
         rgb: 0x6666CC,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip_none'
     },
     line_red___clip: {
         rgb: 0xFF3333,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__000'
     },
     line_red_noclip: {
         rgb: 0xFF3333,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__000'
     },
     sgmt_blue_noclip: {
         rgb: 0x5555FF,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip_none'
     },
     sgmt_red___clip: {
         rgb: 0xFF5555,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__000'
     },
     sgmt_red_noclip: {
         rgb: 0xFF5555,
-        opacity: 0.90,
+        opacity: LINE_OPACITY,
         clip: 'clip__000'
     },
 };
