@@ -10,7 +10,7 @@ export type TColorKey =
     'face_gray___clip__000' | 'face_gray___clip__245' | 'face_gray___clip_none' |
     'face_green___clip__000' | 'face_green___clip__245' | 'face_green___clip_none' |
     'face_blue___clip__245' | 'face_blue___clip_none' |
-    'face_yellow___clip' |
+    'face_yellow___clip__000' | 'face_yellow___clip__245' | 'face_yellow___clip_none' |
     'face_red___clip' | 'face_red_noclip' |
     'line_gray___clip__000' | 'line_gray___clip__245' | 'line_gray___clip_none' |
     'line_green___clip__000' | 'line_green___clip__245' | 'line_green___clip_none' |
@@ -65,11 +65,6 @@ export const COLOR_DESCRIPTIONS: { [K in TColorKey]: IColorDescription } = {
         opacity: 0.75,
         clip: 'clip_none'
     },
-    face_yellow___clip: {
-        rgb: 0xCCCC00,
-        opacity: 1.00,
-        clip: 'clip__000'
-    },
     face_red___clip: {
         rgb: 0xFF4444,
         opacity: 1.00,
@@ -77,6 +72,21 @@ export const COLOR_DESCRIPTIONS: { [K in TColorKey]: IColorDescription } = {
     },
     face_red_noclip: {
         rgb: 0xFF4444,
+        opacity: 1.00,
+        clip: 'clip_none'
+    },
+    face_yellow___clip__000: {
+        rgb: 0xCCCC00,
+        opacity: 1.00,
+        clip: 'clip__000'
+    },
+    face_yellow___clip__245: {
+        rgb: 0xCCCC00,
+        opacity: 1.00,
+        clip: 'clip__245'
+    },
+    face_yellow___clip_none: {
+        rgb: 0xCCCC00,
         opacity: 1.00,
         clip: 'clip_none'
     },

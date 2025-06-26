@@ -4,6 +4,7 @@ import { STATUS_HANDLERS } from "../types/IStatusHandler";
 import { IWeatherForecast } from "./IWeatherForecast";
 import { ObjectUtil } from "./ObjectUtil";
 import { PolygonUtil } from "./PolygonUtil";
+import { JsonLoader } from "./JsonLoader";
 
 /**
  * alternative: https://api.open-meteo.com/v1/forecast?timezone=Europe/Berlin&latitude=48.21&longitude=16.45&hourly=temperature_2m,weathercode,precipitation_probability,cloud_cover&daily=sunrise,sunset&forecast_days=1
@@ -62,6 +63,12 @@ export class WeatherUtil {
             } else {
                 symbols.push('./w_cloud_closed.svg');
             }
+        }
+
+        if (forecast.weathercode === 95) {
+            symbols.push('./w_thunderstorm.svg')
+        } else if (forecast.weathercode === 96) {
+            symbols.push('./w_thunderstorm_hail.svg')
         }
 
 
@@ -134,13 +141,13 @@ export class WeatherUtil {
         // loader = loader.withParameter('hourly', 'temperature_2m,weathercode,precipitation_probability,cloud_cover');
         // loader = loader.withParameter('forecast_days', '1');
 
-        // const openMeteoResponse: never = await loader.load() as never;
-        // console.log('openMeteoResponse', openMeteoResponse);
+        // const openMeteoResponse2: never = await loader.load() as never;
+        // console.log('openMeteoResponse2', openMeteoResponse2);
 
         const openMeteoResponse = {
             "latitude": 48.2,
             "longitude": 16.46,
-            "generationtime_ms": 0.0820159912109375,
+            "generationtime_ms": 18.79096031188965,
             "utc_offset_seconds": 7200,
             "timezone": "Europe/Berlin",
             "timezone_abbreviation": "GMT+2",
@@ -154,82 +161,82 @@ export class WeatherUtil {
             },
             "hourly": {
                 "time": [
-                    "2025-06-24T00:00",
-                    "2025-06-24T01:00",
-                    "2025-06-24T02:00",
-                    "2025-06-24T03:00",
-                    "2025-06-24T04:00",
-                    "2025-06-24T05:00",
-                    "2025-06-24T06:00",
-                    "2025-06-24T07:00",
-                    "2025-06-24T08:00",
-                    "2025-06-24T09:00",
-                    "2025-06-24T10:00",
-                    "2025-06-24T11:00",
-                    "2025-06-24T12:00",
-                    "2025-06-24T13:00",
-                    "2025-06-24T14:00",
-                    "2025-06-24T15:00",
-                    "2025-06-24T16:00",
-                    "2025-06-24T17:00",
-                    "2025-06-24T18:00",
-                    "2025-06-24T19:00",
-                    "2025-06-24T20:00",
-                    "2025-06-24T21:00",
-                    "2025-06-24T22:00",
-                    "2025-06-24T23:00"
+                    "2025-06-26T00:00",
+                    "2025-06-26T01:00",
+                    "2025-06-26T02:00",
+                    "2025-06-26T03:00",
+                    "2025-06-26T04:00",
+                    "2025-06-26T05:00",
+                    "2025-06-26T06:00",
+                    "2025-06-26T07:00",
+                    "2025-06-26T08:00",
+                    "2025-06-26T09:00",
+                    "2025-06-26T10:00",
+                    "2025-06-26T11:00",
+                    "2025-06-26T12:00",
+                    "2025-06-26T13:00",
+                    "2025-06-26T14:00",
+                    "2025-06-26T15:00",
+                    "2025-06-26T16:00",
+                    "2025-06-26T17:00",
+                    "2025-06-26T18:00",
+                    "2025-06-26T19:00",
+                    "2025-06-26T20:00",
+                    "2025-06-26T21:00",
+                    "2025-06-26T22:00",
+                    "2025-06-26T23:00"
                 ],
                 "temperature_2m": [
-                    20,
-                    20.8,
-                    20.8,
-                    20.4,
+                    25,
+                    23.2,
+                    21.1,
                     20.3,
                     19.7,
-                    19.1,
-                    20.2,
+                    19.7,
+                    19.6,
+                    21,
+                    24.1,
+                    26.5,
+                    28.4,
+                    30.4,
+                    32.3,
+                    33.9,
+                    34.7,
+                    35.2,
+                    35.8,
+                    35.6,
+                    34.6,
+                    32.8,
+                    23.4,
+                    22,
                     21.7,
-                    22.9,
-                    24.6,
-                    25.7,
-                    26.9,
-                    28,
-                    29.2,
-                    30,
-                    30.1,
-                    30.2,
-                    30.2,
-                    29.5,
-                    28.3,
-                    26.6,
-                    24.4,
-                    23
+                    21.8
                 ],
                 "weathercode": [
-                    3,
-                    3,
-                    2,
-                    2,
-                    2,
-                    2,
-                    2,
-                    2,
                     1,
-                    1,
-                    3,
-                    3,
-                    2,
-                    2,
-                    2,
-                    1,
-                    1,
-                    1,
+                    0,
+                    0,
                     1,
                     0,
                     0,
                     0,
                     0,
-                    0
+                    0,
+                    0,
+                    0,
+                    0,
+                    2,
+                    0,
+                    1,
+                    0,
+                    0,
+                    3,
+                    3,
+                    3,
+                    96,
+                    95,
+                    3,
+                    3
                 ],
                 "precipitation_probability": [
                     0,
@@ -248,40 +255,40 @@ export class WeatherUtil {
                     0,
                     0,
                     0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
+                    5,
+                    13,
+                    5,
+                    23,
+                    25,
+                    28,
+                    28,
+                    58
                 ],
                 "cloud_cover": [
-                    100,
-                    100,
-                    100,
-                    79,
-                    83,
-                    64,
-                    84,
-                    47,
-                    24,
-                    34,
-                    72,
-                    100,
-                    92,
-                    38,
-                    62,
-                    38,
-                    11,
-                    35,
-                    23,
+                    36,
+                    0,
+                    0,
+                    44,
                     0,
                     0,
                     0,
                     0,
-                    0
+                    0,
+                    0,
+                    0,
+                    0,
+                    85,
+                    0,
+                    2,
+                    0,
+                    0,
+                    100,
+                    100,
+                    100,
+                    100,
+                    100,
+                    100,
+                    100
                 ]
             }
         };

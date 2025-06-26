@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="w_thunderstorm.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.72604515"
+     inkscape:cx="196.26879"
+     inkscape:cy="146.68509"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       d="m 30.281534,2.6272213 h 1.02827 l 18.21966,26.9010177 c 0.12853,0.149992 0.14996,0.299979 0.0643,0.449958 -0.0643,0.171423 -0.21421,0.257122 -0.44986,0.257122 h -7.4871 l 7.8727,14.430772 c 0.25707,0.492809 0.0964,0.739215 -0.482,0.739215 h -10.0899 c -0.27849,0 -0.52485,-0.160694 -0.73907,-0.482096 l -7.39069,-19.605283 c -0.0857,-0.471384 0.075,-0.707077 0.482,-0.707077 h 7.42282 z"
+       id="text5"
+       style="font-size:25.4px;line-height:1.1;font-family:'Weather Icons';-inkscape-font-specification:'Weather Icons';display:inline;opacity:0.530973;fill:#ffff00;stroke:#000000;stroke-width:0.259117;stroke-linecap:round;stroke-linejoin:round;stroke-dashoffset:0.990634"
+       aria-label=""
+       inkscape:label="lightning"
+       sodipodi:nodetypes="ccccsccssccscc" />
+  </g>
+</svg>

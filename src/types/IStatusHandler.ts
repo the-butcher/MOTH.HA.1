@@ -1,12 +1,12 @@
 import { invalidate } from "@react-three/fiber";
-import { Group, LineSegments, Mesh, SpotLight } from "three";
+import { Color, Group, LineSegments, Mesh, MeshLambertMaterial, Object3D, SpotLight } from "three";
 import { Line2 } from "three/examples/jsm/Addons.js";
 import { IWeatherForecast } from "../util/IWeatherForecast";
 import { MaterialRepo } from "../util/MaterialRepo";
 import { MqttUtil } from "../util/MqttUtil";
 import { PolygonUtil } from "../util/PolygonUtil";
 import { WeatherUtil } from "../util/WeatherUtil";
-import { COLOR_DESCRIPTIONS, TColorKey } from "./IColorDescription";
+import { COLOR_DESCRIPTIONS, IColorDescription, TColorKey } from "./IColorDescription";
 import { ISwitchProps } from "./ISwitchProps";
 
 export type TStatusKey = 'weather___' | 'light_01' | 'light_02' | 'moth____66' | 'moth___178' | 'moth___130' | 'moth_295D3' | 'barrel_cnt' | 'barrel_top' | 'barrel_bot' | 'status_pure_1' | 'switch_pure_1' | 'switch_pump_1' | 'switch_pump_2' | 'switch_pump_3';
@@ -44,6 +44,7 @@ export interface IStatusHandler {
     lines: Line2[];
     texts: Group[];
     lights: SpotLight[];
+    sprites: Object3D[];
     actTo: number;
 }
 
@@ -117,10 +118,20 @@ const createLightHandler = (statusKey: TStatusKey): IStatusHandler => {
             // if (Object.keys(POWER_LIGHTS).indexOf(statusKey) === -1) {
             //     POWER_LIGHTS[statusKey] = false;
             // }
+            const colorDesc: IColorDescription = POWER_LIGHTS[statusKey] ? COLOR_DESCRIPTIONS['face_gray___clip__245'] : {
+                ...COLOR_DESCRIPTIONS['face_gray___clip__245'],
+                opacity: 0.5
+            }
 
             STATUS_HANDLERS[statusKey].lights.forEach(light => {
                 light.visible = POWER_LIGHTS[statusKey];
-                // light.shadow.needsUpdate = true;
+            });
+            STATUS_HANDLERS[statusKey].faces.forEach(face => {
+                face.material = MaterialRepo.getMaterialFace(colorDesc);
+                if (POWER_LIGHTS[statusKey]) {
+                    (face.material as MeshLambertMaterial).emissive = new Color(colorDesc.rgb);
+                    (face.material as MeshLambertMaterial).emissiveIntensity = 1;
+                }
             });
             invalidate();
 
@@ -158,13 +169,15 @@ const createLightHandler = (statusKey: TStatusKey): IStatusHandler => {
                 STATUS_HANDLERS[statusKey].statusHndlr({} as never);
             },
             select: () => {
-                STATUS_HANDLERS[statusKey].sgmts.forEach(sgmt => {
-                    sgmt.visible = true;
+                const colorDesc = COLOR_DESCRIPTIONS['line_blue___clip__245'];
+                STATUS_HANDLERS[statusKey].lines.forEach(line => {
+                    line.material = MaterialRepo.getMaterialLine(colorDesc);
                 });
             },
             deselect: () => {
-                STATUS_HANDLERS[statusKey].sgmts.forEach(sgmt => {
-                    sgmt.visible = false;
+                const colorDesc = COLOR_DESCRIPTIONS['line_gray___clip__245'];
+                STATUS_HANDLERS[statusKey].lines.forEach(line => {
+                    line.material = MaterialRepo.getMaterialLine(colorDesc);
                 });
             },
         },
@@ -173,6 +186,7 @@ const createLightHandler = (statusKey: TStatusKey): IStatusHandler => {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     };
 }
@@ -188,17 +202,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             window.clearTimeout(STATUS_HANDLERS['weather___'].actTo);
             STATUS_HANDLERS['weather___'].actTo = window.setTimeout(async () => {
                 WeatherUtil.renderForecast(status);
-                // PolygonUtil.clearChildren(STATUS_HANDLERS['weather___'].texts[0]);
-                // for (let i = 0; i < symbols.length; i++) {
-                //     await PolygonUtil.createSymbolMesh(symbols[i], STATUS_HANDLERS['weather___'].texts[0], COLOR_DESCRIPTIONS['face_gray___clip_none']);
-                // }
-                // requestAnimationFrame(() => {
-                //     invalidate();
-                // });
-
                 PolygonUtil.createTextMesh(`${deg}°C - ${status.weathercode}`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray___clip_none']);
-                // PolygonUtil.createTextMesh(`${sun}%`, STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip_none']);
-                // PolygonUtil.createTextMesh(`${prc}mm/h`, STATUS_HANDLERS['weather___'].texts[2], COLOR_DESCRIPTIONS['face_gray___clip_none']);
 
             }, 500);
 
@@ -228,6 +232,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     light_01: createLightHandler('light_01'),
@@ -246,7 +251,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             if (rad >= 10) {
                 colorDescKeyRad = 'face_red___clip';
             } else if (rad >= 0.2) {
-                colorDescKeyRad = 'face_yellow___clip';
+                colorDescKeyRad = 'face_yellow___clip__000';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
@@ -285,6 +290,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     moth____66: {
@@ -304,14 +310,14 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             if (co2Lpf >= 1000) {
                 colorDescKeyLpf = 'face_red___clip';
             } else if (co2Lpf >= 800) {
-                colorDescKeyLpf = 'face_yellow___clip';
+                colorDescKeyLpf = 'face_yellow___clip__000';
             }
 
             let colorDescKeyDeg: TColorKey = 'face_green___clip__000';
             if (deg >= 30) {
                 colorDescKeyDeg = 'face_red___clip';
             } else if (deg >= 25) {
-                colorDescKeyDeg = 'face_yellow___clip';
+                colorDescKeyDeg = 'face_yellow___clip__000';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
@@ -367,6 +373,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     moth___178: {
@@ -386,14 +393,14 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             if (co2Lpf >= 1000) {
                 colorDescKeyLpf = 'face_red___clip';
             } else if (co2Lpf >= 800) {
-                colorDescKeyLpf = 'face_yellow___clip';
+                colorDescKeyLpf = 'face_yellow___clip__000';
             }
 
             let colorDescKeyDeg: TColorKey = 'face_green___clip__000';
             if (deg >= 30) {
                 colorDescKeyDeg = 'face_red___clip';
             } else if (deg >= 25) {
-                colorDescKeyDeg = 'face_yellow___clip';
+                colorDescKeyDeg = 'face_yellow___clip__000';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
@@ -449,6 +456,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     moth___130: {
@@ -464,7 +472,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
             if (pm025 >= 15) {
                 colorDescKeyPm025 = 'face_red___clip';
             } else if (pm025 >= 5) {
-                colorDescKeyPm025 = 'face_yellow___clip';
+                colorDescKeyPm025 = 'face_yellow___clip__000';
             }
 
             // TODO :: multiple messages coming almost at the same time -> debounce
@@ -498,6 +506,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     barrel_cnt: {
@@ -558,6 +567,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     barrel_top: {
@@ -607,6 +617,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     barrel_bot: {
@@ -656,6 +667,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     status_pure_1: {
@@ -679,6 +691,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     switch_pure_1: {
@@ -743,6 +756,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     switch_pump_1: {
@@ -794,6 +808,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     switch_pump_2: {
@@ -877,6 +892,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     },
     switch_pump_3: {
@@ -933,6 +949,7 @@ export const STATUS_HANDLERS: { [K in TStatusKey]: IStatusHandler } = {
         lines: [],
         texts: [],
         lights: [],
+        sprites: [],
         actTo: -1
     }
 }

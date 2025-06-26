@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="w_thunderstorm_hail.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.0267829"
+     inkscape:cx="17.043525"
+     inkscape:cy="61.843648"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       d="m 30.281534,2.6272213 h 1.02827 l 18.21966,26.9010177 c 0.12853,0.149992 0.14996,0.299979 0.0643,0.449958 -0.0643,0.171423 -0.21421,0.257122 -0.44986,0.257122 h -7.4871 l 7.8727,14.430772 c 0.25707,0.492809 0.0964,0.739215 -0.482,0.739215 h -10.0899 c -0.27849,0 -0.52485,-0.160694 -0.73907,-0.482096 l -7.39069,-19.605283 c -0.0857,-0.471384 0.075,-0.707077 0.482,-0.707077 h 7.42282 z"
+       id="text5"
+       style="font-size:25.4px;line-height:1.1;font-family:'Weather Icons';-inkscape-font-specification:'Weather Icons';display:inline;opacity:0.530973;fill:#ffff00;stroke:#000000;stroke-width:0.259117;stroke-linecap:round;stroke-linejoin:round;stroke-dashoffset:0.990634"
+       aria-label=""
+       inkscape:label="lightning"
+       sodipodi:nodetypes="ccccsccssccscc" />
+    <path
+       d="m 21.385228,10.781579 c 0,-0.771365 0.27849,-1.4355926 0.83547,-1.99268 0.55698,-0.557087 1.22107,-0.835632 1.99228,-0.835632 0.81405,0 1.48886,0.267832 2.02442,0.803498 0.55697,0.5356674 0.83546,1.2106054 0.83546,2.024814 0,0.81421 -0.27849,1.489147 -0.83546,2.024814 -0.53556,0.535648 -1.21037,0.803473 -2.02442,0.803473 -0.81404,0 -1.48885,-0.267825 -2.02441,-0.803473 -0.53556,-0.535667 -0.80334,-1.210604 -0.80334,-2.024814 z m 22.07567,0 c 0,-0.771365 0.27849,-1.4355926 0.83547,-1.99268 0.55698,-0.557087 1.24249,-0.835632 2.05654,-0.835632 0.79263,0 1.45673,0.278545 1.99229,0.835632 0.55697,0.5356674 0.83546,1.1998914 0.83546,1.99268 0,0.81421 -0.26778,1.489147 -0.80334,2.024814 -0.53556,0.535648 -1.21036,0.803473 -2.02441,0.803473 -0.81405,0 -1.49956,-0.267825 -2.05654,-0.803473 -0.55698,-0.535667 -0.83547,-1.210604 -0.83547,-2.024814 z"
+       id="text11"
+       style="font-size:25.4px;line-height:1.1;font-family:'Weather Icons';-inkscape-font-specification:'Weather Icons';display:inline;opacity:0.530973;fill:#ffff00;stroke:#000000;stroke-width:0.259117;stroke-linecap:round;stroke-linejoin:round;stroke-dashoffset:0.990634"
+       aria-label=""
+       inkscape:label="snow"
+       sodipodi:nodetypes="ssscscsssssscsssss"
+       inkscape:transform-center-x="1.5943252"
+       inkscape:transform-center-y="-7.3338959" />
+    <path
+       d="m 25.314877,19.993706 c 0,-0.771365 0.27849,-1.435593 0.83547,-1.99268 0.55698,-0.557087 1.22107,-0.835632 1.99228,-0.835632 0.81405,0 1.48886,0.267832 2.02442,0.803498 0.55697,0.535667 0.83546,1.210605 0.83546,2.024814 0,0.81421 -0.27849,1.489147 -0.83546,2.024814 -0.53556,0.535648 -1.21037,0.803473 -2.02442,0.803473 -0.81404,0 -1.48885,-0.267825 -2.02441,-0.803473 -0.53556,-0.535667 -0.80334,-1.210604 -0.80334,-2.024814 z m 22.07567,0 c 0,-0.771365 0.27849,-1.435593 0.83547,-1.99268 0.55698,-0.557087 1.24249,-0.835632 2.05654,-0.835632 0.79263,0 1.45673,0.278545 1.99229,0.835632 0.55697,0.535667 0.83546,1.199891 0.83546,1.99268 0,0.81421 -0.26778,1.489147 -0.80334,2.024814 -0.53556,0.535648 -1.21036,0.803473 -2.02441,0.803473 -0.81405,0 -1.49956,-0.267825 -2.05654,-0.803473 -0.55698,-0.535667 -0.83547,-1.210604 -0.83547,-2.024814 z"
+       id="path1"
+       style="font-size:25.4px;line-height:1.1;font-family:'Weather Icons';-inkscape-font-specification:'Weather Icons';display:inline;opacity:0.530973;fill:#ffff00;stroke:#000000;stroke-width:0.259117;stroke-linecap:round;stroke-linejoin:round;stroke-dashoffset:0.990634"
+       aria-label=""
+       inkscape:label="snow"
+       sodipodi:nodetypes="ssscscsssssscsssss"
+       inkscape:transform-center-x="1.5943252"
+       inkscape:transform-center-y="-7.3338959" />
+  </g>
+</svg>

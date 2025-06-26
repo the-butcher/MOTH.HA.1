@@ -1,7 +1,7 @@
 import { useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
-import { Group, LineSegments, Mesh, Object3D, Object3DEventMap, SpotLight, SphereGeometry, Vector3 } from 'three';
-import { ColladaLoader } from 'three/examples/jsm/Addons.js';
+import { BackSide, CircleGeometry, Group, LineSegments, Mesh, Object3D, Object3DEventMap, SpotLight, Vector3 } from 'three';
+import { ColladaLoader, Line2, LineGeometry } from 'three/examples/jsm/Addons.js';
 import { IEdge3D } from '../types/IEdge3D';
 import { FACE_DESCRIPTIONS, IFaceDescription, TFaceDescKey } from '../types/IFaceDescription';
 import { ILineDescription, LINE_DESCRIPTIONS, TLineDescKey } from '../types/ILineDescription';
@@ -10,6 +10,7 @@ import { PRESET_PROPS, TPresetKey } from '../types/IOrbitProps';
 import { STATUS_HANDLERS, TStatusKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { PolygonUtil } from '../util/PolygonUtil';
+import { COLOR_DESCRIPTIONS } from '../types/IColorDescription';
 
 const ModelComponent = (props: IModelProps) => {
 
@@ -233,25 +234,42 @@ const ModelComponent = (props: IModelProps) => {
             light.position.set(p0.x, p0.y, p0.z);
             lights.push(light);
 
-            const lightMaterial = MaterialRepo.getMaterialFace({
-              rgb: 0xccccaa,
-              opacity: 1.00,
-              clip: 'clip__245'
-            });
-            lightMaterial.emissive = lightMaterial.color;
-            lightMaterial.emissiveIntensity = 0.50;
-            const lightSphere = new Mesh(new SphereGeometry(0.10), lightMaterial);
-            lightSphere.position.set(p0.x, p0.y, p0.z);
-            lightSphere.name = lineName as TStatusKey;
-            lightSphere.castShadow = false;
-            lightSphere.receiveShadow = true;
+            const positions2: number[] = []; // point A of first segment
+            const increm = 10;
+            const radius = 0.15;
+            for (let i = 0; i <= 360; i += increm) {
+              const angleA = i * Math.PI / 180;
+              positions2.push(Math.sin(angleA) * radius);
+              positions2.push(Math.cos(angleA) * radius);
+              positions2.push(0);
+            }
+            const lineGeometry = new LineGeometry();
+            lineGeometry.setPositions(positions2);
+
+            const line2 = new Line2(lineGeometry, MaterialRepo.getMaterialLine(lineDesc));
+            line2.computeLineDistances();
+
+            const circleGeometry = new CircleGeometry(radius, 360 / increm);
+            const material = MaterialRepo.getMaterialFace(COLOR_DESCRIPTIONS['face_gray___clip__245']);
+            const circleMesh = new Mesh(circleGeometry, material); scene.add(circleMesh);
+            circleMesh.position.set(0, 0, -0.20);
+
+            const group = new Group();
+            group.position.set(p0.x, p0.y, p0.z);
+            group.name = lineName as TStatusKey;
+
+            group.add(circleMesh);
+            group.add(line2);
 
             line1.visible = false;
             // dont add the light yet, will be passed through properties to SunComponent
-            scene.add(lightSphere);
+            scene.add(group);
 
-            STATUS_HANDLERS[lineName as TStatusKey]?.faces.push(lightSphere);
+            // STATUS_HANDLERS[lineName as TStatusKey]?.faces.push(lightSphere);
             STATUS_HANDLERS[lineName as TStatusKey]?.lights.push(light);
+            STATUS_HANDLERS[lineName as TStatusKey]?.faces.push(circleMesh);
+            STATUS_HANDLERS[lineName as TStatusKey]?.lines.push(line2);
+            STATUS_HANDLERS[lineName as TStatusKey]?.sprites.push(group);
 
           } else {
 

@@ -299,6 +299,7 @@ const ControlsComponent = (props: IOrbitProps) => {
     MaterialRepo.updateMaterialLineResolution();
 
     let isAnimated = false;
+    let isMouseNav = !!pointerDownRef.current;
 
     const tsAnimN = Date.now();
     if (tsAnimN < tsAnimDest.current) {
@@ -326,9 +327,17 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     }
 
+    const handlerKeys = Object.keys(STATUS_HANDLERS);
+    handlerKeys.forEach(handlerKey => {
+      STATUS_HANDLERS[handlerKey as TStatusKey].sprites.forEach(sprite => {
+        sprite.lookAt(camera.position);
+      });
+    });
+
     // const isMouseNav = !!pointerDownRef.current;
     // const isAnimated = tsAnimDest.current > 0;
     // console.log('isMouseNav', isMouseNav, 'isAnimated', isAnimated);
+
 
     if (pointerUpRef.current) {
 
@@ -453,6 +462,8 @@ const ControlsComponent = (props: IOrbitProps) => {
       }
 
       pointerUpRef.current = undefined;
+      isMouseNav = false;
+      invalidate();
 
     }
 
@@ -466,7 +477,7 @@ const ControlsComponent = (props: IOrbitProps) => {
         effectPassRef.current!.dispose();
         effectPassRef.current = undefined;
       }
-      if (!isAnimated) {
+      if (!isAnimated && !isMouseNav) {
         effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
           worldFocusDistance: worldFocusDistanceRef.current,
           worldFocusRange: Math.max(3, worldFocusDistanceRef.current / 3),

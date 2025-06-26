@@ -130,6 +130,8 @@ function AppScene() {
 
     MqttUtil.setup();
 
+    WeatherUtil.loadForecast();
+
     scenePropsRef.current = {
       ...scenePropsRef.current,
       model: {
@@ -191,7 +193,7 @@ function AppScene() {
 
     console.debug('✨ building appscene component');
 
-    WeatherUtil.loadForecast();
+
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

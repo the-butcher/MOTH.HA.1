@@ -16,6 +16,9 @@ OK page becomes unresponsive after a while (maybe after many text updates) :: te
 OK when using forecast early hours become unavailble later in the day and light intensities become negative, likely due to naive interpolation
 OK reduce weather information to maybe a single symbol
 -- show connection state of sensors, switches
+-- have HUD elements for lights
+-- light rendering only in dark mode (?), find another way for during the day
+-- improve IStatusHandler interface (maybe have types that have commands, i.e. toggle or status, and flexible UI elements for different types)
 
 possible improvements:
 
