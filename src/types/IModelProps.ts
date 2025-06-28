@@ -11,7 +11,3 @@ export interface IModelProps {
   modelComplete: boolean;
   handleModelComplete: (lights: SpotLight[]) => void;
 }
-
-// export interface IClipPlane {
-//   clipPlane: number;
-// }

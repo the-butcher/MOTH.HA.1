@@ -1,9 +1,10 @@
 import mqtt, { MqttClient } from 'mqtt';
-import { IStatusHandler, IStatusResult, STATUS_HANDLERS, TStatusKey } from '../types/IStatusHandler';
+import { IStatusHandler, STATUS_HANDLERS, THandlerKey } from '../types/IStatusHandler';
+import { IStatusResult } from '../types/IStatusResult';
 
 
 export interface IBoardHandler {
-    statusKey: string;
+    handlerKey: string;
     handleResult: (result: IStatusResult) => void;
 }
 
@@ -20,17 +21,30 @@ export class MqttUtil {
      * references to handlers, primarily taking care of 3d representation
      */
     static HANDLERS_BY_TOPIC: { [K in string]: IStatusHandler[] } = {};
-    public static BOARD_HANDLER: IBoardHandler | undefined;
+    public static BOARD_HANDLERS: IBoardHandler[] = [];
 
-    static setBoardHandler(boardHandler: IBoardHandler): void {
-        MqttUtil.BOARD_HANDLER = boardHandler;
-        if (this.RESULTS_BY_KEY[boardHandler.statusKey]) {
-            boardHandler.handleResult(this.RESULTS_BY_KEY[boardHandler.statusKey]);
+    static addBoardHandler(boardHandler: IBoardHandler): void {
+        MqttUtil.BOARD_HANDLERS.push(boardHandler);
+        if (this.RESULTS_BY_KEY[boardHandler.handlerKey]) {
+            boardHandler.handleResult(this.RESULTS_BY_KEY[boardHandler.handlerKey]);
         }
     }
 
-    static clearBoardHandler(): void {
-        MqttUtil.BOARD_HANDLER = undefined;
+    static clearBoardHandlers(): void {
+        MqttUtil.BOARD_HANDLERS = [];
+    }
+
+    static setupHandler(handler: IStatusHandler): void {
+        // first handler for this topic?
+        if (handler.topic) {
+            if (!MqttUtil.HANDLERS_BY_TOPIC[handler.topic]) {
+                MqttUtil.HANDLERS_BY_TOPIC[handler.topic] = []; // bucket to store any handlers subscribing to the same topic
+                this.MQTT_CLIENT.subscribe(handler.topic, { qos: 0 }); // subscribe to this topic
+                // console.log('subscribing to topic', handler.statusTopic);
+            }
+            // add to handlers
+            MqttUtil.HANDLERS_BY_TOPIC[handler.topic].push(handler);
+        }
     }
 
     static setup(): void {
@@ -53,28 +67,21 @@ export class MqttUtil {
             // console.log('collecting handlers by topic');
 
             handlerKeys.forEach(handlerKey => {
-                const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
-                // first handler for this topic?
-                if (handler.topic) {
-                    if (!MqttUtil.HANDLERS_BY_TOPIC[handler.topic]) {
-                        MqttUtil.HANDLERS_BY_TOPIC[handler.topic] = []; // bucket to store any handlers subscribing to the same topic
-                        this.MQTT_CLIENT.subscribe(handler.topic, { qos: 0 }); // subscribe to this topic
-                        // console.log('subscribing to topic', handler.statusTopic);
-                    }
-                    // add to handlers
-                    MqttUtil.HANDLERS_BY_TOPIC[handler.topic].push(handler);
-                }
+                MqttUtil.setupHandler(STATUS_HANDLERS[handlerKey as THandlerKey]);
             });
 
             this.MQTT_CLIENT.on('message', (topic, message) => {
-                const status = JSON.parse(message.toString());
+                const statusJson = JSON.parse(message.toString());
                 if (MqttUtil.HANDLERS_BY_TOPIC[topic]) {
                     MqttUtil.HANDLERS_BY_TOPIC[topic].forEach(handler => {
-                        const result = handler.statusHndlr(status as never);
-                        this.RESULTS_BY_KEY[handler.statusKey] = result;
-                        if (this.BOARD_HANDLER?.statusKey === handler.statusKey) {
-                            // console.log('topic', topic, 'value', handler.value, 'status', status, 'result', result);
-                            this.BOARD_HANDLER.handleResult(result);
+                        const result = handler.handleStatus(statusJson as never); // let the handler process the result
+                        if (result) {
+                            this.RESULTS_BY_KEY[handler.handlerKey] = result; // store a copy of the result
+                            this.BOARD_HANDLERS.forEach(b => {
+                                if (b.handlerKey === handler.handlerKey) {
+                                    b.handleResult(result);
+                                }
+                            });
                         }
                     });
                 }
@@ -82,15 +89,9 @@ export class MqttUtil {
 
             // query handler stati (if the handler has implemented it)
             handlerKeys.forEach(handlerKey => {
-                const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
+                const handler = STATUS_HANDLERS[handlerKey as THandlerKey];
                 handler.statusQuery('STARTUP');
             });
-
-            // // initialize all handlers
-            // handlerKeys.forEach(handlerKey => {
-            //     const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
-            //     handler.initialize();
-            // });
 
         });
 

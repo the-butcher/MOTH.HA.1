@@ -1,18 +1,23 @@
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
+import AdjustIcon from '@mui/icons-material/Adjust';
 import BatteryStdIcon from '@mui/icons-material/BatteryStd';
 import BlurOnIcon from '@mui/icons-material/BlurOn';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Co2Icon from '@mui/icons-material/Co2';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
+import FormatColorResetIcon from '@mui/icons-material/FormatColorReset';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import HolidayVillageIcon from '@mui/icons-material/HolidayVillage';
+import OilBarrelIcon from '@mui/icons-material/OilBarrel';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SpeedIcon from '@mui/icons-material/Speed';
+import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import { Card, CardContent, CardHeader, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Slider, Stack, SvgIcon, Switch, Typography } from '@mui/material';
-import { SyntheticEvent, useEffect, useRef, useState } from 'react';
+import { ReactElement, SyntheticEvent, useEffect, useRef, useState } from 'react';
+import { ActionResultUnion } from '../types/IActionResult';
 import { IBoardProps } from '../types/IBoardProps';
-import { IStatusResult, STATUS_HANDLERS } from '../types/IStatusHandler';
+import { STATUS_HANDLERS, THandlerKey } from '../types/IStatusHandler';
+import { IStatusResult } from '../types/IStatusResult';
 import { MqttUtil } from '../util/MqttUtil';
 import { TimeUtil } from '../util/TimeUtil';
 
@@ -20,9 +25,8 @@ const BoardComponent = (props: IBoardProps) => {
 
   const { sun, handleSunInstant, handlePresetKey, handleSelectKey, selectKey, handleToggleStats } = { ...props };
 
+  const statusResultRef = useRef<IStatusResult>();
   const [statusResult, setStatusResult] = useState<IStatusResult>();
-  // const [switchProps, setSwitchProps] = useState<ISwitchProps>();
-  // const [switchActive, setSwitchActive] = useState<boolean>(false);
 
   /**
    * component init hook
@@ -75,53 +79,200 @@ const BoardComponent = (props: IBoardProps) => {
 
     console.debug('⚙ updating board component (selectKey)', selectKey);
 
+    statusResultRef.current = undefined;
+    setStatusResult(undefined);
+    MqttUtil.clearBoardHandlers();
+
     if (selectKey) {
 
-      MqttUtil.setBoardHandler({
-        statusKey: STATUS_HANDLERS[selectKey].statusKey,
+      MqttUtil.addBoardHandler({
+        handlerKey: STATUS_HANDLERS[selectKey].handlerKey,
         handleResult
       });
 
-      // TODO :: find a generic way to:
-      // A) get the last valid state (could be stored on MQTTUtil)
-      // B) get any updates when the state updates => set board handler on mqtt util
+      STATUS_HANDLERS[selectKey].dependencyKeys.forEach(dependencyKey => {
+        MqttUtil.addBoardHandler({
+          handlerKey: STATUS_HANDLERS[dependencyKey].handlerKey,
+          handleResult
+        });
+      });
 
-    } else {
-      setStatusResult(undefined);
-      MqttUtil.clearBoardHandler();
+
+
+      // // set an empty status result
+      // setStatusResult({
+      //   resultKey: selectKey,
+      //   values: [],
+      //   switches: []
+      // });
+
     }
-
-    // if (selectKey && STATUS_HANDLERS[selectKey].topic && STATUS_HANDLERS[selectKey].statusKey && STATUS_HANDLERS[selectKey].switchProps) {
-    //   setSwitchProps(STATUS_HANDLERS[selectKey].switchProps!);
-    //   MqttUtil.setBoardHandler({
-    //     topic: STATUS_HANDLERS[selectKey].topic,
-    //     statusKey: STATUS_HANDLERS[selectKey].statusKey,
-    //     handleResult
-    //   });
-    //   STATUS_HANDLERS[selectKey].statusQuery('RUNTIME');
-    // } else {
-    //   setSwitchProps(undefined);
-    //   MqttUtil.clearBoardHandler();
-    // }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectKey]);
+
+  const setOrMergeStatusResult = (result: IStatusResult) => {
+
+    if (statusResultRef.current) {
+
+      const values = statusResultRef.current.values;
+
+      for (let i = 0; i < values.length; i++) {
+        const replaceValue = result.values.find(v => v.key === values[i].key);
+        if (replaceValue) {
+          values[i].value = replaceValue.value;
+        }
+      }
+      result.values.forEach(v2 => {
+        const prevKey = values.find(v1 => v1.key === v2.key);
+        if (!prevKey) {
+          values.push(v2);
+        }
+      });
+
+      const switches = statusResultRef.current.actions;
+
+      for (let i = 0; i < switches.length; i++) {
+        const replaceSwitch = result.actions.find(s => s.handlerKey === switches[i].handlerKey);
+        if (replaceSwitch) {
+          switches[i].status = replaceSwitch.status;
+        }
+      }
+      result.actions.forEach(s2 => {
+        const prevSwitch = switches.find(s1 => s1.handlerKey === s2.handlerKey);
+        if (!prevSwitch) {
+          switches.push(s2);
+        }
+      });
+
+      statusResultRef.current = {
+        ...statusResultRef.current,
+        values,
+        actions: switches
+      };
+
+      setStatusResult(statusResultRef.current);
+
+    } else {
+
+      statusResultRef.current = result;
+
+    }
+
+    setStatusResult(statusResultRef.current);
+
+  }
 
   const handleResult = (result: IStatusResult) => {
 
     console.debug('📞 handling result in board component', result);
 
-    setStatusResult(result);
+    setOrMergeStatusResult(result);
 
   }
 
-  const toggleSwitch = () => {
+  const handleSwitchAction = (handlerKey: THandlerKey) => {
 
-    if (selectKey && STATUS_HANDLERS[selectKey].topic && STATUS_HANDLERS[selectKey].switchProps) {
-      STATUS_HANDLERS[selectKey].switchProps!.toggle();
+    if (STATUS_HANDLERS[handlerKey].action) {
+      STATUS_HANDLERS[handlerKey].action!.action();
+    } else {
+      console.warn('no action found', handlerKey);
     }
 
   };
+
+
+
+  const getActionListItem = (actionResult: ActionResultUnion): ReactElement => {
+
+    if (actionResult.type === 'switch') {
+      return <ListItem
+        key={`action_${actionResult.handlerKey}`}
+        sx={{
+          padding: '0px 0px 0px 12px !important'
+        }}
+      >
+        <ListItemIcon
+          key={`${actionResult.handlerKey}_power`}
+          sx={{
+            minWidth: 'unset'
+          }}
+        >
+          <PowerSettingsNewIcon />
+
+        </ListItemIcon>
+        <ListItemText
+          sx={{
+            flexGrow: 10,
+            paddingLeft: '6px'
+          }}
+          primary={'power'}
+        />
+        <ListItemText
+          sx={{
+            flexGrow: 0
+          }}
+          primary={<Switch
+            size="medium"
+            sx={{
+              // margin: '3px'
+              // flexGrow: 0
+            }}
+            checked={actionResult.status}
+            onClick={() => handleSwitchAction(actionResult.handlerKey)}
+          />}
+        />
+
+      </ListItem>
+    } else if (actionResult.type === 'reset') {
+      return <ListItem
+        key={`action_${actionResult.handlerKey}`}
+        sx={{
+          padding: '0px 0px 0px 12px !important'
+        }}
+      >
+        <ListItemIcon
+          key={`${actionResult.handlerKey}_power`}
+          sx={{
+            minWidth: 'unset'
+          }}
+        >
+          <FormatColorResetIcon />
+        </ListItemIcon>
+        <ListItemText
+          sx={{
+            flexGrow: 10,
+            paddingLeft: '6px'
+          }}
+          primary={'reset'}
+        />
+        <ListItemText
+          sx={{
+            flexGrow: 0,
+            padding: '0px 3px'
+          }}
+          primary={<IconButton
+            onClick={() => handleSwitchAction(actionResult.handlerKey)}
+            sx={{
+              // padding: '0px 12px 0px 0px !important',
+              padding: '5px',
+              height: '36px',
+              width: '36px'
+            }}
+
+          >
+            <AdjustIcon />
+          </IconButton>
+          }
+        />
+
+      </ListItem >
+    } else {
+      return <></>
+    }
+
+
+  }
 
   const handleDeselect = () => {
     console.debug('📞 handling deselect');
@@ -317,7 +468,7 @@ const BoardComponent = (props: IBoardProps) => {
                   <HighlightOffIcon />
                 </IconButton>
               }
-              title={<Typography>{statusResult.title}</Typography>}
+              title={<Typography>{STATUS_HANDLERS[statusResult.handlerKey].title}</Typography>}
             />
             <CardContent
               sx={{
@@ -342,7 +493,7 @@ const BoardComponent = (props: IBoardProps) => {
                   >
                     {
                       statusResult.values.map(v => <ListItem
-                        key={`${statusResult.statusKey}_${v.key}`}
+                        key={`${statusResult.handlerKey}_${v.key}`}
                         sx={{
                           padding: '0px 12px !important'
                         }}
@@ -365,6 +516,7 @@ const BoardComponent = (props: IBoardProps) => {
                                 </svg>
                               </SvgIcon>
                               case 'pm025_microgram_per_cube_meter': return <BlurOnIcon />
+                              case 'volume_liters': return <OilBarrelIcon />
                               default: return <ChevronRightIcon />
                             }
                           })()}
@@ -384,11 +536,11 @@ const BoardComponent = (props: IBoardProps) => {
                         />
                       </ListItem>)
                     }
-
                   </List>
                 </> : null
-              } {
-                statusResult.switch ? <>
+              }
+              {
+                statusResult.actions.length > 0 ? <>
                   <Divider
                     orientation='horizontal'
                     sx={{
@@ -396,59 +548,21 @@ const BoardComponent = (props: IBoardProps) => {
                       backgroundColor: 'white'
                     }}
                   ></Divider>
-                  <Stack
-                    direction={'row'}
+                  <List
+                    sx={{
+                      padding: '2px 0px 2px 0px',
+                      width: '100%'
+                    }}
                   >
-                    <List
-                      sx={{
-                        padding: '6px 0px 6px 0px',
-                        width: '100%'
-                      }}
-                    >
-                      <ListItem
-                        sx={{
-                          padding: '0px 6px !important'
-                        }}
-                      >
-                        <ListItemIcon
-                          key={`${statusResult.statusKey}_power`}
-                          sx={{
-                            minWidth: 'unset'
-                          }}
-                        >
-                          <PowerSettingsNewIcon />
-
-                        </ListItemIcon>
-                        <ListItemText
-                          sx={{
-                            flexGrow: 10,
-                            paddingLeft: '6px'
-                          }}
-                          primary={'power'}
-                        />
-                        <ListItemText
-                          sx={{
-                            flexGrow: 0
-                          }}
-                          primary={<Switch
-                            size="medium"
-                            sx={{
-                              // margin: '3px'
-                              flexGrow: 0
-                            }}
-                            checked={statusResult.switch.status}
-                            onClick={() => toggleSwitch()}
-                          />}
-                        />
-
-                      </ListItem>
-                    </List>
-
-                  </Stack>
+                    {
+                      statusResult.actions.map(s => getActionListItem(s))
+                    }
+                  </List >
                 </> : null
               }
 
-            </CardContent>
+
+            </CardContent >
           </Card> : <Slider
             sx={{
               zIndex: 300,

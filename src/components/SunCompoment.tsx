@@ -111,7 +111,7 @@ const SunCompoment = (props: ISunProps) => {
     const position = SunCalc.getPosition(new Date(sunInstant), TimeUtil.LATITUDE, TimeUtil.LONGITUDE); // coordinates for vienna
 
     const forecast = WeatherUtil.getForecast(sunInstant);
-    STATUS_HANDLERS['weather___'].statusHndlr(forecast as never);
+    STATUS_HANDLERS['weather___'].handleStatus(forecast as never);
 
     const azimuth = position.azimuth;
     const altitude = position.altitude;
@@ -128,7 +128,7 @@ const SunCompoment = (props: ISunProps) => {
     lightRef_noshadow.current.intensity = Math.max(0, lightRef_noshadowIntensity * 1.2 * ambientIntensity);
     ambientLightRef.current.intensity = Math.max(0.01, ambientIntensity);
 
-    console.log('ambientIntensity', ambientIntensity, 'lightRef___shadowIntensity', lightRef___shadow.current.intensity, 'lightRef_noshadowIntensity', lightRef_noshadow.current.intensity);
+    // console.log('ambientIntensity', ambientIntensity, 'lightRef___shadowIntensity', lightRef___shadow.current.intensity, 'lightRef_noshadowIntensity', lightRef_noshadow.current.intensity);
 
     // const _backgroundRotation = position.azimuth + Math.PI / 2;
     // const _environmentIntensity = 0.1 + 0.5 * forecast.sunshine;

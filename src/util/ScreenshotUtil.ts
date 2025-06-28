@@ -1,5 +1,5 @@
 import { WebGLRenderer } from 'three';
-import { IScreenshot } from './IScreenshot';
+import { IScreenshot } from '../types/IScreenshot';
 // @ts-expect-error no declaration
 import GIFEncoder from 'gif-encoder-2';
 

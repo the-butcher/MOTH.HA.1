@@ -7,7 +7,7 @@ import SceneComponent from './components/SceneComponent';
 import { IBoardProps } from './types/IBoardProps';
 import { TPresetKey } from './types/IOrbitProps';
 import { ISceneProps } from './types/ISceneProps';
-import { POWER_LIGHTS, STATUS_HANDLERS, TStatusKey } from './types/IStatusHandler';
+import { POWER_LIGHTS, STATUS_HANDLERS, THandlerKey } from './types/IStatusHandler';
 import { ISunProps } from './types/ISunProps';
 import { MqttUtil } from './util/MqttUtil';
 import { ObjectUtil } from './util/ObjectUtil';
@@ -56,7 +56,7 @@ function AppScene() {
 
   }
 
-  const handleSelectKey = (selectKey: TStatusKey | undefined) => {
+  const handleSelectKey = (selectKey: THandlerKey | undefined) => {
 
     console.debug('📞 handleSelectKey', selectKey);
 
@@ -107,7 +107,7 @@ function AppScene() {
 
   }
 
-  const handleModelComplete = (lights: SpotLight[]) => {
+  const handleModelComplete = async (lights: SpotLight[]) => {
 
     console.debug('📞 handleModelComplete (lights', lights);
 
@@ -116,21 +116,22 @@ function AppScene() {
     const handlerKeys = Object.keys(STATUS_HANDLERS);
     // initialize all handlers
     handlerKeys.forEach(handlerKey => {
-      const handler = STATUS_HANDLERS[handlerKey as TStatusKey];
+      const handler = STATUS_HANDLERS[handlerKey as THandlerKey];
       handler.initialize();
-      handler.switchProps?.deselect();
+      handler.action?.blur();
     });
 
+    // lights must be initially ON so shadows render
     setTimeout(() => {
       const lightKeys = Object.keys(POWER_LIGHTS);
       lightKeys.forEach(lightKey => {
-        STATUS_HANDLERS[lightKey as TStatusKey].switchProps?.toggle();
+        STATUS_HANDLERS[lightKey as THandlerKey].action?.action();
       })
     }, 1000);
 
-    MqttUtil.setup();
+    await WeatherUtil.loadForecast();
 
-    WeatherUtil.loadForecast();
+    MqttUtil.setup();
 
     scenePropsRef.current = {
       ...scenePropsRef.current,
@@ -152,7 +153,7 @@ function AppScene() {
   };
 
   // const clipPlaneRef = useRef<number>(8.6);
-  const selectKeyRef = useRef<TStatusKey | undefined>('weather___');
+  const selectKeyRef = useRef<THandlerKey | undefined>('weather___');
   const presetKeyRef = useRef<TPresetKey | undefined>('home3');
   const sunPropsRef = useRef<ISunProps>(TimeUtil.getSunProps());
   const showStatsRef = useRef<boolean>(false);

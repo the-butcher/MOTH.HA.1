@@ -6,7 +6,7 @@ import { Group, Intersection, LineSegments, Mesh, Object3D, Object3DEventMap, Ra
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { MODEL_OFFSET_Y } from '../types/IModelProps';
 import { IOrbitProps, PRESET_PROPS } from '../types/IOrbitProps';
-import { STATUS_HANDLERS, TStatusKey } from '../types/IStatusHandler';
+import { STATUS_HANDLERS, THandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { ScreenshotUtil } from '../util/ScreenshotUtil';
 import { ID_CANVAS } from './SceneComponent';
@@ -241,19 +241,19 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     // deselect anything other than
     Object.keys(STATUS_HANDLERS).forEach(key => {
-      const curConfirm = STATUS_HANDLERS[key as TStatusKey].switchProps;
+      const curConfirm = STATUS_HANDLERS[key as THandlerKey].action;
       if (key !== selectKey && curConfirm) {
         // console.log('deselect: ', key);
-        curConfirm.deselect();
+        curConfirm.blur();
       }
     });
 
     if (selectKey) {
 
-      const curConfirm = STATUS_HANDLERS[selectKey as TStatusKey].switchProps;
+      const curConfirm = STATUS_HANDLERS[selectKey as THandlerKey].action;
       if (curConfirm) {
         // console.log('select: ', selectKey);
-        curConfirm.select();
+        curConfirm.focus();
       }
 
     }
@@ -329,7 +329,7 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     const handlerKeys = Object.keys(STATUS_HANDLERS);
     handlerKeys.forEach(handlerKey => {
-      STATUS_HANDLERS[handlerKey as TStatusKey].sprites.forEach(sprite => {
+      STATUS_HANDLERS[handlerKey as THandlerKey].sprites.forEach(sprite => {
         sprite.lookAt(camera.position);
       });
     });
@@ -337,7 +337,6 @@ const ControlsComponent = (props: IOrbitProps) => {
     // const isMouseNav = !!pointerDownRef.current;
     // const isAnimated = tsAnimDest.current > 0;
     // console.log('isMouseNav', isMouseNav, 'isAnimated', isAnimated);
-
 
     if (pointerUpRef.current) {
 
@@ -407,7 +406,7 @@ const ControlsComponent = (props: IOrbitProps) => {
                   // sphere.position.z = intersect.point.z;
                   // selectHelperRef.current?.add(sphere);
 
-                  const statusHandler = STATUS_HANDLERS[intersect.object.name as TStatusKey];
+                  const statusHandler = STATUS_HANDLERS[intersect.object.name as THandlerKey];
                   if (statusHandler) {
                     hitsByNamedHandler[intersect.object.name] = hitsByNamedHandler[intersect.object.name] ? hitsByNamedHandler[intersect.object.name] + (3 - radius) : 1;
                   }
@@ -422,38 +421,18 @@ const ControlsComponent = (props: IOrbitProps) => {
           // console.log('hitsByNamedHandler', hitsByNamedHandler);
 
           let maxHits = -1;
-          let maxSelectKey: TStatusKey | undefined;
+          let maxSelectKey: THandlerKey | undefined;
           Object.keys(hitsByNamedHandler).forEach(key => {
             const keyHits = hitsByNamedHandler[key];
             // console.log('keyHits', keyHits);
-            if (keyHits > maxHits) { //  && STATUS_HANDLERS[key as TStatusKey].switchProps
-              maxSelectKey = key as TStatusKey;
+            if (keyHits > maxHits) {
+              maxSelectKey = key as THandlerKey;
               maxHits = keyHits;
             }
           });
           if (maxSelectKey) {
             handleSelectKey(maxSelectKey); // can also be undefined
           }
-
-          // if (maxConfirm) {
-          //   console.log('select: ', maxSelectKey);
-
-          //   handleConfirmProps(maxConfirm);
-          //   // maxConfirm.select();
-          //   // handleConfirmProps({
-          //   //   ...maxConfirmProps,
-          //   //   handleCancel: (e: IClientCoordinate) => {
-          //   //     maxConfirmProps?.handleCancel(e);
-          //   //     handleConfirmProps(undefined);
-          //   //   },
-          //   //   handleConfirm: (e: IClientCoordinate) => {
-          //   //     maxConfirmProps?.handleConfirm(e);
-          //   //     handleConfirmProps(undefined);
-          //   //   }
-          //   // });
-          // } else {
-          //   console.log('no selection!');
-          // }
 
         }
 

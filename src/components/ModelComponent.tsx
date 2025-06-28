@@ -1,16 +1,16 @@
 import { useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
-import { BackSide, CircleGeometry, Group, LineSegments, Mesh, Object3D, Object3DEventMap, SpotLight, Vector3 } from 'three';
+import { CircleGeometry, Group, LineSegments, Mesh, Object3D, Object3DEventMap, SpotLight, Vector3 } from 'three';
 import { ColladaLoader, Line2, LineGeometry } from 'three/examples/jsm/Addons.js';
+import { COLOR_DESCRIPTIONS } from '../types/IColorDescription';
 import { IEdge3D } from '../types/IEdge3D';
 import { FACE_DESCRIPTIONS, IFaceDescription, TFaceDescKey } from '../types/IFaceDescription';
 import { ILineDescription, LINE_DESCRIPTIONS, TLineDescKey } from '../types/ILineDescription';
 import { IModelProps } from '../types/IModelProps';
 import { PRESET_PROPS, TPresetKey } from '../types/IOrbitProps';
-import { STATUS_HANDLERS, TStatusKey } from '../types/IStatusHandler';
+import { STATUS_HANDLERS, THandlerKey } from '../types/IStatusHandler';
 import { MaterialRepo } from '../util/MaterialRepo';
 import { PolygonUtil } from '../util/PolygonUtil';
-import { COLOR_DESCRIPTIONS } from '../types/IColorDescription';
 
 const ModelComponent = (props: IModelProps) => {
 
@@ -116,7 +116,7 @@ const ModelComponent = (props: IModelProps) => {
           face.name = faceName; // reassign, since the original occurence of name may have been somewhere else in the hierarchy
 
           // if there is a status handler with that key, add it to its faces container
-          STATUS_HANDLERS[faceName as TStatusKey]?.faces.push(face);
+          STATUS_HANDLERS[faceName as THandlerKey]?.faces.push(face);
           // if there are preset props with that key, add it to its faces container
           PRESET_PROPS[faceName as TPresetKey]?.faces.push(face);
 
@@ -130,14 +130,14 @@ const ModelComponent = (props: IModelProps) => {
               if (faceDesc!.lineDesc.lineStyle === 'thin') {
                 face.parent?.add(sgmts);
                 // if there is a status handler with that key, add it to its sgmts container
-                STATUS_HANDLERS[faceName as TStatusKey]?.sgmts.push(sgmts);
+                STATUS_HANDLERS[faceName as THandlerKey]?.sgmts.push(sgmts);
                 // if there are preset props with that key, add it to its sgmts container
                 PRESET_PROPS[faceName as TPresetKey]?.sgmts.push(sgmts);
               } else if (faceDesc!.lineDesc.lineStyle === 'wide') {
                 const line2 = PolygonUtil.toLine2(sgmts, faceDesc!.lineDesc);
                 face.parent?.add(line2);
                 // if there is a status handler with that key, add it to its lines container
-                STATUS_HANDLERS[faceName as TStatusKey]?.lines.push(line2);
+                STATUS_HANDLERS[faceName as THandlerKey]?.lines.push(line2);
               }
             });
 
@@ -223,7 +223,7 @@ const ModelComponent = (props: IModelProps) => {
             scene.add(textGroupOuter);
 
             // if there is a status handler with that key, add it to its texts container
-            STATUS_HANDLERS[lineName as TStatusKey]?.texts.push(textGroupInner);
+            STATUS_HANDLERS[lineName as THandlerKey]?.texts.push(textGroupInner);
 
           } else if (lineName.startsWith('light')) {
 
@@ -256,7 +256,7 @@ const ModelComponent = (props: IModelProps) => {
 
             const group = new Group();
             group.position.set(p0.x, p0.y, p0.z);
-            group.name = lineName as TStatusKey;
+            group.name = lineName as THandlerKey;
 
             group.add(circleMesh);
             group.add(line2);
@@ -265,11 +265,10 @@ const ModelComponent = (props: IModelProps) => {
             // dont add the light yet, will be passed through properties to SunComponent
             scene.add(group);
 
-            // STATUS_HANDLERS[lineName as TStatusKey]?.faces.push(lightSphere);
-            STATUS_HANDLERS[lineName as TStatusKey]?.lights.push(light);
-            STATUS_HANDLERS[lineName as TStatusKey]?.faces.push(circleMesh);
-            STATUS_HANDLERS[lineName as TStatusKey]?.lines.push(line2);
-            STATUS_HANDLERS[lineName as TStatusKey]?.sprites.push(group);
+            STATUS_HANDLERS[lineName as THandlerKey]?.lights.push(light);
+            STATUS_HANDLERS[lineName as THandlerKey]?.faces.push(circleMesh);
+            STATUS_HANDLERS[lineName as THandlerKey]?.lines.push(line2);
+            STATUS_HANDLERS[lineName as THandlerKey]?.sprites.push(group);
 
           } else {
 
@@ -280,13 +279,13 @@ const ModelComponent = (props: IModelProps) => {
             if (lineDesc.lineStyle === 'thin') {
               line1.material = MaterialRepo.getMaterialSgmt(lineDesc);
               // if there is a status handler with that key, add it to its sgmts container
-              STATUS_HANDLERS[lineName as TStatusKey]?.sgmts.push(line1);
+              STATUS_HANDLERS[lineName as THandlerKey]?.sgmts.push(line1);
             } else if (lineDesc.lineStyle === 'wide') {
               const line2 = PolygonUtil.toLine2(line1, lineDesc);
               line1.visible = false;
               line1.parent?.add(line2);
               // if there is a status handler with that key, add it to its lines container
-              STATUS_HANDLERS[lineName as TStatusKey]?.lines.push(line2);
+              STATUS_HANDLERS[lineName as THandlerKey]?.lines.push(line2);
             }
 
           }

@@ -6,10 +6,3 @@ export interface ISunProps {
   sunInstant: number
   lights: SpotLight[];
 }
-
-// /**
-//  * definition for extra lights
-//  */
-// export interface ILightProps {
-//   position: Vector3;
-// }

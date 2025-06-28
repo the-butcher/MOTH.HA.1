@@ -3,18 +3,16 @@ export interface IClientCoordinate {
     clientY: number;
 }
 
-export interface ISwitchProps {
-    // title: string;
-    // content: string;
+export interface ISwitchAction {
     /**
      * create visual selection in 3d display
      * @returns
      */
-    select: () => void;
+    focus: () => void;
     /**
      * clear visual selection in 3d display
      * @returns
      */
-    deselect: () => void;
-    toggle: () => void;
+    blur: () => void;
+    action: () => void;
 }

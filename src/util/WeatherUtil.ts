@@ -1,7 +1,7 @@
 import { invalidate } from "@react-three/fiber";
 import { COLOR_DESCRIPTIONS } from "../types/IColorDescription";
 import { STATUS_HANDLERS } from "../types/IStatusHandler";
-import { IWeatherForecast } from "./IWeatherForecast";
+import { IWeatherForecast } from "../types/IWeatherForecast";
 import { ObjectUtil } from "./ObjectUtil";
 import { PolygonUtil } from "./PolygonUtil";
 import { JsonLoader } from "./JsonLoader";
@@ -65,7 +65,9 @@ export class WeatherUtil {
             }
         }
 
-        if (forecast.weathercode === 95) {
+        if (forecast.weathercode === 61 || forecast.weathercode === 80) {
+            symbols.push('./w_rain_light.svg')
+        } else if (forecast.weathercode === 95) {
             symbols.push('./w_thunderstorm.svg')
         } else if (forecast.weathercode === 96) {
             symbols.push('./w_thunderstorm_hail.svg')
@@ -134,164 +136,17 @@ export class WeatherUtil {
 
         // console.log('iso', new Date().toISOString());
 
-        // let loader = new JsonLoader('https://api.open-meteo.com/v1/forecast', 'GET');
-        // loader = loader.withParameter('timezone', 'Europe/Berlin');
-        // loader = loader.withParameter('latitude', '48.21');
-        // loader = loader.withParameter('longitude', '16.45');
-        // loader = loader.withParameter('hourly', 'temperature_2m,weathercode,precipitation_probability,cloud_cover');
-        // loader = loader.withParameter('forecast_days', '1');
+        let loader = new JsonLoader('https://api.open-meteo.com/v1/forecast', 'GET');
+        loader = loader.withParameter('timezone', 'Europe/Berlin');
+        loader = loader.withParameter('latitude', '48.21');
+        loader = loader.withParameter('longitude', '16.45');
+        loader = loader.withParameter('hourly', 'temperature_2m,weathercode,precipitation_probability,cloud_cover');
+        loader = loader.withParameter('forecast_days', '1');
 
-        // const openMeteoResponse2: never = await loader.load() as never;
-        // console.log('openMeteoResponse2', openMeteoResponse2);
+        const openMeteoResponse: never = await loader.load() as never;
+        console.log('openMeteoResponse', openMeteoResponse);
 
-        const openMeteoResponse = {
-            "latitude": 48.2,
-            "longitude": 16.46,
-            "generationtime_ms": 18.79096031188965,
-            "utc_offset_seconds": 7200,
-            "timezone": "Europe/Berlin",
-            "timezone_abbreviation": "GMT+2",
-            "elevation": 162,
-            "hourly_units": {
-                "time": "iso8601",
-                "temperature_2m": "°C",
-                "weathercode": "wmo code",
-                "precipitation_probability": "%",
-                "cloud_cover": "%"
-            },
-            "hourly": {
-                "time": [
-                    "2025-06-26T00:00",
-                    "2025-06-26T01:00",
-                    "2025-06-26T02:00",
-                    "2025-06-26T03:00",
-                    "2025-06-26T04:00",
-                    "2025-06-26T05:00",
-                    "2025-06-26T06:00",
-                    "2025-06-26T07:00",
-                    "2025-06-26T08:00",
-                    "2025-06-26T09:00",
-                    "2025-06-26T10:00",
-                    "2025-06-26T11:00",
-                    "2025-06-26T12:00",
-                    "2025-06-26T13:00",
-                    "2025-06-26T14:00",
-                    "2025-06-26T15:00",
-                    "2025-06-26T16:00",
-                    "2025-06-26T17:00",
-                    "2025-06-26T18:00",
-                    "2025-06-26T19:00",
-                    "2025-06-26T20:00",
-                    "2025-06-26T21:00",
-                    "2025-06-26T22:00",
-                    "2025-06-26T23:00"
-                ],
-                "temperature_2m": [
-                    25,
-                    23.2,
-                    21.1,
-                    20.3,
-                    19.7,
-                    19.7,
-                    19.6,
-                    21,
-                    24.1,
-                    26.5,
-                    28.4,
-                    30.4,
-                    32.3,
-                    33.9,
-                    34.7,
-                    35.2,
-                    35.8,
-                    35.6,
-                    34.6,
-                    32.8,
-                    23.4,
-                    22,
-                    21.7,
-                    21.8
-                ],
-                "weathercode": [
-                    1,
-                    0,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    2,
-                    0,
-                    1,
-                    0,
-                    0,
-                    3,
-                    3,
-                    3,
-                    96,
-                    95,
-                    3,
-                    3
-                ],
-                "precipitation_probability": [
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    5,
-                    13,
-                    5,
-                    23,
-                    25,
-                    28,
-                    28,
-                    58
-                ],
-                "cloud_cover": [
-                    36,
-                    0,
-                    0,
-                    44,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    85,
-                    0,
-                    2,
-                    0,
-                    0,
-                    100,
-                    100,
-                    100,
-                    100,
-                    100,
-                    100,
-                    100
-                ]
-            }
-        };
+        // const openMeteoResponse =
 
         const instants: number[] = (openMeteoResponse['hourly']['time'] as string[]).map(d => Date.parse(d));
         const temperatures: number[] = openMeteoResponse['hourly']['temperature_2m'] as number[];
