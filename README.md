@@ -17,7 +17,7 @@ OK when using forecast early hours become unavailble later in the day and light 
 OK reduce weather information to maybe a single symbol
 OK have HUD/sprite elements for lights
 -- show connection state of sensors, switches
--- light rendering only in dark mode (?), find another way for during the day
+-- lights rendering only in dark mode (?), find another way for during the day
 -- improve IStatusHandler interface (maybe have types that have commands, i.e. toggle or status, and flexible UI elements for different types)
 
 possible improvements:

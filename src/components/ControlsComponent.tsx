@@ -1,6 +1,8 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { easeInOut } from "motion";
-import { DepthOfFieldEffect, EffectComposer, EffectPass, RenderPass, SMAAEffect } from "postprocessing";
+// @ts-expect-error no declaration
+import { N8AOPostPass } from "n8ao";
+import { DepthOfFieldEffect, EffectComposer, EffectPass, Pass, RenderPass, SMAAEffect, SMAAPreset } from "postprocessing";
 import { useEffect, useRef } from 'react';
 import { Group, Intersection, LineSegments, Mesh, Object3D, Object3DEventMap, Raycaster, SphereGeometry, Vector2, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
@@ -44,7 +46,8 @@ const ControlsComponent = (props: IOrbitProps) => {
   const clipPlaneDiff = useRef<number>(8.6);
 
   const effectComposerRef = useRef<EffectComposer>();
-  const effectPassRef = useRef<EffectPass>();
+  const effectPassDofRef = useRef<Pass>();
+  const effectPassSaoRef = useRef<Pass>();
 
   /**
    * the beginning millis of animation
@@ -116,15 +119,37 @@ const ControlsComponent = (props: IOrbitProps) => {
 
     effectComposerRef.current = new EffectComposer(gl);
 
-    effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
+    effectPassDofRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
       worldFocusDistance: worldFocusDistanceRef.current,
       worldFocusRange: worldFocusDistanceRef.current / 3,
       bokehScale: 5
     }));
 
+    effectPassSaoRef.current = new N8AOPostPass(
+      scene,
+      camera
+    );
+    // @ts-expect-error does not exist
+    effectPassSaoRef.current!.configuration.aoRadius = 3.0;
+    // @ts-expect-error does not exist
+    effectPassSaoRef.current!.configuration.intensity = 1.0;
+
     effectComposerRef.current.addPass(new RenderPass(scene, camera));
-    effectComposerRef.current.addPass(new EffectPass(camera, new SMAAEffect()));
-    effectComposerRef.current.addPass(effectPassRef.current);
+
+    // // https://github.com/N8python/n8ao
+    // const n8aoPass = new N8AOPostPass(
+    //   scene,
+    //   camera
+    // );
+    // n8aoPass.configuration.aoRadius = 1.0;
+    // n8aoPass.configuration.intensity = 2.0;
+
+    effectComposerRef.current.addPass(effectPassSaoRef.current!);
+    effectComposerRef.current.addPass(new EffectPass(camera, new SMAAEffect({
+      preset: SMAAPreset.ULTRA
+    })));
+
+    effectComposerRef.current.addPass(effectPassDofRef.current);
 
     MaterialRepo.setClipPlane(clipPlaneCurr.current);
 
@@ -451,18 +476,20 @@ const ControlsComponent = (props: IOrbitProps) => {
     }
 
     if (effectComposerRef.current) {
-      if (effectPassRef.current) {
-        effectComposerRef.current!.removePass(effectPassRef.current!);
-        effectPassRef.current!.dispose();
-        effectPassRef.current = undefined;
+      if (effectPassDofRef.current) {
+        effectComposerRef.current!.removePass(effectPassDofRef.current!);
+        effectPassDofRef.current!.dispose();
+        effectPassDofRef.current = undefined;
       }
+      effectPassSaoRef.current!.enabled = false;
       if (!isAnimated && !isMouseNav) {
-        effectPassRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
+        effectPassDofRef.current = new EffectPass(camera, new DepthOfFieldEffect(camera, {
           worldFocusDistance: worldFocusDistanceRef.current,
           worldFocusRange: Math.max(3, worldFocusDistanceRef.current / 3),
           bokehScale: 5
         }));
-        effectComposerRef.current!.addPass(effectPassRef.current);
+        effectComposerRef.current!.addPass(effectPassDofRef.current);
+        effectPassSaoRef.current!.enabled = true;
       }
       effectComposerRef.current!.render();
     }

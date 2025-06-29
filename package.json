@@ -18,16 +18,17 @@
     "@mui/material": "^7.1.1",
     "@react-three/drei": "^10.3.0",
     "@react-three/fiber": "^9.1.2",
-    "@react-three/postprocessing": "^3.0.4",
     "@types/suncalc": "^1.9.2",
     "bmp-ts": "^1.0.9",
     "gif-encoder-2": "^1.0.5",
+    "motion": "^12.9.4",
     "mqtt": "^5.9.1",
+    "n8ao": "^1.10.1",
+    "postprocessing": "^6.37.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "suncalc": "^1.9.0",
-    "three": "^0.176.0",
-    "motion": "^12.9.4"
+    "three": "^0.176.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

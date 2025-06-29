@@ -25,64 +25,70 @@ export class PolygonUtil {
 
     static async createSymbolMesh(url: string, parent: Group, colorDesc: IColorDescription, name: string = ''): Promise<void> {
 
-        new SVGLoader().loadAsync(url).then(data => {
+        return new Promise((resolve, reject) => {
 
-            const paths = data.paths;
-            for (let i = 0; i < paths.length; i++) {
+            new SVGLoader().loadAsync(url).then(data => {
 
-                const path = paths[i];
+                const paths = data.paths;
+                for (let i = 0; i < paths.length; i++) {
 
-                const meshMaterial = MaterialRepo.getMaterialFace(colorDesc);
-                const lineMaterial = MaterialRepo.getMaterialSgmt({
-                    ...LINE_DESCRIPTIONS['misc_gray'],
-                    opacity: 0.1
-                });
+                    const path = paths[i];
 
-                const group = new Group();
+                    const meshMaterial = MaterialRepo.getMaterialFace(colorDesc);
+                    const lineMaterial = MaterialRepo.getMaterialSgmt({
+                        ...LINE_DESCRIPTIONS['misc_gray'],
+                        opacity: 0.1
+                    });
 
-                const shapes = SVGLoader.createShapes(path);
-                for (let j = 0; j < shapes.length; j++) {
+                    const group = new Group();
 
-                    const shape = shapes[j];
-                    const meshGeometry = new ShapeGeometry(shape);
-                    const mesh = new Mesh(meshGeometry, meshMaterial);
-                    group.add(mesh);
+                    const shapes = SVGLoader.createShapes(path);
+                    for (let j = 0; j < shapes.length; j++) {
 
-                    const points = shape.extractPoints(2);
+                        const shape = shapes[j];
+                        const meshGeometry = new ShapeGeometry(shape);
+                        const mesh = new Mesh(meshGeometry, meshMaterial);
+                        group.add(mesh);
 
-                    const lineSegmentPositionsA: number[] = [];
-                    const collectPoints = (points2: Vector2[]) => {
-                        for (let i = 0; i < points2.length - 1; i++) {
-                            lineSegmentPositionsA.push(points2[i].x);
-                            lineSegmentPositionsA.push(points2[i].y);
-                            lineSegmentPositionsA.push(0);
-                            lineSegmentPositionsA.push(points2[i + 1].x);
-                            lineSegmentPositionsA.push(points2[i + 1].y);
-                            lineSegmentPositionsA.push(0);
+                        const points = shape.extractPoints(2);
+
+                        const lineSegmentPositionsA: number[] = [];
+                        const collectPoints = (points2: Vector2[]) => {
+                            for (let i = 0; i < points2.length - 1; i++) {
+                                lineSegmentPositionsA.push(points2[i].x);
+                                lineSegmentPositionsA.push(points2[i].y);
+                                lineSegmentPositionsA.push(0);
+                                lineSegmentPositionsA.push(points2[i + 1].x);
+                                lineSegmentPositionsA.push(points2[i + 1].y);
+                                lineSegmentPositionsA.push(0);
+                            }
                         }
+                        collectPoints(points.shape);
+                        points.holes.forEach(hole => collectPoints(hole));
+                        const lineSegmentPositionsB = new Float32Array(lineSegmentPositionsA);
+
+                        const lineGeometry = new BufferGeometry();
+                        lineGeometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
+
+                        const lineSegments = new LineSegments(lineGeometry, lineMaterial);
+                        lineSegments.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+                        lineSegments.updateMatrixWorld();
+                        lineSegments.name = name;
+
+                        group.add(lineSegments);
+
                     }
-                    collectPoints(points.shape);
-                    points.holes.forEach(hole => collectPoints(hole));
-                    const lineSegmentPositionsB = new Float32Array(lineSegmentPositionsA);
 
-                    const lineGeometry = new BufferGeometry();
-                    lineGeometry.attributes['position'] = new BufferAttribute(lineSegmentPositionsB, 3);
-
-                    const lineSegments = new LineSegments(lineGeometry, lineMaterial);
-                    lineSegments.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
-                    lineSegments.updateMatrixWorld();
-                    lineSegments.name = name;
-
-                    group.add(lineSegments);
+                    group.scale.set(0.01, 0.01, 0.01);
+                    parent.add(group);
 
                 }
 
-                group.scale.set(0.01, 0.01, 0.01);
-                parent.add(group);
+                resolve();
 
-            }
-
-            return;
+            }).catch((e: Error) => {
+                reject(e);
+            });
 
         });
 

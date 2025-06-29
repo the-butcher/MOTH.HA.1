@@ -19,7 +19,7 @@ export type TColorKey =
     'sgmt_blue_noclip' |
     'sgmt_red___clip' | 'sgmt_red_noclip';
 
-const LINE_OPACITY = 0.75;
+const LINE_OPACITY = 0.60;
 
 export const COLOR_DESCRIPTIONS: { [K in TColorKey]: IColorDescription } = {
     face_gray___clip__000: {

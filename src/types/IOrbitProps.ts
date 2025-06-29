@@ -17,7 +17,7 @@ export const CAMERA_POSITIONS_PORTRAIT: { [K in TPresetKey]: Vector3 } = {
   'home1': new Vector3(-23.92, 25.90, -31.97),
   'home2': new Vector3(-23.92, 28.70, -31.97),
   'home3': new Vector3(-23.92, 12.00, -31.97).multiplyScalar(1.4),
-  'quarter': new Vector3(-47.82122098139755, 30.60846253048619, -52.577751231462614)
+  'quarter': new Vector3(-58.40978634657678, 49.03004378500024, 8.717258495086595)
 };
 
 export const CAMERA_TARGETS_PORTRAIT: { [K in TPresetKey]: Vector3 } = {
@@ -26,7 +26,7 @@ export const CAMERA_TARGETS_PORTRAIT: { [K in TPresetKey]: Vector3 } = {
   'home1': new Vector3(-0.04, 0.10, -5.88),
   'home2': new Vector3(-0.04, 2.90, -5.88),
   'home3': new Vector3(-0.04, 2.90, -5.88),
-  'quarter': new Vector3(-4.316680036981539, 1.6980772085064948, -6.304850625092192)
+  'quarter': new Vector3(-4.459880176107357, 1.7651644464516436, -5.848431272387478)
 };
 
 export const CAMERA_POSITIONS_LANDSCAPE: { [K in TPresetKey]: Vector3 } = {
@@ -35,7 +35,7 @@ export const CAMERA_POSITIONS_LANDSCAPE: { [K in TPresetKey]: Vector3 } = {
   'home1': new Vector3(-11.99, 13.01, -18.93).multiplyScalar(1.1),
   'home2': new Vector3(-11.99, 15.81, -18.93).multiplyScalar(1.1),
   'home3': new Vector3(-11.99, 6.00, -18.93).multiplyScalar(1.4),
-  'quarter': new Vector3(-24.995553088620653, 15.439957365592065, -28.299599140949535)
+  'quarter': new Vector3(-58.40978634657678, 49.03004378500024, 8.717258495086595)
 };
 
 export const CAMERA_TARGETS_LANDSCAPE: { [K in TPresetKey]: Vector3 } = {
@@ -44,7 +44,7 @@ export const CAMERA_TARGETS_LANDSCAPE: { [K in TPresetKey]: Vector3 } = {
   'home1': new Vector3(-0.05, 0.10, -5.88),
   'home2': new Vector3(-0.05, 2.90, -5.88),
   'home3': new Vector3(-0.05, 0.90, -5.88),
-  'quarter': new Vector3(-4.316680036981535, 1.6980772085064593, -6.304850625092199)
+  'quarter': new Vector3(-4.459880176107357, 1.7651644464516436, -5.848431272387478)
 };
 
 export const WFOCUS_TARGETS: { [K in TPresetKey]: Vector3 } = {

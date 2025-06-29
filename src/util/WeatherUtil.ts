@@ -5,6 +5,9 @@ import { IWeatherForecast } from "../types/IWeatherForecast";
 import { ObjectUtil } from "./ObjectUtil";
 import { PolygonUtil } from "./PolygonUtil";
 import { JsonLoader } from "./JsonLoader";
+import { IOpenMeteoResponse } from "../types/IOpenMeteoResponse";
+import { LocalStorageUtil } from "./LocalStorageUtil";
+import { TimeUtil } from "./TimeUtil";
 
 /**
  * alternative: https://api.open-meteo.com/v1/forecast?timezone=Europe/Berlin&latitude=48.21&longitude=16.45&hourly=temperature_2m,weathercode,precipitation_probability,cloud_cover&daily=sunrise,sunset&forecast_days=1
@@ -88,9 +91,11 @@ export class WeatherUtil {
             for (let i = 0; i < symbols.length; i++) {
                 await PolygonUtil.createSymbolMesh(symbols[i], STATUS_HANDLERS['weather___'].texts[1], COLOR_DESCRIPTIONS['face_gray___clip_none']);
             }
-            requestAnimationFrame(() => {
-                invalidate();
-            });
+            // console.log('done creating weather symbols');
+            invalidate();
+            // requestAnimationFrame(() => {
+            //     invalidate();
+            // });
         }
 
 
@@ -136,23 +141,35 @@ export class WeatherUtil {
 
         // console.log('iso', new Date().toISOString());
 
-        let loader = new JsonLoader('https://api.open-meteo.com/v1/forecast', 'GET');
-        loader = loader.withParameter('timezone', 'Europe/Berlin');
-        loader = loader.withParameter('latitude', '48.21');
-        loader = loader.withParameter('longitude', '16.45');
-        loader = loader.withParameter('hourly', 'temperature_2m,weathercode,precipitation_probability,cloud_cover');
-        loader = loader.withParameter('forecast_days', '1');
+        // let loader = new JsonLoader('https://api.open-meteo.com/v1/forecast', 'GET');
+        // loader = loader.withParameter('timezone', 'Europe/Berlin');
+        // loader = loader.withParameter('latitude', '48.21');
+        // loader = loader.withParameter('longitude', '16.45');
+        // loader = loader.withParameter('hourly', 'temperature_2m,weathercode,precipitation_probability,cloud_cover');
+        // loader = loader.withParameter('forecast_days', '1');
 
-        const openMeteoResponse: never = await loader.load() as never;
-        console.log('openMeteoResponse', openMeteoResponse);
+        // const openMeteoResponse: never = await loader.load() as never;
+        // console.log('openMeteoResponse', openMeteoResponse);
+        let openMeteoResponse: IOpenMeteoResponse | undefined = LocalStorageUtil.load('SK_FORECAST', TimeUtil.MILLISECONDS_PER_HOUR);
+        if (!openMeteoResponse) {
 
-        // const openMeteoResponse =
+            let loader = new JsonLoader('https://api.open-meteo.com/v1/forecast', 'GET');
+            loader = loader.withParameter('timezone', 'Europe/Berlin');
+            loader = loader.withParameter('latitude', '48.21');
+            loader = loader.withParameter('longitude', '16.45');
+            loader = loader.withParameter('hourly', 'temperature_2m,weathercode,precipitation_probability,cloud_cover');
+            loader = loader.withParameter('forecast_days', '1');
+            openMeteoResponse = await loader.load();
 
-        const instants: number[] = (openMeteoResponse['hourly']['time'] as string[]).map(d => Date.parse(d));
-        const temperatures: number[] = openMeteoResponse['hourly']['temperature_2m'] as number[];
-        const precipitations: number[] = openMeteoResponse['hourly']['precipitation_probability'] as number[];
-        const weathercodes: number[] = openMeteoResponse['hourly']['weathercode'] as number[];
-        const cloudcovers: number[] = openMeteoResponse['hourly']['cloud_cover'] as number[];
+            LocalStorageUtil.store('SK_FORECAST', openMeteoResponse);
+
+        }
+
+        const instants: number[] = (openMeteoResponse!.hourly.time).map(d => Date.parse(d));
+        const temperatures: number[] = openMeteoResponse!.hourly.temperature_2m;
+        const precipitations: number[] = openMeteoResponse!.hourly.precipitation_probability;
+        const weathercodes: number[] = openMeteoResponse!.hourly.weathercode;
+        const cloudcovers: number[] = openMeteoResponse!.hourly.cloud_cover;
 
         for (let i = 0; i < instants.length; i++) {
             WeatherUtil.FORECASTS.push({

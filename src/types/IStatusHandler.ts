@@ -36,7 +36,7 @@ export type TUnit =
     'battery_percent' |
     'radiation_microsivert_per_hour' |
     'pressure_hectopascal' |
-    'pm025_microgram_per_cube_meter'
+    'pm_microgram_per_cube_meter'
 
 export interface IStatusHandler {
     handlerKey: THandlerKey;
@@ -482,7 +482,9 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
         title: 'moth PM sensor',
         handleStatus: (status: never) => {
 
+            const pm010 = status['pm010'] as number;
             const pm025 = status['pm025'] as number;
+            const pm100 = status['pm100'] as number;
 
             // console.log('moth/ip_130', status);
 
@@ -504,9 +506,19 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
                 handlerKey: 'moth___130',
                 values: [
                     {
+                        key: 'PM1.0 (µg/m³)',
+                        unit: 'pm_microgram_per_cube_meter',
+                        value: pm010.toFixed(0)
+                    },
+                    {
                         key: 'PM2.5 (µg/m³)',
-                        unit: 'pm025_microgram_per_cube_meter',
+                        unit: 'pm_microgram_per_cube_meter',
                         value: pm025.toFixed(0)
+                    },
+                    {
+                        key: 'PM10.0 (µg/m³)',
+                        unit: 'pm_microgram_per_cube_meter',
+                        value: pm100.toFixed(0)
                     }
                 ],
                 actions: []
