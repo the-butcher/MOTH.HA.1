@@ -125,7 +125,7 @@ function AppScene() {
     setTimeout(() => {
       const lightKeys = Object.keys(POWER_LIGHTS);
       lightKeys.forEach(lightKey => {
-        STATUS_HANDLERS[lightKey as THandlerKey].action?.action();
+        STATUS_HANDLERS[lightKey as THandlerKey].action?.execute(false as never);
       })
     }, 1000);
 

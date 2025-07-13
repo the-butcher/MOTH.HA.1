@@ -6,9 +6,10 @@ import { MqttUtil } from "../util/MqttUtil";
 import { PolygonUtil } from "../util/PolygonUtil";
 import { WeatherUtil } from "../util/WeatherUtil";
 import { COLOR_DESCRIPTIONS, IColorDescription, TColorKey } from "./IColorDescription";
+import { THandlerActionUnion } from "./IHandlerAction";
 import { IStatusResult } from "./IStatusResult";
-import { ISwitchAction } from "./ISwitchAction";
 import { IWeatherForecast } from "./IWeatherForecast";
+import { TLedboxStatus } from "./IActionResult";
 
 export type THandlerKey =
     'weather___' |
@@ -25,7 +26,8 @@ export type THandlerKey =
     'switch_pure_1' |
     'switch_pump_1' |
     'switch_pump_2' |
-    'switch_pump_3';
+    'switch_pump_3' |
+    'switch_frame_1';
 export type TQueryTime = 'STARTUP' | 'RUNTIME'
 export type TUnit =
     'barrel_switch' |
@@ -50,7 +52,7 @@ export interface IStatusHandler {
     initialize: () => void;
     handleStatus: (status: never) => IStatusResult | undefined; // todo some container that holds all instances (Meshes) that a specific status may apply to
     statusQuery: (queryTime: TQueryTime) => void;
-    action?: ISwitchAction;
+    action?: THandlerActionUnion;
     faces: Mesh[];
     sgmts: LineSegments[];
     lines: Line2[];
@@ -70,6 +72,9 @@ let POWER____PURE_1 = false;
 let POWER____PUMP_1 = false;
 let POWER____PUMP_2 = false;
 let POWER____PUMP_3 = false;
+let BATTERY_FRAME_1: number = 0;
+let POWER___FRAME_1: TLedboxStatus = 0;
+let FUTURE__FRAME_1: TLedboxStatus = 0;
 export const POWER_LIGHTS: { [K: string]: boolean } = {};
 const counter1Min = 225;
 
@@ -172,8 +177,8 @@ const createLightHandler = (handlerKey: THandlerKey): IStatusHandler => {
             // nothing
         },
         action: {
-            // title: 'air purifier',
-            action: () => {
+            type: 'switch',
+            execute: () => {
                 POWER_LIGHTS[handlerKey] = !POWER_LIGHTS[handlerKey];
                 STATUS_HANDLERS[handlerKey].handleStatus({} as never);
             },
@@ -188,7 +193,7 @@ const createLightHandler = (handlerKey: THandlerKey): IStatusHandler => {
                 STATUS_HANDLERS[handlerKey].lines.forEach(line => {
                     line.material = MaterialRepo.getMaterialLine(colorDesc);
                 });
-            },
+            }
         },
         faces: [],
         sgmts: [],
@@ -588,7 +593,8 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicShedN}/Counter1`, '+0', { qos: 0, retain: false });
         },
         action: {
-            action: () => {
+            type: 'reset',
+            execute: () => {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicShedN}/Counter1`, '0', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
             focus: () => {
@@ -596,7 +602,7 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
             },
             blur: () => {
                 // nothing
-            },
+            }
         },
         faces: [],
         sgmts: [],
@@ -786,8 +792,8 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPure1}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
         },
         action: {
-            // title: 'air purifier',
-            action: () => {
+            type: 'switch',
+            execute: () => {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPure1}/Power`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
             focus: () => {
@@ -799,7 +805,7 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
                 STATUS_HANDLERS['switch_pure_1'].lines.forEach(line => {
                     line.visible = false;
                 });
-            },
+            }
         },
         faces: [],
         sgmts: [],
@@ -847,8 +853,8 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
             MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPumpN}/State`, '10', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
         },
         action: {
-            // title: 'ground ⤴ barrel',
-            action: () => {
+            type: 'switch',
+            execute: () => {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPumpN}/Power1`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
             focus: () => {
@@ -860,7 +866,7 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
                 STATUS_HANDLERS['switch_pump_1'].lines.forEach(line => {
                     line.visible = false;
                 });
-            },
+            }
         },
         faces: [],
         sgmts: [],
@@ -934,8 +940,8 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
             }
         },
         action: {
-            // title: 'barrel ⤳ garden',
-            action: () => {
+            type: 'switch',
+            execute: () => {
                 MqttUtil.MQTT_CLIENT.publish(`cmnd/${topicPumpN}/Power2`, 'TOGGLE', { qos: 0, retain: false }); // this should cause the device to publish a RESULT message
             },
             focus: () => {
@@ -947,7 +953,7 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
                 STATUS_HANDLERS['switch_pump_2'].lines.forEach(line => {
                     line.visible = false;
                 });
-            },
+            }
         },
         faces: [],
         sgmts: [],
@@ -1016,5 +1022,84 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
         lights: [],
         sprites: [],
         actTo: -1
-    }
+    },
+    switch_frame_1: {
+        topic: `stat/frame_039/Power`,
+        handlerKey: 'switch_frame_1',
+        dependencyKeys: [],
+        title: 'ledframe 1',
+        handleStatus: (status: never) => {
+
+            // console.log('handling ledbox status', status);
+
+            if ('lp' in status) {
+                POWER___FRAME_1 = status['lp'] as TLedboxStatus; // when ON the barrel is completely full
+                FUTURE__FRAME_1 = POWER___FRAME_1;
+                STATUS_HANDLERS['switch_frame_1'].sgmts.forEach(sgmt => {
+                    sgmt.visible = POWER___FRAME_1 > 0;
+                });
+                BATTERY_FRAME_1 = status['bp'] as number;
+            }
+
+            invalidate();
+
+            return {
+                handlerKey: 'switch_frame_1',
+                values: [
+                    {
+                        key: 'battery (%)',
+                        unit: 'battery_percent',
+                        value: BATTERY_FRAME_1.toFixed(0)
+                    }
+                ],
+                actions: [
+                    {
+                        handlerKey: 'switch_frame_1',
+                        type: 'ledbox',
+                        status: POWER___FRAME_1,
+                        future: FUTURE__FRAME_1
+                    }
+                ]
+            };
+
+        },
+        initialize: () => {
+            // nothing
+        },
+        statusQuery: () => { // queryTime: TQueryTime
+            // TODO :: implement status query
+        },
+        action: {
+            type: 'ledbox',
+            execute: (param: TLedboxStatus) => {
+                // console.log('received ledbox param', param);
+                FUTURE__FRAME_1 = param;
+                const payload = {
+                    p: param,
+                    m: 1
+                };
+                MqttUtil.MQTT_CLIENT.publish(`cmnd/frame_039/Power`, JSON.stringify(payload), { qos: 0, retain: true }); // this should cause the device to publish a RESULT message
+                // need to reflect future in UI
+                const result = STATUS_HANDLERS['switch_frame_1'].handleStatus({} as never);
+                MqttUtil.BOARD_HANDLERS.find(h => h.handlerKey === 'switch_frame_1')?.handleResult(result!);
+            },
+            focus: () => {
+                STATUS_HANDLERS['switch_frame_1'].lines.forEach(line => {
+                    line.visible = true;
+                });
+            },
+            blur: () => {
+                STATUS_HANDLERS['switch_frame_1'].lines.forEach(line => {
+                    line.visible = false;
+                });
+            }
+        },
+        faces: [],
+        sgmts: [],
+        lines: [],
+        texts: [],
+        lights: [],
+        sprites: [],
+        actTo: -1
+    },
 }

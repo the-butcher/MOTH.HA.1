@@ -55,8 +55,18 @@ export class ThemeUtil {
         MuiSlider: {
           styleOverrides: {
             root: {
-              color: '#666666',
+              // color: '#666666',
             },
+            track: {
+              height: '4px',
+              margin: '0px -2px',
+              width: 'calc(100% + 4px)'
+            },
+            rail: {
+              height: '14px',
+              margin: '0px -7px',
+              width: 'calc(100% + 14px)'
+            }
           },
         },
         MuiButtonGroup: {

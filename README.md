@@ -16,9 +16,6 @@ OK page becomes unresponsive after a while (maybe after many text updates) :: te
 OK when using forecast early hours become unavailble later in the day and light intensities become negative, likely due to naive interpolation :: swapped to different forecast
 OK reduce weather information to maybe a single symbol
 OK have HUD/sprite elements for lights
--- show connection state of sensors, switches
--- lights rendering only in dark mode (?), find another way for during the day
--- improve IStatusHandler interface (maybe have types that have commands, i.e. toggle or status, and flexible UI elements for different types)
 
 possible improvements:
 
@@ -26,3 +23,6 @@ OK add the gif exporter
 -- indicate rain
 -- moonlight (and moonphase if somehow possible/feasible)
 -- progressive shadowmap to show lightshed over a full day
+-- improve IStatusHandler interface (maybe have types that have commands, i.e. toggle or status, and flexible UI elements for different types)
+-- show connection state of sensors, switches, alternatively only show sensors, switches not being connected
+-- lights rendering only in dark mode (?), find another way for during the day

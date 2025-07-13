@@ -12,9 +12,11 @@ import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SpeedIcon from '@mui/icons-material/Speed';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
+import LightbulbOutlineIcon from '@mui/icons-material/LightbulbOutline';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { Card, CardContent, CardHeader, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Slider, Stack, SvgIcon, Switch, Typography } from '@mui/material';
 import { ReactElement, SyntheticEvent, useEffect, useRef, useState } from 'react';
-import { ActionResultUnion } from '../types/IActionResult';
+import { TActionResultUnion, TLedboxStatus, TResetStatus } from '../types/IActionResult';
 import { IBoardProps } from '../types/IBoardProps';
 import { STATUS_HANDLERS, THandlerKey } from '../types/IStatusHandler';
 import { IStatusResult } from '../types/IStatusResult';
@@ -130,25 +132,27 @@ const BoardComponent = (props: IBoardProps) => {
         }
       });
 
-      const switches = statusResultRef.current.actions;
+      const actions = statusResultRef.current.actions;
 
-      for (let i = 0; i < switches.length; i++) {
-        const replaceSwitch = result.actions.find(s => s.handlerKey === switches[i].handlerKey);
-        if (replaceSwitch) {
-          switches[i].status = replaceSwitch.status;
+      for (let i = 0; i < actions.length; i++) {
+        const replaceAction = result.actions.find(s => s.handlerKey === actions[i].handlerKey);
+        if (replaceAction) {
+          const keys = Object.keys(replaceAction);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          keys.forEach(key => (actions[i] as any)[key] = (replaceAction as any)[key])
         }
       }
       result.actions.forEach(s2 => {
-        const prevSwitch = switches.find(s1 => s1.handlerKey === s2.handlerKey);
-        if (!prevSwitch) {
-          switches.push(s2);
+        const prevAction = actions.find(s1 => s1.handlerKey === s2.handlerKey);
+        if (!prevAction) {
+          actions.push(s2);
         }
       });
 
       statusResultRef.current = {
         ...statusResultRef.current,
         values,
-        actions: switches
+        actions: actions
       };
 
       setStatusResult(statusResultRef.current);
@@ -171,10 +175,33 @@ const BoardComponent = (props: IBoardProps) => {
 
   }
 
-  const handleSwitchAction = (handlerKey: THandlerKey) => {
+  const handleSwitchAction = (handlerKey: THandlerKey, param: boolean) => {
 
-    if (STATUS_HANDLERS[handlerKey].action) {
-      STATUS_HANDLERS[handlerKey].action!.action();
+    if (STATUS_HANDLERS[handlerKey].action && STATUS_HANDLERS[handlerKey].action!.type === 'switch') {
+      STATUS_HANDLERS[handlerKey].action!.execute(param as never);
+    } else {
+      console.warn('no action found', handlerKey);
+    }
+
+  };
+
+  const handleResetAction = (handlerKey: THandlerKey, param: TResetStatus) => {
+
+    if (STATUS_HANDLERS[handlerKey].action && STATUS_HANDLERS[handlerKey].action!.type === 'reset') {
+      STATUS_HANDLERS[handlerKey].action!.execute(param as never);
+    } else {
+      console.warn('no action found', handlerKey);
+    }
+
+  };
+
+  const handleLedboxAction = (handlerKey: THandlerKey, params: TLedboxStatus[]) => {
+
+    const action = statusResultRef.current?.actions.find(a => a.handlerKey === handlerKey);
+    const future = params.find(p => p !== action?.status);
+    // console.log('params', params, 'action', action, 'future', future, STATUS_HANDLERS[handlerKey].action);
+    if (future !== undefined && STATUS_HANDLERS[handlerKey].action && STATUS_HANDLERS[handlerKey].action!.type === 'ledbox') {
+      STATUS_HANDLERS[handlerKey].action!.execute(future as never);
     } else {
       console.warn('no action found', handlerKey);
     }
@@ -182,8 +209,7 @@ const BoardComponent = (props: IBoardProps) => {
   };
 
 
-
-  const getActionListItem = (actionResult: ActionResultUnion): ReactElement => {
+  const getActionListItem = (actionResult: TActionResultUnion): ReactElement => {
 
     if (actionResult.type === 'switch') {
       return <ListItem
@@ -219,7 +245,7 @@ const BoardComponent = (props: IBoardProps) => {
               // flexGrow: 0
             }}
             checked={actionResult.status}
-            onClick={() => handleSwitchAction(actionResult.handlerKey)}
+            onChange={(e) => handleSwitchAction(actionResult.handlerKey, e.target.checked)}
           />}
         />
 
@@ -252,7 +278,7 @@ const BoardComponent = (props: IBoardProps) => {
             padding: '0px 3px'
           }}
           primary={<IconButton
-            onClick={() => handleSwitchAction(actionResult.handlerKey)}
+            onClick={() => handleResetAction(actionResult.handlerKey, '')}
             sx={{
               // padding: '0px 12px 0px 0px !important',
               padding: '5px',
@@ -264,6 +290,71 @@ const BoardComponent = (props: IBoardProps) => {
             <AdjustIcon />
           </IconButton>
           }
+        />
+
+      </ListItem >
+    } else if (actionResult.type === 'ledbox') {
+      return <ListItem
+        key={`action_${actionResult.handlerKey}`}
+        sx={{
+          padding: '0px 0px 0px 12px !important',
+          alignItems: 'start'
+        }}
+      >
+        <ListItemIcon
+          key={`${actionResult.handlerKey}_power`}
+          sx={{
+            paddingTop: '6px',
+            minWidth: 'unset'
+          }}
+        >
+          {
+            actionResult.status === 0 ? <LightbulbOutlineIcon /> : <LightbulbIcon />
+          }
+
+        </ListItemIcon>
+        <ListItemText
+          sx={{
+            flexGrow: 10,
+            paddingTop: '4px',
+            paddingLeft: '6px'
+          }}
+          primary={'level'}
+        />
+        <ListItemText
+          sx={{
+            flexGrow: 2,
+            padding: '0px 24px',
+          }}
+          primary={<Slider
+            sx={{
+              minWidth: '100px'
+            }}
+            onChange={(_e: Event, value: number | number[]) => handleLedboxAction(actionResult.handlerKey, value as TLedboxStatus[])}
+            defaultValue={0}
+            step={null}
+            max={3}
+            track={false}
+            value={[actionResult.status, actionResult.future]}
+            marks={[
+              {
+                value: 0,
+                label: '0',
+              },
+              {
+                value: 1,
+                label: '1',
+              },
+              {
+                value: 2,
+                label: '2',
+              },
+              {
+                value: 3,
+                label: '3',
+              },
+            ]}
+          />}
         />
 
       </ListItem >
@@ -567,7 +658,7 @@ const BoardComponent = (props: IBoardProps) => {
             sx={{
               zIndex: 300,
               padding: '0px',
-              margin: '0px',
+              margin: '0px 12px',
               pointerEvents: 'auto'
             }}
             orientation="horizontal"
