@@ -68,13 +68,17 @@ export class WeatherUtil {
             }
         }
 
-        if (forecast.weathercode === 61 || forecast.weathercode === 80) {
+        if (forecast.weathercode === 45) {
+            symbols.push('./w_fog_light.svg')
+        } else if (forecast.weathercode === 61 || forecast.weathercode === 80) {
             symbols.push('./w_rain_light.svg')
         } else if (forecast.weathercode === 95) {
             symbols.push('./w_thunderstorm.svg')
         } else if (forecast.weathercode === 96) {
             symbols.push('./w_thunderstorm_hail.svg')
         }
+
+
 
 
 
