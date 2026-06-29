@@ -619,15 +619,16 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
         title: 'barrel water sensor',
         handleStatus: (status: never) => {
 
-            // console.log('barrel_top :: statusHndlr', status)
+            console.log('barrel_top :: statusHndlr', status)
 
             const switch1 = status['POWER1']; // when ON the barrel is completely full
             if (switch1) {
 
-                // console.log('barrel_top handler', switch1, status);
+                // console.log('barrel_top handler', switch1, status
+                const barrelTopWet = switch1 === 'ON';
 
-                const colorDesc = switch1 === 'ON' ? COLOR_DESCRIPTIONS['face_blue___clip_none'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
-                const colorDescSgmt = switch1 === 'ON' ? COLOR_DESCRIPTIONS['sgmt_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
+                const colorDesc = barrelTopWet ? COLOR_DESCRIPTIONS['face_blue___clip_none'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
+                const colorDescSgmt = barrelTopWet ? COLOR_DESCRIPTIONS['sgmt_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
                 STATUS_HANDLERS['barrel_top'].faces.forEach(face => {
                     face.material = MaterialRepo.getMaterialFace(colorDesc);
                 });
@@ -642,7 +643,7 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
                         {
                             key: 'barrel top',
                             unit: 'barrel_switch',
-                            value: switch1 === 'ON' ? 'wet' : 'dry'
+                            value: barrelTopWet ? 'wet' : 'dry'
                         }
                     ],
                     actions: []
@@ -677,9 +678,11 @@ export const STATUS_HANDLERS: { [K in THandlerKey]: IStatusHandler } = {
             const switch2 = status['POWER2']; // when ON the barrel is completely empty
             if (switch2) {
 
+                const barrelBotWet = switch2 === 'ON';
+
                 // console.log('barrel_bot handler', power2, status);
-                const colorDescFace = switch2 === 'OFF' ? COLOR_DESCRIPTIONS['face_blue___clip_none'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
-                const colorDescSgmt = switch2 === 'OFF' ? COLOR_DESCRIPTIONS['sgmt_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
+                const colorDescFace = barrelBotWet ? COLOR_DESCRIPTIONS['face_blue___clip_none'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
+                const colorDescSgmt = barrelBotWet ? COLOR_DESCRIPTIONS['sgmt_blue_noclip'] : COLOR_DESCRIPTIONS['face_gray___clip_none'];
                 STATUS_HANDLERS['barrel_bot'].faces.forEach(face => {
                     face.material = MaterialRepo.getMaterialFace(colorDescFace);
                 });
